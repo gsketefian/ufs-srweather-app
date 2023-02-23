@@ -1424,7 +1424,7 @@ it, we'd have to include more jinja if-statements here.
     <walltime>{{ wtime_run_met_gridstat_vx_apcp01h }}</walltime>
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <native>&SCHED_NATIVE_CMD;</native>
-    <jobname>&TN_RUN_MET_GRIDSTAT_VX_APCP01H;</jobname>
+    <jobname>&TN_RUN_MET_GRIDSTAT_VX_APCP01H;{{ uscore_ensmem_name }}</jobname>
     <join>&LOGDIR;/&TN_RUN_MET_GRIDSTAT_VX_APCP01H;{{ uscore_ensmem_name }}<cyclestr>_@Y@m@d@H</cyclestr>&LOGEXT;</join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
@@ -1476,7 +1476,7 @@ it, we'd have to include more jinja if-statements here.
     <walltime>{{ wtime_run_met_gridstat_vx_apcp03h }}</walltime>
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <native>&SCHED_NATIVE_CMD;</native>
-    <jobname>&TN_RUN_MET_GRIDSTAT_VX_APCP03H;</jobname>
+    <jobname>&TN_RUN_MET_GRIDSTAT_VX_APCP03H;{{ uscore_ensmem_name }}</jobname>
     <join>&LOGDIR;/&TN_RUN_MET_GRIDSTAT_VX_APCP03H;{{ uscore_ensmem_name }}<cyclestr>_@Y@m@d@H</cyclestr>&LOGEXT;</join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
@@ -1518,7 +1518,7 @@ it, we'd have to include more jinja if-statements here.
     <walltime>{{ wtime_run_met_gridstat_vx_apcp06h }}</walltime>
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <native>&SCHED_NATIVE_CMD;</native>
-    <jobname>&TN_RUN_MET_GRIDSTAT_VX_APCP06H;</jobname>
+    <jobname>&TN_RUN_MET_GRIDSTAT_VX_APCP06H;{{ uscore_ensmem_name }}</jobname>
     <join>&LOGDIR;/&TN_RUN_MET_GRIDSTAT_VX_APCP06H;{{ uscore_ensmem_name }}<cyclestr>_@Y@m@d@H</cyclestr>&LOGEXT;</join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
@@ -1560,7 +1560,7 @@ it, we'd have to include more jinja if-statements here.
     <walltime>{{ wtime_run_met_gridstat_vx_apcp24h }}</walltime>
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <native>&SCHED_NATIVE_CMD;</native>
-    <jobname>&TN_RUN_MET_GRIDSTAT_VX_APCP24H;</jobname>
+    <jobname>&TN_RUN_MET_GRIDSTAT_VX_APCP24H;{{ uscore_ensmem_name }}</jobname>
     <join>&LOGDIR;/&TN_RUN_MET_GRIDSTAT_VX_APCP24H;{{ uscore_ensmem_name }}<cyclestr>_@Y@m@d@H</cyclestr>&LOGEXT;</join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
@@ -1601,7 +1601,7 @@ it, we'd have to include more jinja if-statements here.
     <walltime>{{ wtime_run_met_gridstat_vx_refc }}</walltime>
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <native>&SCHED_NATIVE_CMD;</native>
-    <jobname>&TN_RUN_MET_GRIDSTAT_VX_REFC;</jobname>
+    <jobname>&TN_RUN_MET_GRIDSTAT_VX_REFC;{{ uscore_ensmem_name }}</jobname>
     <join>&LOGDIR;/&TN_RUN_MET_GRIDSTAT_VX_REFC;{{ uscore_ensmem_name }}<cyclestr>_@Y@m@d@H</cyclestr>&LOGEXT;</join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
@@ -1651,7 +1651,7 @@ it, we'd have to include more jinja if-statements here.
     <walltime>{{ wtime_run_met_gridstat_vx_retop }}</walltime>
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <native>&SCHED_NATIVE_CMD;</native>
-    <jobname>&TN_RUN_MET_GRIDSTAT_VX_RETOP;</jobname>
+    <jobname>&TN_RUN_MET_GRIDSTAT_VX_RETOP;{{ uscore_ensmem_name }}</jobname>
     <join>&LOGDIR;/&TN_RUN_MET_GRIDSTAT_VX_RETOP;{{ uscore_ensmem_name }}<cyclestr>_@Y@m@d@H</cyclestr>&LOGEXT;</join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
@@ -1703,7 +1703,7 @@ it, we'd have to include more jinja if-statements here.
     <walltime>{{ wtime_run_met_pointstat_vx_sfc }}</walltime>
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <native>&SCHED_NATIVE_CMD;</native>
-    <jobname>&TN_RUN_MET_POINTSTAT_VX_SFC;</jobname>
+    <jobname>&TN_RUN_MET_POINTSTAT_VX_SFC;{{ uscore_ensmem_name }}</jobname>
     <join>&LOGDIR;/&TN_RUN_MET_POINTSTAT_VX_SFC;{{ uscore_ensmem_name }}<cyclestr>_@Y@m@d@H</cyclestr>&LOGEXT;</join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
@@ -1752,7 +1752,7 @@ it, we'd have to include more jinja if-statements here.
     <walltime>{{ wtime_run_met_pointstat_vx_upa }}</walltime>
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <native>&SCHED_NATIVE_CMD;</native>
-    <jobname>&TN_RUN_MET_POINTSTAT_VX_UPA;</jobname>
+    <jobname>&TN_RUN_MET_POINTSTAT_VX_UPA;{{ uscore_ensmem_name }}</jobname>
     <join>&LOGDIR;/&TN_RUN_MET_POINTSTAT_VX_UPA;{{ uscore_ensmem_name }}<cyclestr>_@Y@m@d@H</cyclestr>&LOGEXT;</join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
