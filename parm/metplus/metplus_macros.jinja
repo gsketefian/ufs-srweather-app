@@ -1,0 +1,74 @@
+{#-
+This macro prints out an error message and quits the jinja templater.
+#}
+{%- macro print_err_and_quit(error_msg) %}
+  {%- include 'ERROR: ' ~ error_msg %}
+{%- endmacro %}
+{#-
+This macro checks whether the specified forecast level (fcst_level) has
+a valid value.  fcst_level may be set to 'all' or to a specific forecast
+level.  If set to 'all', all valid levels for each field in the specified
+field group are included in the verification.  If set to a specific level,
+all the fields in the specified field group are verified only for that
+level, which implies that the level must be valid for all such fields.
+#}
+{%- macro check_level(fields_levels_threshes, fcst_level) %}
+  {%- if fcst_level != 'all' %}
+    {%- for field, levels_threshes in fields_levels_threshes.items() %}
+      {%- set valid_levels = levels_threshes.keys()|list %}
+{#- Valid levels for field '{{field}}' are:  {{valid_levels}} #}
+      {%- if fcst_level not in valid_levels %}
+        {%- set error_msg = '\n' ~
+              'The specified forecast level (fcst_level) is not in the list of valid levels\n' ~
+              '(valid_levels) for the current field (field):\n' ~
+              '  field = \'' ~ field ~ '\'\n' ~
+              '  valid_levels = ' ~ valid_levels ~ '\n'
+              '  fcst_level = \'' ~ fcst_level ~ '\'\n'
+              'fcst_level must either be set to the string \'all\' (to include all valid\n' ~
+              'values in the verification) or to one of the elements in valid_levels.' %}
+        {{print_err_and_quit(error_msg)}}
+      {%- endif %}
+    {%- endfor %}
+  {%- endif %}
+{%- endmacro %}
+{#-
+This macro checks whether the specified forecast threshold (fcst_thresh)
+has a valid value.  fcst_thresh may be set to 'none', 'all', or a specific
+forecast threshold.  If set to 'none', threshold information is not
+included in the verification.  This happens for verification metrics that
+do not use thresholds.  If set to 'all', all valid thresholds for each
+field and level combination in the specified field group are included in
+the verification.  If set to a specific threshold, all combinations of
+field and level (the latter, depending on the value of fcst_level, being
+either all the levels or a single one) combinations in the specified field
+group are verified only for that specific threshold, which implies that
+the threshold must be valid for all such field and level combinations.
+#}
+{%- macro check_thresh(fields_levels_threshes, fcst_level, fcst_thresh) %}
+  {%- if (fcst_thresh != 'none') and (fcst_thresh != 'all') %}
+    {%- for field, levels_threshes in fields_levels_threshes.items() %}
+      {%- set valid_levels = levels_threshes.keys()|list %}
+{#- Valid levels for field '{{field}}' are:  {{valid_levels}} #}
+      {%- for level, valid_threshes in levels_threshes.items() %}
+        {%- if (fcst_level == 'all') or (fcst_level == level) %}
+{#- Valid thresholds for field/level '{{field}}/{{level}}' are:  {{valid_threshes}} #}
+          {%- if fcst_thresh not in valid_threshes %}
+            {%- set error_msg = '\n' ~
+                  'The specified forecast threshold (fcst_thresh) is not in the list of valid\n' ~
+                  'thresholds (valid_threshes) for the current field (field) and level (level)\n' ~
+                  'combination:\n' ~
+                  '  field = \'' ~ field ~ '\'\n' ~
+                  '  level = \'' ~ level ~ '\'\n' ~
+                  '  valid_threshes = ' ~ valid_threshes ~ '\n'
+                  '  fcst_thresh = \'' ~ fcst_thresh ~ '\'' %}
+                  'fcst_thresh must be set to the string \'all\' (to include in the verification\n' ~
+                  'all thresholds for each valid combination of field and level), to the string\n' ~
+                  '\'none\' to include no threshold information in the verification, or to one of\n' ~
+                  'the elements in valid_threshes.' %}
+            {{print_err_and_quit(error_msg)}}
+          {%- endif %}
+        {%- endif %}
+      {%- endfor %}
+    {%- endfor %}
+  {%- endif %}
+{%- endmacro %}

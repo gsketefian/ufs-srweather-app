@@ -16,7 +16,7 @@ source_config_for_task "task_run_vx_gridstat|task_run_vx_pointstat|task_run_post
 #
 #-----------------------------------------------------------------------
 #
-. $USHdir/get_met_metplus_tool_name.sh
+. $USHdir/get_metplus_tool_name.sh
 . $USHdir/set_vx_params.sh
 . $USHdir/set_vx_fhr_list.sh
 #
@@ -44,14 +44,15 @@ scrfunc_dir=$( dirname "${scrfunc_fp}" )
 #-----------------------------------------------------------------------
 #
 # Get the name of the MET/METplus tool in different formats that may be
-# needed from the global variable MET_TOOL.
+# needed from the global variable METPLUSTOOLNAME.
 #
 #-----------------------------------------------------------------------
 #
-get_met_metplus_tool_name \
-  generic_tool_name="${MET_TOOL}" \
-  outvarname_met_tool_name="met_tool_name" \
-  outvarname_metplus_tool_name="metplus_tool_name"
+get_metplus_tool_name \
+  METPLUSTOOLNAME="${METPLUSTOOLNAME}" \
+  outvarname_metplus_tool_name="metplus_tool_name" \
+  outvarname_MetplusToolName="MetplusToolName" \
+  outvarname_METPLUS_TOOL_NAME="METPLUS_TOOL_NAME"
 #
 #-----------------------------------------------------------------------
 #
@@ -64,7 +65,7 @@ print_info_msg "
 Entering script:  \"${scrfunc_fn}\"
 In directory:     \"${scrfunc_dir}\"
 
-This is the ex-script for the task that runs the METplus ${metplus_tool_name}
+This is the ex-script for the task that runs the METplus ${MetplusToolName}
 tool to perform deterministic verification of the specified field (VAR)
 for a single forecast.
 ========================================================================"
@@ -129,43 +130,44 @@ time_lag=$( bc -l <<< "${ENS_TIME_LAG_HRS[$i]}*${SECS_PER_HOUR}" )
 #
 #-----------------------------------------------------------------------
 #
-if [ "${grid_or_point}" = "grid" ]; then
-
-  case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
-    "APCP01h")
-      FIELD_THRESHOLDS="gt0.0, ge0.254, ge0.508, ge1.27, ge2.54"
-      ;;
-    "APCP03h")
-      FIELD_THRESHOLDS="gt0.0, ge0.254, ge0.508, ge1.27, ge2.54, ge3.810, ge6.350"
-      ;;
-    "APCP06h")
-      FIELD_THRESHOLDS="gt0.0, ge0.254, ge0.508, ge1.27, ge2.54, ge3.810, ge6.350, ge8.890, ge12.700"
-      ;;
-    "APCP24h")
-      FIELD_THRESHOLDS="gt0.0, ge0.254, ge0.508, ge1.27, ge2.54, ge3.810, ge6.350, ge8.890, ge12.700, ge25.400"
-      ;;
-    "ASNOW")
-      FIELD_THRESHOLDS="gt0.0, ge2.54, ge5.08, ge10.16, ge20.32"
-      ;;
-    "REFC")
-      FIELD_THRESHOLDS="ge20, ge30, ge40, ge50"
-      ;;
-    "RETOP")
-      FIELD_THRESHOLDS="ge20, ge30, ge40, ge50"
-      ;;
-    *)
-      print_err_msg_exit "\
-Verification parameters have not been defined for this field
-(FIELDNAME_IN_MET_FILEDIR_NAMES):
-  FIELDNAME_IN_MET_FILEDIR_NAMES = \"${FIELDNAME_IN_MET_FILEDIR_NAMES}\""
-      ;;
-  esac
-
-elif [ "${grid_or_point}" = "point" ]; then
-
-  FIELD_THRESHOLDS=""
-
-fi
+#if [ "${grid_or_point}" = "grid" ]; then
+#
+#  case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
+#    "APCP01h")
+#      FIELD_THRESHOLDS="gt0.0, ge0.254, ge0.508, ge1.27, ge2.54"
+#      ;;
+#    "APCP03h")
+#      FIELD_THRESHOLDS="gt0.0, ge0.254, ge0.508, ge1.27, ge2.54, ge3.810, ge6.350"
+#      ;;
+#    "APCP06h")
+#      FIELD_THRESHOLDS="gt0.0, ge0.254, ge0.508, ge1.27, ge2.54, ge3.810, ge6.350, ge8.890, ge12.700"
+#      ;;
+#    "APCP24h")
+#      FIELD_THRESHOLDS="gt0.0, ge0.254, ge0.508, ge1.27, ge2.54, ge3.810, ge6.350, ge8.890, ge12.700, ge25.400"
+#      ;;
+#    "ASNOW")
+#      FIELD_THRESHOLDS="gt0.0, ge2.54, ge5.08, ge10.16, ge20.32"
+#      ;;
+#    "REFC")
+#      FIELD_THRESHOLDS="ge20, ge30, ge40, ge50"
+#      ;;
+#    "RETOP")
+#      FIELD_THRESHOLDS="ge20, ge30, ge40, ge50"
+#      ;;
+#    *)
+#      print_err_msg_exit "\
+#Verification parameters have not been defined for this field
+#(FIELDNAME_IN_MET_FILEDIR_NAMES):
+#  FIELDNAME_IN_MET_FILEDIR_NAMES = \"${FIELDNAME_IN_MET_FILEDIR_NAMES}\""
+#      ;;
+#  esac
+#
+#elif [ "${grid_or_point}" = "point" ]; then
+#
+#  FIELD_THRESHOLDS=""
+#
+#fi
+#FIELD_THRESHOLDS=""
 #
 #-----------------------------------------------------------------------
 #
@@ -204,50 +206,58 @@ fi
 
 if [ "${grid_or_point}" = "grid" ]; then
 
-  OBS_INPUT_FN_TEMPLATE=""
-  if [ "${field_is_APCPgt01h}" = "TRUE" ]; then
-    OBS_INPUT_DIR="${vx_output_basedir}/metprd/PcpCombine_obs"
-    OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCPgt01h_FN_TEMPLATE} )
-    FCST_INPUT_DIR="${vx_output_basedir}${slash_cdate_or_null}/${slash_ensmem_subdir_or_null}/metprd/PcpCombine_fcst"
-    FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_FN_METPROC_TEMPLATE} )
-  else
-    OBS_INPUT_DIR="${OBS_DIR}"
+  #OBS_INPUT_FN_TEMPLATE=""
+  #if [ "${field_is_APCPgt01h}" = "TRUE" ]; then
+  #  OBS_INPUT_DIR="${vx_output_basedir}/metprd/PcpCombine_obs"
+  #  OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCPgt01h_FN_TEMPLATE} )
+  #  FCST_INPUT_DIR="${vx_output_basedir}${slash_cdate_or_null}/${slash_ensmem_subdir_or_null}/metprd/PcpCombine_fcst"
+  #  FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_FN_METPROC_TEMPLATE} )
+  #else
+  #  OBS_INPUT_DIR="${OBS_DIR}"
     case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
-      "APCP01h")
-        OBS_INPUT_FN_TEMPLATE="${OBS_CCPA_APCP01h_FN_TEMPLATE}"
-        FCST_INPUT_DIR="${vx_fcst_input_basedir}"
-        FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE} )
+      #"APCP01h")
+      "APCP"*)
+        OBS_INPUT_DIR="${vx_output_basedir}/metprd/PcpCombine_obs"
+        #OBS_INPUT_FN_TEMPLATE="${OBS_CCPA_APCP01h_FN_TEMPLATE}"
+        OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCPgt01h_FN_TEMPLATE} )
+        #FCST_INPUT_DIR="${vx_fcst_input_basedir}"
+        FCST_INPUT_DIR="${vx_output_basedir}${slash_cdate_or_null}/${slash_ensmem_subdir_or_null}/metprd/PcpCombine_fcst"
+        #FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE} )
+        FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_FN_METPROC_TEMPLATE} )
         ;;
       "ASNOW")
+        OBS_INPUT_DIR="${OBS_DIR}"
         OBS_INPUT_FN_TEMPLATE="${OBS_NOHRSC_ASNOW_FN_TEMPLATE}"
         FCST_INPUT_DIR="${vx_output_basedir}${slash_cdate_or_null}/${slash_ensmem_subdir_or_null}/metprd/PcpCombine_fcst"
         FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_FN_METPROC_TEMPLATE} )
         ;;
       "REFC")
+        OBS_INPUT_DIR="${OBS_DIR}"
         OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_REFC_FN_TEMPLATE}"
         FCST_INPUT_DIR="${vx_fcst_input_basedir}"
         FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE} )
         ;;
       "RETOP")
+        OBS_INPUT_DIR="${OBS_DIR}"
         OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_RETOP_FN_TEMPLATE}"
         FCST_INPUT_DIR="${vx_fcst_input_basedir}"
         FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE} )
         ;;
     esac
     OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_INPUT_FN_TEMPLATE} )
-  fi
+  #fi
 
 elif [ "${grid_or_point}" = "point" ]; then
 
   OBS_INPUT_DIR="${vx_output_basedir}/metprd/Pb2nc_obs"
-  OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_SFCorUPA_FN_METPROC_TEMPLATE} )
+  OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_ADPSFCorADPUPA_FN_METPROC_TEMPLATE} )
   FCST_INPUT_DIR="${vx_fcst_input_basedir}"
   FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE} )
 
 fi
 
 OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}/${slash_ensmem_subdir_or_null}"
-OUTPUT_DIR="${OUTPUT_BASE}/metprd/${metplus_tool_name}"
+OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}"
 STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 #
 #-----------------------------------------------------------------------
@@ -320,13 +330,15 @@ fi
 #
 # First, set the base file names.
 #
-if [ "${field_is_APCPgt01h}" = "TRUE" ]; then
-  metplus_config_tmpl_fn="APCPgt01h"
-else
-  metplus_config_tmpl_fn="${FIELDNAME_IN_MET_FILEDIR_NAMES}"
-fi
-metplus_config_tmpl_fn="${metplus_tool_name}_${metplus_config_tmpl_fn}"
-metplus_config_fn="${metplus_tool_name}_${FIELDNAME_IN_MET_FILEDIR_NAMES}_${ensmem_name}"
+#if [ "${field_is_APCPgt01h}" = "TRUE" ]; then
+#  metplus_config_tmpl_fn="APCPgt01h"
+#else
+#  metplus_config_tmpl_fn="${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+#fi
+#metplus_config_tmpl_fn="${MetplusToolName}_${metplus_config_tmpl_fn}"
+#metplus_config_tmpl_fn="${MetplusToolName}"
+metplus_config_tmpl_fn="GridOrPointStat.from_${MetplusToolName}"
+metplus_config_fn="${MetplusToolName}_${FIELDNAME_IN_MET_FILEDIR_NAMES}_${ensmem_name}"
 metplus_log_fn="${metplus_config_fn}"
 #
 # Add prefixes and suffixes (extensions) to the base file names.
@@ -334,6 +346,19 @@ metplus_log_fn="${metplus_config_fn}"
 metplus_config_tmpl_fn="${metplus_config_tmpl_fn}.conf"
 metplus_config_fn="${metplus_config_fn}.conf"
 metplus_log_fn="metplus.log.${metplus_log_fn}"
+#
+#-----------------------------------------------------------------------
+#
+#
+#
+#-----------------------------------------------------------------------
+#
+vx_config_det=$(<"${METPLUS_CONF}/vx_config_det.yaml")
+echo
+echo "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+echo "vx_config_det = "
+echo "${vx_config_det}"
+echo "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
 #
 #-----------------------------------------------------------------------
 #
@@ -377,6 +402,13 @@ settings="\
   'ensmem_name': '${ensmem_name:-}'
   'time_lag': '${time_lag:-}'
 #
+# MET/METplus information.
+#
+  'metplus_tool_name': '${metplus_tool_name}'
+  'MetplusToolName': '${MetplusToolName}'
+  'METPLUS_TOOL_NAME': '${METPLUS_TOOL_NAME}'
+  'metplus_verbosity_level': '${METPLUS_VERBOSITY_LEVEL}'
+#
 # Field information.
 #
   'fieldname_in_obs_input': '${FIELDNAME_IN_OBS_INPUT}'
@@ -386,8 +418,20 @@ settings="\
   'obtype': '${OBTYPE}'
   'accum_hh': '${ACCUM_HH:-}'
   'accum_no_pad': '${ACCUM_NO_PAD:-}'
-  'field_thresholds': '${FIELD_THRESHOLDS:-}'
+  'metplus_templates_dir': '${METPLUS_CONF:-}'
+  'field_group': '${VAR:-}'
+  'fcst_level': '${FCST_LEVEL:-}'
+  'fcst_thresh': '${FCST_THRESH:-}'
+  'field_groups_dict': {${vx_config_det:-}}
 "
+
+#  'field_thresholds': ${FIELD_THRESHOLDS:-}
+
+echo
+echo "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+echo "settings = "
+echo "$settings"
+
 
 # Store the settings in a temporary file
 tmpfile=$( $READLINK -f "$(mktemp ./met_plus_settings.XXXXXX.yaml)")
@@ -422,7 +466,7 @@ rm $tmpfile
 #-----------------------------------------------------------------------
 #
 print_info_msg "$VERBOSE" "
-Calling METplus to run MET's ${met_tool_name} tool for field(s): ${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+Calling METplus to run MET's ${metplus_tool_name} tool for field(s): ${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 ${METPLUS_PATH}/ush/run_metplus.py \
   -c ${METPLUS_CONF}/common.conf \
   -c ${metplus_config_fp} || \
@@ -439,7 +483,7 @@ METplus configuration file used is:
 #
 print_info_msg "
 ========================================================================
-METplus ${metplus_tool_name} tool completed successfully.
+METplus ${MetplusToolName} tool completed successfully.
 
 Exiting script:  \"${scrfunc_fn}\"
 In directory:    \"${scrfunc_dir}\"
