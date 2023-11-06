@@ -412,6 +412,10 @@ settings="\
 
 #  'field_thresholds': ${FIELD_THRESHOLDS:-}
 echo
+echo "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU"
+echo "MET_INSTALL_DIR = |${MET_INSTALL_DIR}|"
+
+echo
 echo "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
 echo "settings = "
 echo "$settings"

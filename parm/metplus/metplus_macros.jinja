@@ -5,6 +5,21 @@ This macro prints out an error message and quits the jinja templater.
   {%- include 'ERROR: ' ~ error_msg %}
 {%- endmacro %}
 {#-
+Given a specified field level that is really an accumulation period, this
+macro prints out an "A" followed by the accumulation period (an integer)
+with any leading zeros removed.  For example, if the level is 'A03', it
+prints out 'A3'.
+#}
+{%- macro get_accumulation_no_zero_pad(level) %}
+  {%- set first_char = level[0] %}
+  {%- set the_rest = level[1:] %}
+  {%- if (first_char == 'A') %}
+    {{- first_char ~ '%d'%the_rest|int }}
+  {%- else %}
+    {{- level }}
+  {%- endif %}
+{%- endmacro %}
+{#-
 This macro checks whether the specified forecast level (fcst_level) has
 a valid value.  fcst_level may be set to 'all' or to a specific forecast
 level.  If set to 'all', all valid levels for each field in the specified

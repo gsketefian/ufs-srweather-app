@@ -226,6 +226,8 @@ metatask_GridStat_MRMS_ensprob:
       VAR: '#VAR#'
       METPLUSTOOLNAME: 'GRIDSTAT'
       OBTYPE: 'MRMS'
+      FCST_LEVEL: 'L0'
+      FCST_THRESH: 'all'
     dependency:
       taskdep:
         attrs:
