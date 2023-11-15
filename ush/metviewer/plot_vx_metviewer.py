@@ -6,6 +6,7 @@ import glob
 import argparse
 import yaml
 import re
+import copy
 
 import logging
 from textwrap import dedent
@@ -101,9 +102,11 @@ def get_static_info(static_info_config_fp):
 
     levels_to_levels_in_db = static_data['levels_to_levels_in_db']
     all_valid_levels = list(levels_to_levels_in_db.keys())
+    all_valid_levels.append("all")
 
     threshs_to_threshs_in_db = static_data['threshs_to_threshs_in_db']
     all_valid_threshs = list(threshs_to_threshs_in_db.keys())
+    all_valid_threshs.append("all")
 
     # Define local dictionaries containing static values that depend on the 
     # forecast variable.
@@ -322,7 +325,8 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         argv:  Command-line arguments
 
     Returns:
-        None
+        string: Path to MetViewer batch plotting script
+        list:   List of strings indicating paths to XMLs for MetViewer batch plotting
     """
 
     static_info_config_fp = static_info['static_info_config_fp']
@@ -477,6 +481,16 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     cla.incl_ens_means = incl_ens_means
 
     valid_levels_or_accums = valid_levels_by_fcst_var[cla.fcst_var]
+    if cla.level_or_accum == "all":
+            output_xmls = []
+            for level_or_accum in valid_levels_or_accums:
+                #make a deep copy so we don't override original command-line arguments
+                clanew = copy.deepcopy(cla)
+                clanew.level_or_accum = level_or_accum
+                logging.debug(f"calling generate_metviewer_xml with {clanew.level_or_accum=}")
+                _,output_xml = generate_metviewer_xml(clanew, static_info, mv_database_info)
+                output_xmls.extend(output_xml)
+            return(mv_machine_config_dict['mv_batch'],output_xmls)
     if cla.level_or_accum not in valid_levels_or_accums:
         err_msg = dedent(f"""
             The specified level or accumulation is not compatible with the specified
@@ -561,6 +575,16 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
 
     elif (stat_need_thresh[cla.vx_stat]):
         valid_thresholds = valid_threshs_by_fcst_var[cla.fcst_var]
+        if cla.threshold == "all":
+            output_xmls = []
+            for threshold in valid_threshs_by_fcst_var[cla.fcst_var]:
+                #make a deep copy so we don't override original command-line arguments
+                clanew = copy.deepcopy(cla)
+                clanew.threshold = threshold 
+                logging.debug(f"calling generate_metviewer_xml with {clanew.threshold=}")
+                _,output_xml = generate_metviewer_xml(clanew, static_info, mv_database_info)
+                output_xmls.extend(output_xml)
+            return(mv_machine_config_dict['mv_batch'],output_xmls)
         if cla.threshold not in valid_thresholds:
             err_msg = dedent(f"""
                 The specified threshold is not compatible with the specified forecast
@@ -792,7 +816,9 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     set_template(args_list)
     os.remove(tmp_fn)
 
-    return(mv_machine_config_dict['mv_batch'], output_xml_fp)
+    # Return output_xml_fp as a list so we can extend it arbitrarily with recursion
+    # for the "all" option for various arguments
+    return(mv_machine_config_dict['mv_batch'], [output_xml_fp])
 
 
 def run_mv_batch(mv_batch, output_xml_fp):
@@ -899,15 +925,17 @@ def plot_vx_metviewer(argv):
 
     # Generate a MetViewer xml.
     logging.info(dedent(f"""
-        Generating a MetViewer xml ...
+        Generating MetViewer xml(s) ...
         """))
     mv_batch, output_xml_fp = generate_metviewer_xml(cla, static_info, mv_database_info)
 
-    # Run MetViewer on the xml to create a verification plot.
-    logging.info(dedent(f"""
-        Running MetViewer on xml file: {output_xml_fp}
-        """))
-    run_mv_batch(mv_batch, output_xml_fp)
+    # Run MetViewer on the xml(s) to create verification plot(s).
+
+    for output_xml in output_xml_fp:
+        logging.info(dedent(f"""
+            Running MetViewer on xml file: {output_xml}
+            """))
+        run_mv_batch(mv_batch, output_xml)
 #
 # -----------------------------------------------------------------------
 #
