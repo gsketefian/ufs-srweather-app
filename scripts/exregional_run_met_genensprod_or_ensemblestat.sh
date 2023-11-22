@@ -107,79 +107,10 @@ set_vx_params \
   field="$VAR" \
   accum_hh="${ACCUM_HH}" \
   outvarname_grid_or_point="grid_or_point" \
-  outvarname_field_is_APCPgt01h="field_is_APCPgt01h" \
   outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
   outvarname_fieldname_in_fcst_input="FIELDNAME_IN_FCST_INPUT" \
   outvarname_fieldname_in_MET_output="FIELDNAME_IN_MET_OUTPUT" \
   outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
-echo
-echo "EEEEEEEEEEEEEEEEEEEEEEEEEEEE"
-echo "field_is_APCPgt01h = |${field_is_APCPgt01h}|"
-echo "FIELDNAME_IN_OBS_INPUT = |${FIELDNAME_IN_OBS_INPUT}|"
-echo "FIELDNAME_IN_FCST_INPUT = |${FIELDNAME_IN_FCST_INPUT}|"
-echo "FIELDNAME_IN_MET_OUTPUT = |${FIELDNAME_IN_MET_OUTPUT}|"
-echo "FIELDNAME_IN_MET_FILEDIR_NAMES = |${FIELDNAME_IN_MET_FILEDIR_NAMES}|"
-#
-#-----------------------------------------------------------------------
-#
-# Set additional field-dependent verification parameters.
-#
-#-----------------------------------------------------------------------
-#
-#if [ "${grid_or_point}" = "grid" ]; then
-#
-#  case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
-#    "APCP01h")
-#      FIELD_THRESHOLDS="{'gt0.0': '>0.0',
-#                         'ge0.254': '>=0.254',
-#                         'ge0.508': '>=0.508',
-#                         'ge2.54': '>=2.54',
-#                        }"
-#      ;;
-#    "APCP03h")
-#      FIELD_THRESHOLDS="{'gt0.0': '>0.0',
-#                         'ge0.508': '>=0.508',
-#                         'ge2.54': '>=2.54',
-#                         'ge6.350': '>=6.350',
-#                        }"
-#      ;;
-#    "APCP06h")
-#      FIELD_THRESHOLDS="{'gt0.0': '>0.0',
-#                         'ge2.54': '>=2.54',
-#                         'ge6.350': '>=6.350',
-#                         'ge12.700': '>=12.700',
-#                        }"
-#      ;;
-#    "APCP24h")
-#      FIELD_THRESHOLDS="{'gt0.0': '>0.0',
-#                         'ge6.350': '>=6.350',
-#                         'ge12.700': '>=12.700',
-#                         'ge25.400': '>=25.400',
-#                        }"
-#      ;;
-#    "ASNOW")
-#      FIELD_THRESHOLDS="gt0.0, ge2.54, ge5.08, ge10.16, ge20.32"
-#      ;;
-#    "REFC")
-#      FIELD_THRESHOLDS="ge20, ge30, ge40, ge50"
-#      ;;
-#    "RETOP")
-#      FIELD_THRESHOLDS="ge20, ge30, ge40, ge50"
-#      ;;
-#    *)
-#      print_err_msg_exit "\
-#Verification parameters have not been defined for this field
-#(FIELDNAME_IN_MET_FILEDIR_NAMES):
-#  FIELDNAME_IN_MET_FILEDIR_NAMES = \"${FIELDNAME_IN_MET_FILEDIR_NAMES}\""
-#      ;;
-#  esac
-#
-#elif [ "${grid_or_point}" = "point" ]; then
-#
-#  FIELD_THRESHOLDS=""
-#
-#fi
-#FIELD_THRESHOLDS=""
 #
 #-----------------------------------------------------------------------
 #
@@ -198,49 +129,37 @@ fi
 
 if [ "${grid_or_point}" = "grid" ]; then
 
-  #OBS_INPUT_FN_TEMPLATE=""
-  #if [ "${field_is_APCPgt01h}" = "TRUE" ]; then
-  #  OBS_INPUT_DIR="${vx_output_basedir}/metprd/PcpCombine_obs"
-  #  OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCPgt01h_FN_TEMPLATE} )
-  #  FCST_INPUT_DIR="${vx_output_basedir}"
-  #else
-    #OBS_INPUT_DIR="${OBS_DIR}"
-    case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
-      #"APCP01h")
-      "APCP"*)
-        #OBS_INPUT_DIR="${OBS_DIR}"
-        OBS_INPUT_DIR="${vx_output_basedir}/metprd/PcpCombine_obs"
-        #OBS_INPUT_FN_TEMPLATE="${OBS_CCPA_APCP01h_FN_TEMPLATE}"
-        OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCPgt01h_FN_TEMPLATE} )
-        #FCST_INPUT_DIR="${vx_fcst_input_basedir}"
-        FCST_INPUT_DIR="${vx_output_basedir}"
-        ;;
-      "ASNOW")
-        OBS_INPUT_DIR="${OBS_DIR}"
-        OBS_INPUT_FN_TEMPLATE="${OBS_NOHRSC_ASNOW_FN_TEMPLATE}"
-        FCST_INPUT_DIR="${vx_output_basedir}"
-        ;;
-      "REFC")
-        OBS_INPUT_DIR="${OBS_DIR}"
-        OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_REFC_FN_TEMPLATE}"
-        FCST_INPUT_DIR="${vx_fcst_input_basedir}"
-        ;;
-      "RETOP")
-        OBS_INPUT_DIR="${OBS_DIR}"
-        OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_RETOP_FN_TEMPLATE}"
-        FCST_INPUT_DIR="${vx_fcst_input_basedir}"
-        ;;
-    esac
-    OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_INPUT_FN_TEMPLATE} )
-  #fi
+  case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
+    "APCP"*)
+      OBS_INPUT_DIR="${vx_output_basedir}/metprd/PcpCombine_obs"
+      OBS_INPUT_FN_TEMPLATE="${OBS_CCPA_APCP_FN_TEMPLATE_PCPCOMBINE_OUTPUT}"
+      FCST_INPUT_DIR="${vx_output_basedir}"
+      ;;
+    "ASNOW"*)
+      OBS_INPUT_DIR="${OBS_DIR}"
+      OBS_INPUT_FN_TEMPLATE="${OBS_NOHRSC_ASNOW_FN_TEMPLATE}"
+      FCST_INPUT_DIR="${vx_output_basedir}"
+      ;;
+    "REFC")
+      OBS_INPUT_DIR="${OBS_DIR}"
+      OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_REFC_FN_TEMPLATE}"
+      FCST_INPUT_DIR="${vx_fcst_input_basedir}"
+      ;;
+    "RETOP")
+      OBS_INPUT_DIR="${OBS_DIR}"
+      OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_RETOP_FN_TEMPLATE}"
+      FCST_INPUT_DIR="${vx_fcst_input_basedir}"
+      ;;
+  esac
 
 elif [ "${grid_or_point}" = "point" ]; then
 
   OBS_INPUT_DIR="${vx_output_basedir}/metprd/Pb2nc_obs"
-  OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_ADPSFCorADPUPA_FN_METPROC_TEMPLATE} )
+  OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_ADPSFCorADPUPA_FN_TEMPLATE_PB2NC_OUTPUT}"
   FCST_INPUT_DIR="${vx_fcst_input_basedir}"
 
 fi
+OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_INPUT_FN_TEMPLATE} )
 #
 # Construct variable that contains a METplus template of the paths to
 # the files that the PcpCombine tool has generated (in previous workflow
@@ -261,22 +180,12 @@ for (( i=0; i<${NUM_ENS_MEMBERS}; i++ )); do
 
   time_lag=$( bc -l <<< "${ENS_TIME_LAG_HRS[$i]}*${SECS_PER_HOUR}" )
 
-echo
-echo "IIIIIIIIIIIIIIIIIII"
-echo "FIELDNAME_IN_MET_FILEDIR_NAMES = |${FIELDNAME_IN_MET_FILEDIR_NAMES}|"
-  #if [ "${field_is_APCPgt01h}" = "TRUE" ] || [ "${FIELDNAME_IN_MET_FILEDIR_NAMES}" = "ASNOW" ]; then
-  if [ "${FIELDNAME_IN_FCST_INPUT}" = "APCP" ] || \
-     [ "${FIELDNAME_IN_MET_FILEDIR_NAMES}" = "ASNOW" ]; then
-    template="${cdate_ensmem_subdir_or_null:+${cdate_ensmem_subdir_or_null}/}metprd/PcpCombine_fcst/${FCST_FN_METPROC_TEMPLATE}"
-echo
-echo "JJJJJJJJJJJJJJJJJJJ"
-echo "template = |${template}|"
+  if [ "${VAR}" = "APCP" ] || [ "${VAR}" = "ASNOW" ]; then
+    template="${cdate_ensmem_subdir_or_null:+${cdate_ensmem_subdir_or_null}/}metprd/PcpCombine_fcst/${FCST_FN_TEMPLATE_PCPCOMBINE_OUTPUT}"
   else
     template="${FCST_SUBDIR_TEMPLATE}/${FCST_FN_TEMPLATE}"
   fi
 
-  # Doesn't seem like this variable is used any longer.
-  #slash_ensmem_subdir_or_null="/${ensmem_name}"
   if [ -z "${FCST_INPUT_FN_TEMPLATE}" ]; then
     FCST_INPUT_FN_TEMPLATE="$(eval echo ${template})"
   else
@@ -284,9 +193,6 @@ echo "template = |${template}|"
   fi
 
 done
-echo
-echo "KKKKKKKKKKKKKKKKKKKKKKK"
-echo "FCST_INPUT_FN_TEMPLATE = |${FCST_INPUT_FN_TEMPLATE}|"
 
 OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}"
 OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}"
@@ -362,15 +268,6 @@ fi
 #
 # First, set the base file names.
 #
-#if [ "${field_is_APCPgt01h}" = "TRUE" ]; then
-#  metplus_config_tmpl_fn="APCPgt01h"
-#else
-#  metplus_config_tmpl_fn="${FIELDNAME_IN_MET_FILEDIR_NAMES}"
-#fi
-# The suffix in the name of the template file needs to be changed to just "APCP" instead of "APCPgt01h".
-#metplus_config_tmpl_fn="APCPgt01h"
-metplus_config_tmpl_fn="$VAR"
-metplus_config_tmpl_fn="${MetplusToolName}_${metplus_config_tmpl_fn}"
 metplus_config_tmpl_fn="${MetplusToolName}"
 metplus_config_fn="${MetplusToolName}_${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 metplus_log_fn="${metplus_config_fn}"
@@ -383,16 +280,12 @@ metplus_log_fn="metplus.log.${metplus_log_fn}"
 #
 #-----------------------------------------------------------------------
 #
-#
+# Load the yaml-like file containing the configuration for ensemble 
+# verification.
 #
 #-----------------------------------------------------------------------
 #
 vx_config_ens=$(<"${METPLUS_CONF}/vx_config_ens.yaml")
-echo
-echo "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
-echo "vx_config_ens = "
-echo "${vx_config_ens}"
-echo "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
 #
 #-----------------------------------------------------------------------
 #
@@ -410,6 +303,13 @@ metplus_config_fp="${OUTPUT_DIR}/${metplus_config_fn}"
 # Define variables that appear in the jinja template.
 #
 settings="\
+#
+# MET/METplus information.
+#
+  'metplus_tool_name': '${metplus_tool_name}'
+  'MetplusToolName': '${MetplusToolName}'
+  'METPLUS_TOOL_NAME': '${METPLUS_TOOL_NAME}'
+  'metplus_verbosity_level': '${METPLUS_VERBOSITY_LEVEL}'
 #
 # Date and forecast hour information.
 #
@@ -433,15 +333,8 @@ settings="\
 # Ensemble and member-specific information.
 #
   'num_ens_members': '${NUM_ENS_MEMBERS}'
-  'ensmem_indx': '${ENSMEM_INDX:-}'
+  'ensmem_name': '${ensmem_name:-}'
   'time_lag': '${time_lag:-}'
-#
-# MET/METplus information.
-#
-  'metplus_tool_name': '${metplus_tool_name}'
-  'MetplusToolName': '${MetplusToolName}'
-  'METPLUS_TOOL_NAME': '${METPLUS_TOOL_NAME}'
-  'metplus_verbosity_level': '${METPLUS_VERBOSITY_LEVEL}'
 #
 # Field information.
 #
@@ -458,15 +351,10 @@ settings="\
   'fcst_thresh': '${FCST_THRESH:-}'
   'field_groups_dict': {${vx_config_ens:-}}
 "
-
-#  'field_thresholds': ${FIELD_THRESHOLDS:-}
-echo
-echo "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
-echo "settings = "
-echo "$settings"
-
-
-# Store the settings in a temporary file
+#
+# Store the settings in a temporary file to use as input in the call to
+# the METplus configuration generator script below.
+#
 tmpfile=$( $READLINK -f "$(mktemp ./met_plus_settings.XXXXXX.yaml)")
 cat > $tmpfile << EOF
 $settings
@@ -477,12 +365,11 @@ EOF
 #
 python3 $USHdir/python_utils/workflow-tools/scripts/templater.py \
   -c "${tmpfile}" \
-  -i ${metplus_config_tmpl_fp} \
-  -o ${metplus_config_fp} || \
+  -i "${metplus_config_tmpl_fp}" \
+  -o "${metplus_config_fp}" || \
 print_err_msg_exit "\
-Call to workflow-tools templater to generate a METplus
-configuration file from a jinja template failed.  Parameters passed
-to this script are:
+Call to workflow-tools templater.py to generate a METplus configuration
+file from a jinja template failed.  Parameters passed to this script are:
   Full path to template METplus configuration file:
     metplus_config_tmpl_fp = \"${metplus_config_tmpl_fp}\"
   Full path to output METplus configuration file:

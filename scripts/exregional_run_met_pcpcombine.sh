@@ -98,7 +98,6 @@ set_vx_params \
   field="$VAR" \
   accum_hh="${ACCUM_HH}" \
   outvarname_grid_or_point="grid_or_point" \
-  outvarname_field_is_APCPgt01h="field_is_APCPgt01h" \
   outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
   outvarname_fieldname_in_fcst_input="FIELDNAME_IN_FCST_INPUT" \
   outvarname_fieldname_in_MET_output="FIELDNAME_IN_MET_OUTPUT" \
@@ -172,11 +171,11 @@ FCST_INPUT_FN_TEMPLATE=""
 if [ "${obs_or_fcst}" = "obs" ]; then
 
   OBS_INPUT_DIR="${OBS_DIR}"
-  OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCP01h_FN_TEMPLATE} )
+  OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCP_FN_TEMPLATE} )
 
   OUTPUT_BASE="${vx_output_basedir}"
   OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_obs"
-  OUTPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCPgt01h_FN_TEMPLATE} )
+  OUTPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCP_FN_TEMPLATE_PCPCOMBINE_OUTPUT} )
   STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 
 elif [ "${obs_or_fcst}" = "fcst" ]; then
@@ -186,7 +185,7 @@ elif [ "${obs_or_fcst}" = "fcst" ]; then
 
   OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}/${slash_ensmem_subdir_or_null}"
   OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_fcst"
-  OUTPUT_FN_TEMPLATE=$( eval echo ${FCST_FN_METPROC_TEMPLATE} )
+  OUTPUT_FN_TEMPLATE=$( eval echo ${FCST_FN_TEMPLATE_PCPCOMBINE_OUTPUT} )
   STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 
 fi
@@ -308,6 +307,13 @@ metplus_config_fp="${OUTPUT_DIR}/${metplus_config_fn}"
 #
 settings="\
 #
+# MET/METplus information.
+#
+  'metplus_tool_name': '${metplus_tool_name}'
+  'MetplusToolName': '${MetplusToolName}'
+  'METPLUS_TOOL_NAME': '${METPLUS_TOOL_NAME}'
+  'metplus_verbosity_level': '${METPLUS_VERBOSITY_LEVEL}'
+#
 # Date and forecast hour information.
 #
   'cdate': '$CDATE'
@@ -333,13 +339,6 @@ settings="\
   'ensmem_name': '${ensmem_name:-}'
   'time_lag': '${time_lag:-}'
 #
-# MET/METplus information.
-#
-  'metplus_tool_name': '${metplus_tool_name}'
-  'MetplusToolName': '${MetplusToolName}'
-  'METPLUS_TOOL_NAME': '${METPLUS_TOOL_NAME}'
-  'metplus_verbosity_level': '${METPLUS_VERBOSITY_LEVEL}'
-#
 # Field information.
 #
   'fieldname_in_obs_input': '${FIELDNAME_IN_OBS_INPUT}'
@@ -350,32 +349,25 @@ settings="\
   'accum_hh': '${ACCUM_HH:-}'
   'accum_no_pad': '${ACCUM_NO_PAD:-}'
 "
-
-#  'field_thresholds': '${FIELD_THRESHOLDS:-}'
-echo
-echo "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
-echo "settings = "
-echo "$settings"
-
-
-# Store the settings in a temporary file
+#
+# Store the settings in a temporary file to use as input in the call to
+# the METplus configuration generator script below.
+#
 tmpfile=$( $READLINK -f "$(mktemp ./met_plus_settings.XXXXXX.yaml)")
 cat > $tmpfile << EOF
 $settings
 EOF
-
 #
 # Call the python script to generate the METplus configuration file from
 # the jinja template.
 #
 python3 $USHdir/python_utils/workflow-tools/scripts/templater.py \
-  -c ${tmpfile} \
-  -i ${metplus_config_tmpl_fp} \
-  -o ${metplus_config_fp} || \
+  -c "${tmpfile}" \
+  -i "${metplus_config_tmpl_fp}" \
+  -o "${metplus_config_fp}" || \
 print_err_msg_exit "\
-Call to workflow-tools templater.py to generate a METplus
-configuration file from a jinja template failed.  Parameters passed
-to this script are:
+Call to workflow-tools templater.py to generate a METplus configuration
+file from a jinja template failed.  Parameters passed to this script are:
   Full path to template METplus configuration file:
     metplus_config_tmpl_fp = \"${metplus_config_tmpl_fp}\"
   Full path to output METplus configuration file:
