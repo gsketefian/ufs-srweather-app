@@ -289,7 +289,8 @@ metplus_log_fn="metplus.log.${metplus_log_fn}"
 #
 #-----------------------------------------------------------------------
 #
-vx_config_det=$(<"${METPLUS_CONF}/vx_config_det.yaml")
+python3 ${METPLUS_CONF}/separate_fcst_obs_info.py
+vx_config_det=$(<"${METPLUS_CONF}/vx_config_det_dict.yaml")
 #
 #-----------------------------------------------------------------------
 #
@@ -350,10 +351,10 @@ settings="\
   'accum_hh': '${ACCUM_HH:-}'
   'accum_no_pad': '${ACCUM_NO_PAD:-}'
   'metplus_templates_dir': '${METPLUS_CONF:-}'
-  'field_group': '${VAR:-}'
-  'fcst_level': '${FCST_LEVEL:-}'
-  'fcst_thresh': '${FCST_THRESH:-}'
-  'field_groups_dict': {${vx_config_det:-}}
+  'input_field_group': '${VAR:-}'
+  'input_level_fcst': '${FCST_LEVEL:-}'
+  'input_thresh_fcst': '${FCST_THRESH:-}'
+  'vx_config_dict': ${vx_config_det:-}
 "
 #
 # Store the settings in a temporary file to use as input in the call to
