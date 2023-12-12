@@ -289,7 +289,7 @@ metplus_log_fn="metplus.log.${metplus_log_fn}"
 #
 #-----------------------------------------------------------------------
 #
-python3 ${METPLUS_CONF}/separate_fcst_obs_info.py
+python3 ${METPLUS_CONF}/separate_fcst_obs_info.py --det_or_ens det
 vx_config_det=$(<"${METPLUS_CONF}/vx_config_det_dict.yaml")
 #
 #-----------------------------------------------------------------------

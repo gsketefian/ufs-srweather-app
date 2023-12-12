@@ -51,7 +51,7 @@ def get_pprint_str(x, indent_str):
     return x_str
 
 #def separate_fcst_obs_info(field_group):
-def separate_fcst_obs_info():
+def separate_fcst_obs_info(det_or_ens):
     """
     This macro extracts from the input dictionary fields_levels_threshes that
     contains information on field names, levels, and thresholds for both the
@@ -78,7 +78,7 @@ def separate_fcst_obs_info():
 
     metplus_conf_dir = Path(os.path.join(home_dir, 'parm', 'metplus')).resolve()
     print(f'==>> metplus_conf_dir = {metplus_conf_dir}')
-    config_fn = 'vx_config_det.yaml'
+    config_fn = ''.join(['vx_config_', det_or_ens, '.yaml'])
     config_fp = Path(os.path.join(metplus_conf_dir, config_fn)).resolve()
     config_dict = load_config_file(config_fp)
 
@@ -216,7 +216,7 @@ def separate_fcst_obs_info():
     # Convert the dictionary of jinja variable settings above to yaml format
     # and write it to a temporary yaml file for reading by the set_template
     # function.
-    filename = 'vx_config_det_dict.yaml'
+    filename = ''.join(['vx_config_', det_or_ens, '_dict.yaml'])
     filepath = Path(os.path.join(metplus_conf_dir, filename)).resolve()
     print(f'==>> filepath = {filepath}')
     with open(f'{filepath}', 'w') as fn:
@@ -235,8 +235,21 @@ def separate_fcst_obs_info():
 #
 if __name__ == "__main__":
 
-    print('abcdefgh')
-    separate_fcst_obs_info()
+    parser = argparse.ArgumentParser(
+        description='Read in and process verification configuration file'
+    )
+
+    parser.add_argument('--det_or_ens',
+                        type=str,
+                        required=True, default='det',
+                        help=dedent(f'''String that determines whether to read in the deterministic
+                                        or ensemble verification configuration file.'''))
+
+    args = parser.parse_args()
+
+    #print('abcdefgh')
+    #det_or_ens = 'ens'
+    separate_fcst_obs_info(det_or_ens=args.det_or_ens)
 #(field_group = 'ADPUPA')
 
 
