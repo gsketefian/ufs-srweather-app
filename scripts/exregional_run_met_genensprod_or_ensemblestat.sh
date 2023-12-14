@@ -286,7 +286,7 @@ metplus_log_fn="metplus.log.${metplus_log_fn}"
 #-----------------------------------------------------------------------
 #
 python3 ${METPLUS_CONF}/separate_fcst_obs_info.py --det_or_ens ens
-vx_config_ens=$(<"${METPLUS_CONF}/vx_config_ens_dict.yaml")
+vx_config_dict=$(<"${METPLUS_CONF}/tmp.vx_config_ens_dict.split_fcst_obs.txt")
 #
 #-----------------------------------------------------------------------
 #
@@ -350,7 +350,7 @@ settings="\
   'input_field_group': '${VAR:-}'
   'input_level_fcst': '${FCST_LEVEL:-}'
   'input_thresh_fcst': '${FCST_THRESH:-}'
-  'vx_config_dict': ${vx_config_ens:-}
+  'vx_config_dict': ${vx_config_dict:-}
 "
 #
 # Store the settings in a temporary file to use as input in the call to

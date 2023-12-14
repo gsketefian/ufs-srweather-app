@@ -212,17 +212,17 @@ def separate_fcst_obs_info(det_or_ens):
     # write to a yaml file.
     vx_config_dict = {'fcst': fgs_fields_levels_threshes_fcst,
                       'obs': fgs_fields_levels_threshes_obs}
-    abc = get_pprint_str(vx_config_dict, '  ')
+    dict_to_str = get_pprint_str(vx_config_dict, '  ')
     # Convert the dictionary of jinja variable settings above to yaml format
     # and write it to a temporary yaml file for reading by the set_template
     # function.
-    filename = ''.join(['vx_config_', det_or_ens, '_dict.yaml'])
+    filename = ''.join(['tmp.vx_config_', det_or_ens, '_dict.split_fcst_obs.txt'])
     filepath = Path(os.path.join(metplus_conf_dir, filename)).resolve()
     print(f'==>> filepath = {filepath}')
     with open(f'{filepath}', 'w') as fn:
         #yaml_vars = yaml.dump(vx_config_dict, fn)
         #pprint.pformat(vx_config_dict, fn, sort_dicts=False)
-        fn.write(abc)
+        fn.write(dict_to_str)
 
 #    x_str = pprint.pformat(x, compact=True, sort_dicts=False)
 
@@ -247,9 +247,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    #print('abcdefgh')
-    #det_or_ens = 'ens'
     separate_fcst_obs_info(det_or_ens=args.det_or_ens)
-#(field_group = 'ADPUPA')
 
 
