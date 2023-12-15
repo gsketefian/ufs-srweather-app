@@ -224,8 +224,6 @@ def separate_fcst_obs_info(det_or_ens):
         #pprint.pformat(vx_config_dict, fn, sort_dicts=False)
         fn.write(dict_to_str)
 
-#    x_str = pprint.pformat(x, compact=True, sort_dicts=False)
-
 #
 # -----------------------------------------------------------------------
 #
