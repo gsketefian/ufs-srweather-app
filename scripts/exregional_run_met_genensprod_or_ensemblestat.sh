@@ -201,6 +201,16 @@ STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 #-----------------------------------------------------------------------
 #
 # Set the array of forecast hours for which to run the MET/METplus tool.
+# This is done by starting with the full list of forecast hours for which
+# there is forecast output and then removing from that list any forecast
+# hours for which there is no corresponding observation data.
+#
+# Note that strictly speaking, this does not need to be done if the MET/
+# METplus tool being called is GenEnsProd (because this tool only operates
+# on forecasts), but we run the check anyway in this case in order to
+# keep the code here simpler and because the output of GenEnsProd for
+# forecast hours with missing observations will not be used anyway in
+# downstream verification tasks.
 #
 #-----------------------------------------------------------------------
 #

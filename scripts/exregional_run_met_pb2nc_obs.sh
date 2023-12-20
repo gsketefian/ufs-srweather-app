@@ -120,6 +120,9 @@ STAGING_DIR="${OUTPUT_BASE}/stage/${MetplusToolName}_obs"
 #-----------------------------------------------------------------------
 #
 # Set the array of forecast hours for which to run the MET/METplus tool.
+# This is done by starting with the full list of forecast hours for which
+# there is forecast output and then removing from that list any forecast
+# hours for which there is no corresponding observation data.
 #
 #-----------------------------------------------------------------------
 #
