@@ -120,7 +120,7 @@ set_vx_params \
 #-----------------------------------------------------------------------
 #
 time_lag="0"
-if [ "${obs_or_fcst}" = "fcst" ]; then
+if [ "${FCST_OR_OBS}" = "FCST" ]; then
   i="0"
   if [ "${DO_ENSEMBLE}" = "TRUE" ]; then
     i=$( bc -l <<< "${ENSMEM_INDX}-1" )
@@ -168,17 +168,7 @@ OBS_INPUT_FN_TEMPLATE=""
 FCST_INPUT_DIR=""
 FCST_INPUT_FN_TEMPLATE=""
 
-if [ "${obs_or_fcst}" = "obs" ]; then
-
-  OBS_INPUT_DIR="${OBS_DIR}"
-  OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCP_FN_TEMPLATE} )
-
-  OUTPUT_BASE="${vx_output_basedir}"
-  OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_obs"
-  OUTPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCP_FN_TEMPLATE_PCPCOMBINE_OUTPUT} )
-  STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
-
-elif [ "${obs_or_fcst}" = "fcst" ]; then
+if [ "${FCST_OR_OBS}" = "FCST" ]; then
 
   FCST_INPUT_DIR="${vx_fcst_input_basedir}"
   FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE} )
@@ -186,6 +176,16 @@ elif [ "${obs_or_fcst}" = "fcst" ]; then
   OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}/${slash_ensmem_subdir_or_null}"
   OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_fcst"
   OUTPUT_FN_TEMPLATE=$( eval echo ${FCST_FN_TEMPLATE_PCPCOMBINE_OUTPUT} )
+  STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+
+elif [ "${FCST_OR_OBS}" = "OBS" ]; then
+
+  OBS_INPUT_DIR="${OBS_DIR}"
+  OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCP_FN_TEMPLATE} )
+
+  OUTPUT_BASE="${vx_output_basedir}"
+  OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_obs"
+  OUTPUT_FN_TEMPLATE=$( eval echo ${OBS_CCPA_APCP_FN_TEMPLATE_PCPCOMBINE_OUTPUT} )
   STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 
 fi
@@ -196,14 +196,14 @@ fi
 #
 #-----------------------------------------------------------------------
 #
-if [ "${obs_or_fcst}" = "obs" ]; then
-  base_dir="${OBS_INPUT_DIR}"
-  fn_template="${OBS_INPUT_FN_TEMPLATE}"
-  num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}"
-elif [ "${obs_or_fcst}" = "fcst" ]; then
+if [ "${FCST_OR_OBS}" = "FCST" ]; then
   base_dir="${FCST_INPUT_DIR}"
   fn_template="${FCST_INPUT_FN_TEMPLATE}"
   num_missing_files_max="${NUM_MISSING_FCST_FILES_MAX}"
+elif [ "${FCST_OR_OBS}" = "OBS" ]; then
+  base_dir="${OBS_INPUT_DIR}"
+  fn_template="${OBS_INPUT_FN_TEMPLATE}"
+  num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}"
 fi
 
 set_vx_fhr_list \
@@ -270,8 +270,8 @@ fi
 #
 # First, set the base file names.
 #
-metplus_config_tmpl_fn="${MetplusToolName}_${obs_or_fcst}"
-metplus_config_fn="${metplus_config_tmpl_fn}_${FIELDNAME_IN_MET_FILEDIR_NAMES}${ENSMEM_INDX:+_${ensmem_name}}"
+metplus_config_tmpl_fn="${MetplusToolName}"
+metplus_config_fn="${metplus_config_tmpl_fn}_$(echo_lowercase ${FCST_OR_OBS})_${FIELDNAME_IN_MET_FILEDIR_NAMES}${ENSMEM_INDX:+_${ensmem_name}}"
 metplus_log_fn="${metplus_config_fn}_$CDATE"
 #
 # If operating on observation files, append the cycle date to the name
@@ -280,13 +280,13 @@ metplus_log_fn="${metplus_config_fn}_$CDATE"
 # necessary to associate the configuration file with the cycle for which
 # it is used).
 #
-if [ "${obs_or_fcst}" = "obs" ]; then
+if [ "${FCST_OR_OBS}" = "OBS" ]; then
   metplus_config_fn="${metplus_log_fn}"
 fi
 #
 # Add prefixes and suffixes (extensions) to the base file names.
 #
-metplus_config_tmpl_fn="${metplus_config_tmpl_fn}_${field}.conf"
+metplus_config_tmpl_fn="${metplus_config_tmpl_fn}.conf"
 metplus_config_fn="${metplus_config_fn}.conf"
 metplus_log_fn="metplus.log.${metplus_log_fn}"
 #
@@ -323,10 +323,8 @@ settings="\
 #
   'metplus_config_fn': '${metplus_config_fn:-}'
   'metplus_log_fn': '${metplus_log_fn:-}'
-  'obs_input_dir': '${OBS_INPUT_DIR:-}'
-  'obs_input_fn_template': '${OBS_INPUT_FN_TEMPLATE:-}'
-  'fcst_input_dir': '${FCST_INPUT_DIR:-}'
-  'fcst_input_fn_template': '${FCST_INPUT_FN_TEMPLATE:-}'
+  'input_dir': '${FCST_INPUT_DIR:-${OBS_INPUT_DIR}}'
+  'input_fn_template': '${FCST_INPUT_FN_TEMPLATE:-${OBS_INPUT_FN_TEMPLATE}}'
   'output_base': '${OUTPUT_BASE}'
   'output_dir': '${OUTPUT_DIR}'
   'output_fn_template': '${OUTPUT_FN_TEMPLATE:-}'
@@ -346,8 +344,14 @@ settings="\
   'fieldname_in_met_output': '${FIELDNAME_IN_MET_OUTPUT}'
   'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
   'obtype': '${OBTYPE}'
+  'FCST_OR_OBS': '${FCST_OR_OBS}'
   'accum_hh': '${ACCUM_HH:-}'
   'accum_no_pad': '${ACCUM_NO_PAD:-}'
+  'metplus_templates_dir': '${METPLUS_CONF:-}'
+  'input_field_group': '${VAR:-}'
+  'input_level_fcst': '${FCST_LEVEL:-}'
+  'input_thresh_fcst': '${FCST_THRESH:-}'
+  'vx_config_dict': ${vx_config_dict:-}
 "
 #
 # Store the settings in a temporary file to use as input in the call to
