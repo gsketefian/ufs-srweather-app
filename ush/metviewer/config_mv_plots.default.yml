@@ -6,7 +6,7 @@ model_names: ['href', 'gdas', 'gefs']
 
 fcst_init_info:
     fcst_init_time_first: '2022050100'
-    num_fcsts: 6
+    num_fcst_inits: 6
     fcst_init_intvl_hrs: 24
 
 fcst_len_hrs: 36

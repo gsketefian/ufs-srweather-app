@@ -455,9 +455,9 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
 
     # Set the initialization times for the forecasts.
     fcst_init_time_first = datetime.strptime(cla.fcst_init_info[0], '%Y%m%d%H')
-    num_fcsts = int(cla.fcst_init_info[1])
+    num_fcst_inits = int(cla.fcst_init_info[1])
     fcst_init_intvl_hrs = timedelta(hours=int(cla.fcst_init_info[2]))
-    fcst_init_times = list(range(0,num_fcsts))
+    fcst_init_times = list(range(0,num_fcst_inits))
     fcst_init_times = [fcst_init_time_first + i*fcst_init_intvl_hrs for i in fcst_init_times]
     fcst_init_times = [i.strftime("%Y-%m-%d %H:%M:%S") for i in fcst_init_times]
 
@@ -725,7 +725,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
                    "vx_stat_uc": cla.vx_stat.upper(),
                    "vx_stat_lc": cla.vx_stat.lower(),
                    "vx_stat_mv": vx_stat_mv,
-                   "num_fcsts": num_fcsts,
+                   "num_fcst_inits": num_fcst_inits,
                    "fcst_init_times": fcst_init_times,
                    "fcst_len_hrs": cla.fcst_len_hrs,
                    "job_title": job_title,
