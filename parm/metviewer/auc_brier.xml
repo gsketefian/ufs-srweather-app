@@ -74,7 +74,7 @@
             <y1_label>Brier Score</y1_label>
 {%- endif %}
             <y2_label/>
-            <caption/>
+            <caption>{{caption}}</caption>
             <job_title>{{job_title}}</job_title>
             <keep_revisions>false</keep_revisions>
             <listdiffseries1>list()</listdiffseries1>
@@ -149,11 +149,15 @@ Variance inflation factor should be turned off according to DTC statisticians.
         <legend_inset>c(-.05, -.15)</legend_inset>
         <legend_ncol>3</legend_ncol>
         <legend_size>0.8</legend_size>
-        <caption_weight>1</caption_weight>
-        <caption_col>#333333</caption_col>
-        <caption_size>0.8</caption_size>
-        <caption_offset>3</caption_offset>
-        <caption_align>0</caption_align>
+        <!-- Have the caption weight and color match that of the title.
+             Note that it doesn't seem possible to change the title color
+             (i.e. there is no <title_col> above), so here we set the
+             color of the caption to match that of the title. -->
+        <caption_weight>2</caption_weight>
+        <caption_col>#2a3f5f</caption_col>
+        <caption_size>1.0</caption_size>
+        <caption_offset>4.2</caption_offset>
+        <caption_align>0.05</caption_align>
         <ci_alpha>0.05</ci_alpha>
         <eqbound_low>-0.001</eqbound_low>
         <eqbound_high>0.001</eqbound_high>

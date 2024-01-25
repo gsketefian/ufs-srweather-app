@@ -456,14 +456,17 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     # Set the initialization times for the forecasts.
     fcst_init_time_first = datetime.strptime(cla.fcst_init_info[0], '%Y%m%d%H')
     num_fcst_inits = int(cla.fcst_init_info[1])
-    fcst_init_intvl_hrs = timedelta(hours=int(cla.fcst_init_info[2]))
+    fcst_init_intvl_hrs = int(cla.fcst_init_info[2])
+    fcst_init_intvl = timedelta(hours=fcst_init_intvl_hrs)
     fcst_init_times = list(range(0,num_fcst_inits))
-    fcst_init_times = [fcst_init_time_first + i*fcst_init_intvl_hrs for i in fcst_init_times]
-    fcst_init_times = [i.strftime("%Y-%m-%d %H:%M:%S") for i in fcst_init_times]
+    fcst_init_times = [fcst_init_time_first + i*fcst_init_intvl for i in fcst_init_times]
+    fcst_init_times_YmDHMS = [i.strftime("%Y-%m-%d %H:%M:%S") for i in fcst_init_times]
+    fcst_init_times_YmDH = [i.strftime("%Y-%m-%d %H") for i in fcst_init_times]
+    fcst_init_info_str = f'fcst_init_times = [{fcst_init_times_YmDH[0]}Z, {fcst_init_intvl_hrs} hr, {fcst_init_times_YmDH[-1]}Z] (num_fcst_inits = {num_fcst_inits})'
 
-    fcst_init_times_str = '\n          '.join(fcst_init_times)
+    fcst_init_times_str = '\n          '.join(fcst_init_times_YmDHMS)
     logging.info(dedent(f"""
-        Forecast initialization times (fcst_init_times):
+        Forecast initialization times (fcst_init_times_str):
           {fcst_init_times_str}
         """))
 
@@ -726,10 +729,11 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
                    "vx_stat_lc": cla.vx_stat.lower(),
                    "vx_stat_mv": vx_stat_mv,
                    "num_fcst_inits": num_fcst_inits,
-                   "fcst_init_times": fcst_init_times,
+                   "fcst_init_times": fcst_init_times_YmDHMS,
                    "fcst_len_hrs": cla.fcst_len_hrs,
                    "job_title": job_title,
                    "plot_title": plot_title,
+                   "caption": fcst_init_info_str,
                    "incl_ens_means": incl_ens_means,
                    "num_series": num_series,
                    "order_series": order_series,
