@@ -114,7 +114,6 @@
             <listdiffseries1>list()</listdiffseries1>
             <listdiffseries2>list()</listdiffseries2>
         </tmpl>
-{%- set vif = "false" -%}
 {%- set xlab_offset = "" -%}
 {%- set ylab_offset = "" -%}
 {%- set legend_inset_y = "" -%}
@@ -141,7 +140,10 @@
         <dump_points2>false</dump_points2>
         <log_y1>false</log_y1>
         <log_y2>false</log_y2>
-        <varianceinflationfactor>{{vif}}</varianceinflationfactor>
+{#-
+Variance inflation factor should be turned off according to DTC statisticians.
+#}
+        <varianceinflationfactor>false</varianceinflationfactor>
         <plot_type>png16m</plot_type>
         <plot_height>8.5</plot_height>
         <plot_width>11</plot_width>

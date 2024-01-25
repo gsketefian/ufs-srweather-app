@@ -149,6 +149,9 @@ for now we apply the rule only to FBIAS.
         <dump_points2>false</dump_points2>
         <log_y1>false</log_y1>
         <log_y2>false</log_y2>
+{#-
+Variance inflation factor should be turned off according to DTC statisticians.
+#}
         <varianceinflationfactor>false</varianceinflationfactor>
         <plot_type>png16m</plot_type>
         <plot_height>8.5</plot_height>

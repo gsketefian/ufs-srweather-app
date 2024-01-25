@@ -163,8 +163,7 @@ that.
         <log_y1>false</log_y1>
         <log_y2>false</log_y2>
 {#-
-Turn off varianceinflationfactor for now.  This may be turned on later
-after discussion with DTC statisticians.
+Variance inflation factor should be turned off according to DTC statisticians.
 #}
         <varianceinflationfactor>false</varianceinflationfactor>
         <plot_type>png16m</plot_type>

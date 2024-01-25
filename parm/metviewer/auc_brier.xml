@@ -85,11 +85,10 @@
         <dump_points2>false</dump_points2>
         <log_y1>false</log_y1>
         <log_y2>false</log_y2>
-{%- set vif = "false" -%}
-{%- if (fcst_var_uc == "APCP") %}
-  {%- set vif = "true" -%}
-{%- endif %}
-        <varianceinflationfactor>{{vif}}</varianceinflationfactor>
+{#-
+Variance inflation factor should be turned off according to DTC statisticians.
+#}
+        <varianceinflationfactor>false</varianceinflationfactor>
         <plot_type>png16m</plot_type>
         <plot_height>8.5</plot_height>
         <plot_width>11</plot_width>
