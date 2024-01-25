@@ -456,9 +456,9 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     # Set the initialization times for the forecasts.
     fcst_init_time_first = datetime.strptime(cla.fcst_init_info[0], '%Y%m%d%H')
     num_fcsts = int(cla.fcst_init_info[1])
-    fcst_init_intvl = timedelta(hours=int(cla.fcst_init_info[2]))
+    fcst_init_intvl_hrs = timedelta(hours=int(cla.fcst_init_info[2]))
     fcst_init_times = list(range(0,num_fcsts))
-    fcst_init_times = [fcst_init_time_first + i*fcst_init_intvl for i in fcst_init_times]
+    fcst_init_times = [fcst_init_time_first + i*fcst_init_intvl_hrs for i in fcst_init_times]
     fcst_init_times = [i.strftime("%Y-%m-%d %H:%M:%S") for i in fcst_init_times]
 
     fcst_init_times_str = '\n          '.join(fcst_init_times)
@@ -697,7 +697,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         obs_type = 'ADPUPA'
 
     logging.debug(dedent(f"""
-        Subset of strings passed to jinja template:
+        Subset of strings passed to jinja2 template:
           fcst_var_uc = {fcst_var_uc}
           fcst_var_name_in_db = {fcst_var_name_in_db}
           vx_stat_mv = {vx_stat_mv}
@@ -705,41 +705,41 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         """))
 
     # Create dictionary containing values for the variables appearing in the
-    # jinja template.
-    jinja_vars = {"mv_host": cla.mv_host,
-                  "mv_machine_config_dict": mv_machine_config_dict,
-                  "mv_database_name": cla.mv_database_name,
-                  "mv_output_dir": cla.mv_output_dir,
-                  "num_models_to_plot": num_models_to_plot,
-                  "num_ens_mems_by_model": num_ens_mems_by_model,
-                  "model_names_in_db": model_names_in_db,
-                  "model_names_short": cla.model_names_short,
-                  "model_color_codes": model_color_codes,
-                  "model_color_codes_light": model_color_codes_light,
-                  "fcst_var_uc": fcst_var_uc,
-                  "fcst_var_name_in_db": fcst_var_name_in_db,
-                  "level_in_db": level_in_db,
-                  "level_or_accum_no0pad": loa_value_no0pad,
-                  "thresh_in_db": thresh_in_db,
-                  "obs_type": obs_type,
-                  "vx_stat_uc": cla.vx_stat.upper(),
-                  "vx_stat_lc": cla.vx_stat.lower(),
-                  "vx_stat_mv": vx_stat_mv,
-                  "num_fcsts": num_fcsts,
-                  "fcst_init_times": fcst_init_times,
-                  "fcst_len_hrs": cla.fcst_len_hrs,
-                  "job_title": job_title,
-                  "plot_title": plot_title,
-                  "incl_ens_means": incl_ens_means,
-                  "num_series": num_series,
-                  "order_series": order_series,
-                  "line_types": line_types,
-                  "line_widths": line_widths}
+    # jinja2 template.
+    jinja2_vars = {"mv_host": cla.mv_host,
+                   "mv_machine_config_dict": mv_machine_config_dict,
+                   "mv_database_name": cla.mv_database_name,
+                   "mv_output_dir": cla.mv_output_dir,
+                   "num_models_to_plot": num_models_to_plot,
+                   "num_ens_mems_by_model": num_ens_mems_by_model,
+                   "model_names_in_db": model_names_in_db,
+                   "model_names_short": cla.model_names_short,
+                   "model_color_codes": model_color_codes,
+                   "model_color_codes_light": model_color_codes_light,
+                   "fcst_var_uc": fcst_var_uc,
+                   "fcst_var_name_in_db": fcst_var_name_in_db,
+                   "level_in_db": level_in_db,
+                   "level_or_accum_no0pad": loa_value_no0pad,
+                   "thresh_in_db": thresh_in_db,
+                   "obs_type": obs_type,
+                   "vx_stat_uc": cla.vx_stat.upper(),
+                   "vx_stat_lc": cla.vx_stat.lower(),
+                   "vx_stat_mv": vx_stat_mv,
+                   "num_fcsts": num_fcsts,
+                   "fcst_init_times": fcst_init_times,
+                   "fcst_len_hrs": cla.fcst_len_hrs,
+                   "job_title": job_title,
+                   "plot_title": plot_title,
+                   "incl_ens_means": incl_ens_means,
+                   "num_series": num_series,
+                   "order_series": order_series,
+                   "line_types": line_types,
+                   "line_widths": line_widths}
 
     # Empty strings are included in this concatenation to force insertion
     # of delimiter.
     logging.debug('\n'.join(['', 'Jinja variables passed to template file:',
-                             'jinja_vars = ', get_pprint_str(jinja_vars, '  '), '']))
+                             'jinja2_vars = ', get_pprint_str(jinja2_vars, '  '), '']))
 
     templates_dir = os.path.join(home_dir, 'parm', 'metviewer')
     template_fn = "".join([cla.vx_stat, '.xml'])
@@ -775,12 +775,12 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
           output_xml_fp = {output_xml_fp}
         """))
 
-    # Convert the dictionary of jinja variable settings above to yaml format
+    # Convert the dictionary of jinja2 variable settings above to yaml format
     # and write it to a temporary yaml file for reading by the set_template
     # function.
     tmp_fn = 'tmp.yaml'
     with open(f'{tmp_fn}', 'w') as fn:
-        yaml_vars = yaml.dump(jinja_vars, fn)
+        yaml_vars = yaml.dump(jinja2_vars, fn)
 
     args_list = ['--quiet',
                  '--config_file', tmp_fn,
