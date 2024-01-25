@@ -38,6 +38,15 @@
         <series2/>
 {%- set ipf = -1 %}
         <plot_fix>
+            <field equalize="true" name="fcst_init_beg">
+{%- set ipf = ipf+1 %}
+                <set name="fcst_init_beg_{{ipf}}">
+{%- set indent = "\n                    " -%}
+{%- for t_init in fcst_init_times -%}
+  {{- indent ~ "<val>" ~ t_init ~ "</val>" -}}
+{%- endfor %}
+                </set>
+            </field>
             <field equalize="true" name="fcst_lev">
 {%- set ipf = ipf+1 %}
                 <set name="fcst_lev_{{ipf}}">
