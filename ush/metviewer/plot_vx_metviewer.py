@@ -742,8 +742,10 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         obs_type = 'MRMS'
     # The level for CAPE is 'L0', which means the surface, but its obtype is ADPUPA
     # (upper air).  It's a bit unintuitive...
-    elif cla.fcst_var == 'cape' :
+    elif cla.fcst_var == 'cape':
         obs_type = 'ADPUPA'
+    elif cla.fcst_var == 'vis':
+        obs_type = 'ADPSFC'
     elif cla.level_or_accum in ['2m','02m','10m']:
         obs_type = 'ADPSFC'
     elif cla.level_or_accum in ['500mb','700mb','850mb']:

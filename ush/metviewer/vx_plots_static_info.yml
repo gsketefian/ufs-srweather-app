@@ -46,6 +46,8 @@ threshs_to_threshs_in_db: {'': '',
                            'ge293K': '&gt;=293',
                            'ge298K': '&gt;=298',
                            'ge303K': '&gt;=303',
+                           'lt1609m': '&lt;=1609',
+                           'ge8045m': '&ge;=8045',
                            'ge5mps': '&gt;=5',
                            'ge10mps': '&gt;=10',
                            'ge15mps': '&gt;=15',
@@ -85,6 +87,10 @@ fcst_vars:
         long_name: 'Temperature'
         valid_levels: ['2m', '500mb', '700mb', '850mb']
         valid_thresholds: ['ge258K', 'ge263K', 'ge288K', 'ge293K', 'ge298K', 'ge303K']
+    vis:
+        long_name: 'Visibility'
+        valid_levels: ['L0']
+        valid_thresholds: ['lt1609m', 'ge8045m']
     wind:
         long_name: 'Wind'
         valid_levels: ['10m', '500mb', '700mb', '850mb']
