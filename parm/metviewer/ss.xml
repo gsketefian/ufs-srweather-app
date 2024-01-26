@@ -115,13 +115,13 @@ that.
             <plot_file>plot_{{job_title}}.png</plot_file>
             <r_file>plot_{{job_title}}.R</r_file>
             <title>{{plot_title}}</title>
-            <x_label>Forecast Lead Time (h)</x_label>
+            <x_label>Forecast Hour</x_label>
             <y1_label>Spread/Skill</y1_label>
             <y2_label/>
             <caption>{{caption}}</caption>
             <job_title>{{job_title}}</job_title>
             <keep_revisions>false</keep_revisions>
-{%- set quantities_to_plot = ["RMSE", "Spread", "Ratio"] -%}
+{%- set quantities_to_plot = ["RMSE", "spread", "ratio"] -%}
 {%- set num_quantities_per_model = quantities_to_plot|length -%}
 {#- Set the line types to use for each of the quantities specified
     above.  1 is for "solid", 3 is for "dotted", and 4 is for
@@ -148,6 +148,10 @@ that.
 {#- #}
             <listdiffseries2>list()</listdiffseries2>
         </tmpl>
+{%- set xlab_offset = "6" -%}
+{%- set ylab_offset = "-12" -%}
+{%- set legend_inset_x = "-0.02" -%}
+{%- set legend_inset_y = "-0.2" -%}
         <execution_type>Python</execution_type>
         <event_equal>true</event_equal>
         <vert_plot>false</vert_plot>
@@ -181,19 +185,19 @@ Variance inflation factor should be turned off according to DTC statisticians.
         <xtlab_orient>1</xtlab_orient>
         <xtlab_perp>-0.75</xtlab_perp>
         <xtlab_horiz>0.5</xtlab_horiz>
-        <xtlab_freq>0</xtlab_freq>
+        <xtlab_freq>{{xtick_label_freq}}</xtlab_freq>
         <xtlab_size>2</xtlab_size>
         <xlab_weight>1</xlab_weight>
-        <xlab_size>2</xlab_size>
-        <xlab_offset>6</xlab_offset>
+        <xlab_size>6</xlab_size>
+        <xlab_offset>{{xlab_offset}}</xlab_offset>
         <xlab_align>0.5</xlab_align>
         <ytlab_orient>1</ytlab_orient>
         <ytlab_perp>0.5</ytlab_perp>
         <ytlab_horiz>0.5</ytlab_horiz>
         <ytlab_size>2</ytlab_size>
         <ylab_weight>1</ylab_weight>
-        <ylab_size>2</ylab_size>
-        <ylab_offset>-12</ylab_offset>
+        <ylab_size>6</ylab_size>
+        <ylab_offset>{{ylab_offset}}</ylab_offset>
         <ylab_align>0.5</ylab_align>
         <grid_lty>3</grid_lty>
         <grid_col>#cccccc</grid_col>
@@ -214,9 +218,13 @@ Variance inflation factor should be turned off according to DTC statisticians.
         <y2lab_offset>1</y2lab_offset>
         <y2lab_align>0.5</y2lab_align>
         <legend_box>o</legend_box>
-        <legend_inset>c(-0.02, -.2)</legend_inset>
+        <legend_inset>c({{legend_inset_x}}, {{legend_inset_y}})</legend_inset>
+{#-
+This should be generalized to the number of series being plotted, but
+it doesn't seem to make a difference in the final plot.
+#}
         <legend_ncol>3</legend_ncol>
-        <legend_size>1.1</legend_size>
+        <legend_size>1.5</legend_size>
         <!-- Have the caption weight and color match that of the title.
              Note that it doesn't seem possible to change the title color
              (i.e. there is no <title_col> above), so here we set the
@@ -298,7 +306,7 @@ Variance inflation factor should be turned off according to DTC statisticians.
   {%- set quant = quantities_to_plot[iquant-1] -%}
   {%- for imdl in range(1, num_models_to_plot+1) -%}
     {%- set color = '' -%}
-    {%- if quant == 'Ratio' -%}
+    {%- if quant == 'ratio' -%}
       {%- set color = model_color_codes_light[imdl-1] -%}
     {%- else -%}
       {%- set color = model_color_codes[imdl-1] -%}
@@ -404,7 +412,7 @@ Variance inflation factor should be turned off according to DTC statisticians.
   {%- if iquant != num_quantities_per_model -%} , {%- endif -%}
 {%- endfor -%})</con_series>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "#" (number sign).
+        <!-- These appear in the MetViewer GUI under the column "#" (pound sign).
              They control the order of the series, although details aren't clear. -->
         <order_series>c(
 {#-

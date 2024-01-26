@@ -642,6 +642,66 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
 
     line_widths = [1 for imod in range(0,num_models_to_plot) for imem in range(0,num_ens_mems_by_model[imod])]
 
+    # Set the frequency of x-axis tick labels (xtick_label_freq).
+
+    # Reliability and rank histogram plots do not have forecast hour on
+    # the x-axis (reliability has forecast probability, which ranges from
+    # 0 to 1, while rank histogram has bin number, which can vary).  For
+    # these, we set xtick_label_freq to 0 to let METviewer decide how to
+    # handle things.
+    if cla.vx_stat in ['rely', 'rhist']:
+        xtick_label_freq = 0
+    # The remaining plot (vx stat) types have forecast hour on the x-axis.  
+    # For these, there are several aspects of the plotting to consider for
+    # setting xtick_label_freq.
+    elif cla.vx_stat in ['auc', 'bias', 'brier', 'fbias', 'ss']:
+
+        # Get the list of forecast hours at which the statistic is available
+        # (stat_fcst_hrs).  This requires first determining the time interval
+        # (in hours) with which the statistic is calculated (stat_avail_intvl_hrs).
+        # This in turn depends on the frequency with which both the observations
+        # and the forecast fields are available.
+        #
+        # The default is to assume that the observations and forecasts are
+        # available every hour.  Thus, the statistic is available every hour.
+        stat_avail_intvl_hrs = 1
+        # If the level is actually an accumulation, reset the statistic availability
+        # interval to the accumulation interval.
+        if (cla.level_or_accum in ['01h', '03h', '06h', '24h']):
+            stat_avail_intvl_hrs = int(loa_value)
+        # If the level is an upper air location, we assume it is available every
+        # 6 hours (since ADPUPA obs are available only every 6 hours).
+        elif (cla.level_or_accum in ['500mb', '700mb', '800mb']):
+            stat_avail_intvl_hrs = 6
+
+        # Use the statistic availability interval to set the forecast hours at
+        # which the statistic is available.  Then find the number of such hours.
+        stat_fcst_hrs = list(range(0, cla.fcst_len_hrs+1, stat_avail_intvl_hrs))
+        num_stat_fcst_hrs = len(stat_fcst_hrs)
+
+        # In order to not have crowded x-axis labels, limit the number of such
+        # labels to some maximum value (num_xtick_labels_max).  If num_stat_fcst_hrs
+        # is less than this maximum, then xtick_label_freq will be set to 0 or
+        # 1, which will cause METviewer to place a label at each tick mark.  
+        # If num_stat_fcst_hr is (sufficiently) larger than num_xtick_labels_max,
+        # then xtick_label_freq will be set to a value greater than 1, which 
+        # will cause some number of tick marks to not have labels to avoid 
+        # overcrowding.
+        num_xtick_labels_max = 16
+        xtick_label_freq = round(num_stat_fcst_hrs/num_xtick_labels_max)
+
+        # When plotting AUC (and possibly other statistics; TBD) for APCP with
+        # accumulation interval > 1hr, for whatever reason the forecast hour
+        # values (i.e. the x-axis values) are available every hour instead of
+        # say every 3, 6, or 24 hours even though there is no statistic value
+        # (y-axis value) associated with the in-between hours.  In other words,
+        # stat_fcst_hrs for this case is [1, 2, 3, ... fcst_len_hrs] instead of
+        # say [3, 6, 9, ...].  For this reason, to get the best-looking plots 
+        # we set xtick_label_freq to the accumulation period.  This needs further
+        # investigation.
+        if cla.vx_stat in ['auc'] and (cla.level_or_accum in ['01h', '03h', '06h', '24h']):
+            xtick_label_freq = int(loa_value)
+
     num_series = sum(num_ens_mems_by_model[0:num_models_to_plot])
     if incl_ens_means: num_series = num_series + num_models_to_plot
     order_series = [s for s in range(1,num_series+1)]
@@ -737,6 +797,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
                    "incl_ens_means": incl_ens_means,
                    "num_series": num_series,
                    "order_series": order_series,
+                   "xtick_label_freq": xtick_label_freq,
                    "line_types": line_types,
                    "line_widths": line_widths}
 

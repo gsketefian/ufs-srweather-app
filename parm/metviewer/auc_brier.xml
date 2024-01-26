@@ -80,6 +80,10 @@
             <listdiffseries1>list()</listdiffseries1>
             <listdiffseries2>list()</listdiffseries2>
         </tmpl>
+{%- set xlab_offset = "2" -%}
+{%- set ylab_offset = "-8" -%}
+{%- set legend_inset_x = "-0.025" -%}
+{%- set legend_inset_y = "-0.15" -%}
         <execution_type>Python</execution_type>
         <event_equal>true</event_equal>
         <vert_plot>false</vert_plot>
@@ -113,19 +117,19 @@ Variance inflation factor should be turned off according to DTC statisticians.
         <xtlab_orient>1</xtlab_orient>
         <xtlab_perp>-0.75</xtlab_perp>
         <xtlab_horiz>0.5</xtlab_horiz>
-        <xtlab_freq>0</xtlab_freq>
-        <xtlab_size>1</xtlab_size>
+        <xtlab_freq>{{xtick_label_freq}}</xtlab_freq>
+        <xtlab_size>2</xtlab_size>
         <xlab_weight>1</xlab_weight>
-        <xlab_size>1</xlab_size>
-        <xlab_offset>2</xlab_offset>
+        <xlab_size>6</xlab_size>
+        <xlab_offset>{{xlab_offset}}</xlab_offset>
         <xlab_align>0.5</xlab_align>
         <ytlab_orient>1</ytlab_orient>
         <ytlab_perp>0.5</ytlab_perp>
         <ytlab_horiz>0.5</ytlab_horiz>
-        <ytlab_size>1</ytlab_size>
+        <ytlab_size>2</ytlab_size>
         <ylab_weight>1</ylab_weight>
-        <ylab_size>1</ylab_size>
-        <ylab_offset>-8</ylab_offset>
+        <ylab_size>6</ylab_size>
+        <ylab_offset>{{ylab_offset}}</ylab_offset>
         <ylab_align>0.5</ylab_align>
         <grid_lty>3</grid_lty>
         <grid_col>#cccccc</grid_col>
@@ -146,9 +150,13 @@ Variance inflation factor should be turned off according to DTC statisticians.
         <y2lab_offset>1</y2lab_offset>
         <y2lab_align>0.5</y2lab_align>
         <legend_box>o</legend_box>
-        <legend_inset>c(-.05, -.15)</legend_inset>
+        <legend_inset>c({{legend_inset_x}}, {{legend_inset_y}})</legend_inset>
+{#-
+This should be generalized to the number of series being plotted, but
+it doesn't seem to make a difference in the final plot.
+#}
         <legend_ncol>3</legend_ncol>
-        <legend_size>0.8</legend_size>
+        <legend_size>1.5</legend_size>
         <!-- Have the caption weight and color match that of the title.
              Note that it doesn't seem possible to change the title color
              (i.e. there is no <title_col> above), so here we set the
