@@ -97,7 +97,7 @@ that.
 {%- for ihr in range(fhr_start, fcst_len_hrs+1) -%}
   {%- if ihr%fhr_incr == 0 -%}
     {{indent}}<val label="{{ihr}}" plot_val="">{{ihr*10000}}</val>
-{%- endif -%}
+  {%- endif -%}
 {%- endfor %}
         </indep>
         <agg_stat>
