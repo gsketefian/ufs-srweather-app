@@ -27,10 +27,10 @@
 The MetViewer database contains the statistic ECNT_SPREAD_PLUS_OERR for
 all forecast variables except REFC because the observation error for
 REFC is not known.  For REFC, only ECNT_SPREAD is available, so we use
-that.
+that.  Same is true for RETOP.
 #}
 {%- set plus_oerr_or_null = "_PLUS_OERR" -%}
-{%- if fcst_var_uc == "REFC" %}
+{%- if fcst_var_uc in ["REFC", "RETOP"] %}
   {%- set plus_oerr_or_null = "" -%}
 {%- endif %}
                     <stat>ECNT_SPREAD{{plus_oerr_or_null}}</stat>

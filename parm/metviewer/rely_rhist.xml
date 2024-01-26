@@ -66,7 +66,7 @@
                 </set>
             </field>
 {%- if (vx_stat_uc == "RELY") -%}
-  {%- if (fcst_var_uc in ["APCP","REFC"]) %}
+  {%- if (fcst_var_uc in ["APCP", "REFC", "RETOP"]) %}
             <field equalize="true" name="interp_mthd">
     {%- set ipf = ipf+1 %}
                 <set name="interp_mthd_{{ipf}}">

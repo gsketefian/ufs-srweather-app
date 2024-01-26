@@ -116,7 +116,7 @@ for now we apply the rule only to FBIAS.
         <plot_stat>median</plot_stat>
 {%- elif (vx_stat_uc == "FBIAS") %}
 {#- Known discontinuous variables.  Use aggregate statistics in this case. #}
-  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC"] %}
+  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
         <agg_stat>
             <agg_ctc>true</agg_ctc>
             <boot_repl>1</boot_repl>
@@ -127,7 +127,7 @@ for now we apply the rule only to FBIAS.
             <circular_block_bootstrap>true</circular_block_bootstrap>
         </agg_stat>
 {#- Known continuous variables.  Use summary statistics in this case. #}
-  {%- elif fcst_var_uc in ["DPT", "HGT", "REFC", "TMP"] %}
+  {%- elif fcst_var_uc in ["DPT", "HGT", "TMP"] %}
         <plot_stat>median</plot_stat>
 {#- Default to summary statistics for unexpected variables. #}
   {%- else %}
