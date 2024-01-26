@@ -38,12 +38,20 @@ threshs_to_threshs_in_db: {'': '',
                            'ge30dBZ': '&gt;=30',
                            'ge40dBZ': '&gt;=40',
                            'ge50dBZ': '&gt;=50',
+                           'ge258K': '&gt;=258',
+                           'ge263K': '&gt;=263',
+                           'ge278K': '&gt;=278',
+                           'ge283K': '&gt;=283',
                            'ge288K': '&gt;=288',
                            'ge293K': '&gt;=293',
                            'ge298K': '&gt;=298',
                            'ge303K': '&gt;=303',
                            'ge5mps': '&gt;=5',
-                           'ge10mps': '&gt;=10'}
+                           'ge10mps': '&gt;=10',
+                           'ge15mps': '&gt;=15',
+                           'ge21mps': '&gt;=21',
+                           'ge5400m': '&ge;=5400',
+                           'ge5880m': '&ge;=5880'}
 #
 # List of allowed forecast variable short names, the long name of each,
 # list of valid levels for each, and list of thresholds for each. 
@@ -59,24 +67,28 @@ fcst_vars:
         valid_thresholds: ['']
     dpt:
         long_name: 'Dew Point Temperature'
-        valid_levels: ['2m']
-        valid_thresholds: ['ge288K', 'ge293K']
+        valid_levels: ['2m', '500mb', '700mb', '850mb']
+        valid_thresholds: ['ge278K', 'ge283K', 'ge288K', 'ge293K']
     hgt:
         long_name: 'Height'
         valid_levels: ['500mb']
-        valid_thresholds: ['']
+        valid_thresholds: ['ge5400m', 'ge5880m']
     refc:
         long_name: 'Composite Reflectivity'
+        valid_levels: ['L0']
+        valid_thresholds: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
+    retop:
+        long_name: 'Echo Top'
         valid_levels: ['L0']
         valid_thresholds: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
     tmp:
         long_name: 'Temperature'
         valid_levels: ['2m', '500mb', '700mb', '850mb']
-        valid_thresholds: ['ge288K', 'ge293K', 'ge298K', 'ge303K']
+        valid_thresholds: ['ge258K', 'ge263K', 'ge288K', 'ge293K', 'ge298K', 'ge303K']
     wind:
         long_name: 'Wind'
         valid_levels: ['10m', '500mb', '700mb', '850mb']
-        valid_thresholds: ['ge5mps', 'ge10mps']
+        valid_thresholds: ['ge5mps', 'ge10mps', 'ge15mps', 'ge21mps']
 #
 # List of allowed verification statistic/metric short names, the long name
 # of each, and whether each requires a threshold value for a given forecast
