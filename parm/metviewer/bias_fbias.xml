@@ -113,10 +113,23 @@ FBIAS or to both BIAS and FBIAS (and possibly other statistics).  Thus,
 for now we apply the rule only to FBIAS.
 #}
 {%- if (vx_stat_uc == "BIAS") %}
+{#- Known discontinuous variables.  Use aggregate statistics in this case. #}
+  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP", "VIS"] %}
+        <agg_stat>
+            <agg_sl1l2>true</agg_sl1l2>
+            <boot_repl>1</boot_repl>
+            <boot_random_seed/>
+            <boot_ci>perc</boot_ci>
+            <eveq_dis>false</eveq_dis>
+            <cache_agg_stat>false</cache_agg_stat>
+            <circular_block_bootstrap>true</circular_block_bootstrap>
+        </agg_stat>
+  {%- else %}
         <plot_stat>median</plot_stat>
+  {%- endif %}
 {%- elif (vx_stat_uc == "FBIAS") %}
 {#- Known discontinuous variables.  Use aggregate statistics in this case. #}
-  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
+  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP", "VIS"] %}
         <agg_stat>
             <agg_ctc>true</agg_ctc>
             <boot_repl>1</boot_repl>
