@@ -83,9 +83,23 @@
         </plot_fix>
         <plot_cond/>
         <indep equalize="true" name="fcst_lead">
+{%- set fhr_start = 0 -%}
+{%- if fcst_var_uc == "APCP" %}
+  {%- set fhr_start = 1 -%}
+{%- endif -%}
+{#- #}
+{%- set fhr_incr = 1 -%}
+{%- if obs_type == "ADPUPA" %}
+  {%- set fhr_incr = 12 -%}
+{%- elif fcst_var_uc == "APCP" %}
+  {%- set fhr_incr = level_or_accum_no0pad | int -%}
+{%- endif -%}
+{#- #}
 {%- set indent = "\n            " -%}
-{%- for ihr in range(0, fcst_len_hrs+1) -%}
-  {{indent}}<val label="{{ihr}}" plot_val="">{{ihr*10000}}</val>
+{%- for ihr in range(fhr_start, fcst_len_hrs+1) -%}
+  {%- if ihr%fhr_incr == 0 -%}
+    {{indent}}<val label="{{ihr}}" plot_val="">{{ihr*10000}}</val>
+  {%- endif -%}
 {%- endfor %}
         </indep>
 {#-
