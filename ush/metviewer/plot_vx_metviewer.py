@@ -669,10 +669,12 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         # interval to the accumulation interval.
         if (cla.level_or_accum in ['01h', '03h', '06h', '24h']):
             stat_avail_intvl_hrs = int(loa_value)
-        # If the level is an upper air location, we assume it is available every
-        # 6 hours (since ADPUPA obs are available only every 6 hours).
-        elif (cla.level_or_accum in ['500mb', '700mb', '800mb']):
-            stat_avail_intvl_hrs = 6
+        # If the level is an upper air location, we consider values only at 12Z 
+        # because the number of observations at other hours of the day is very
+        # low (so statistics are unreliable).  Thus, we set stat_avail_intvl_hrs
+        # to 12.
+        elif (cla.level_or_accum in ['500mb', '700mb', '850mb']):
+            stat_avail_intvl_hrs = 12
 
         # Use the statistic availability interval to set the forecast hours at
         # which the statistic is available.  Then find the number of such hours.
@@ -689,18 +691,6 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         # overcrowding.
         num_xtick_labels_max = 16
         xtick_label_freq = round(num_stat_fcst_hrs/num_xtick_labels_max)
-
-        # When plotting AUC (and possibly other statistics; TBD) for APCP with
-        # accumulation interval > 1hr, for whatever reason the forecast hour
-        # values (i.e. the x-axis values) are available every hour instead of
-        # say every 3, 6, or 24 hours even though there is no statistic value
-        # (y-axis value) associated with the in-between hours.  In other words,
-        # stat_fcst_hrs for this case is [1, 2, 3, ... fcst_len_hrs] instead of
-        # say [3, 6, 9, ...].  For this reason, to get the best-looking plots 
-        # we set xtick_label_freq to the accumulation period.  This needs further
-        # investigation.
-        if cla.vx_stat in ['auc'] and (cla.level_or_accum in ['01h', '03h', '06h', '24h']):
-            xtick_label_freq = int(loa_value)
 
     num_series = sum(num_ens_mems_by_model[0:num_models_to_plot])
     if incl_ens_means: num_series = num_series + num_models_to_plot
