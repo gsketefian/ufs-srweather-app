@@ -134,7 +134,6 @@ for now we apply the rule only to FBIAS.
         <plot_stat>median</plot_stat>
   {%- endif %}
 {%- endif %}
-        <plot_stat>median</plot_stat>
         <tmpl>
             <data_file>plot_{{job_title}}.data</data_file>
             <plot_file>plot_{{job_title}}.png</plot_file>
@@ -149,10 +148,10 @@ for now we apply the rule only to FBIAS.
             <listdiffseries1>list()</listdiffseries1>
             <listdiffseries2>list()</listdiffseries2>
         </tmpl>
-{%- set xlab_offset = "2" -%}
-{%- set ylab_offset = "-8" -%}
-{%- set legend_inset_x = "-0.025" -%}
-{%- set legend_inset_y = "-0.15" -%}
+{%- set xlab_offset = "2" %}
+{%- set ylab_offset = "-8" %}
+{%- set legend_inset_x = "-0.025" %}
+{%- set legend_inset_y = "-0.15" %}
         <execution_type>Python</execution_type>
         <event_equal>true</event_equal>
         <vert_plot>false</vert_plot>

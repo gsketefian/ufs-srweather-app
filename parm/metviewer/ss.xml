@@ -148,10 +148,10 @@ that.  Same is true for RETOP.
 {#- #}
             <listdiffseries2>list()</listdiffseries2>
         </tmpl>
-{%- set xlab_offset = "6" -%}
-{%- set ylab_offset = "-12" -%}
-{%- set legend_inset_x = "-0.02" -%}
-{%- set legend_inset_y = "-0.2" -%}
+{%- set xlab_offset = "6" %}
+{%- set ylab_offset = "-12" %}
+{%- set legend_inset_x = "-0.02" %}
+{%- set legend_inset_y = "-0.2" %}
         <execution_type>Python</execution_type>
         <event_equal>true</event_equal>
         <vert_plot>false</vert_plot>

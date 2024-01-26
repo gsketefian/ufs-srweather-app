@@ -114,18 +114,18 @@
             <listdiffseries1>list()</listdiffseries1>
             <listdiffseries2>list()</listdiffseries2>
         </tmpl>
-{%- set xlab_offset = "" -%}
-{%- set ylab_offset = "" -%}
-{%- set legend_inset_x = "0" -%}
-{%- set legend_inset_y = "" -%}
-{%- if (vx_stat_uc == "RELY") -%}
-  {%- set xlab_offset = "2" -%}
-  {%- set ylab_offset = "-2" -%}
-  {%- set legend_inset_y = "-.25" -%}
-{%- elif (vx_stat_uc == "RHIST") -%}
-  {%- set xlab_offset = "6" -%}
-  {%- set ylab_offset = "-12" -%}
-  {%- set legend_inset_y = "-.24" -%}
+{%- set xlab_offset = "" %}
+{%- set ylab_offset = "" %}
+{%- set legend_inset_x = "0" %}
+{%- set legend_inset_y = "" %}
+{%- if (vx_stat_uc == "RELY") %}
+  {%- set xlab_offset = "2" %}
+  {%- set ylab_offset = "-2" %}
+  {%- set legend_inset_y = "-.25" %}
+{%- elif (vx_stat_uc == "RHIST") %}
+  {%- set xlab_offset = "6" %}
+  {%- set ylab_offset = "-12" %}
+  {%- set legend_inset_y = "-.24" %}
 {%- endif %}
         <execution_type>Python</execution_type>
         <event_equal>true</event_equal>
