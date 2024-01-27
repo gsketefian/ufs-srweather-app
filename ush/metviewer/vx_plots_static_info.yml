@@ -8,7 +8,8 @@
 # another or if the values are standard in MetViewer.  If the former,
 # then this should be moved to the database configuration yaml file.
 #
-levels_to_levels_in_db: {'03h': 'A3',
+levels_to_levels_in_db: {'01h': 'A1',
+                         '03h': 'A3',
                          '06h': 'A6',
                          '24h': 'A24',
                          'L0': 'L0',
@@ -44,6 +45,7 @@ threshs_to_threshs_in_db: {'': '',
                            'ge50kft': '&gt;=50',
                            'ge258K': '&gt;=258',
                            'ge263K': '&gt;=263',
+                           'ge268K': '&gt;=268',
                            'ge278K': '&gt;=278',
                            'ge283K': '&gt;=283',
                            'ge288K': '&gt;=288',
@@ -65,14 +67,14 @@ threshs_to_threshs_in_db: {'': '',
 fcst_vars:
     apcp:
         long_name: 'Accumulated Precipitation'
-        valid_levels: ['03h', '06h', '24h']
+        valid_levels: ['01h', '03h', '06h', '24h']
         valid_thresholds: ['gt0.0mm', 'ge0.508mm', 'ge2.54mm', 'ge6.35mm', 'ge12.7mm', 'ge25.4mm']
     cape:
         long_name: 'Convenctive Available Potential Energy'
         valid_levels: ['L0']
         valid_thresholds: ['']
     dpt:
-        long_name: 'Dew Point Temperature'
+        long_name: 'Dew Point'
         valid_levels: ['2m', '500mb', '700mb', '850mb']
         valid_thresholds: ['ge278K', 'ge283K', 'ge288K', 'ge293K']
     hgt:
@@ -90,7 +92,7 @@ fcst_vars:
     tmp:
         long_name: 'Temperature'
         valid_levels: ['2m', '500mb', '700mb', '850mb']
-        valid_thresholds: ['ge258K', 'ge263K', 'ge288K', 'ge293K', 'ge298K', 'ge303K']
+        valid_thresholds: ['ge258K', 'ge268K', 'ge263K', 'ge288K', 'ge293K', 'ge298K', 'ge303K']
     vis:
         long_name: 'Visibility'
         valid_levels: ['L0']
