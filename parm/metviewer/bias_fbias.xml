@@ -113,8 +113,19 @@ FBIAS or to both BIAS and FBIAS (and possibly other statistics).  Thus,
 for now we apply the rule only to FBIAS.
 #}
 {%- if (vx_stat_uc == "BIAS") %}
-{#- Known discontinuous variables.  Use aggregate statistics in this case. #}
-  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP", "VIS"] %}
+{#- Known discontinuous fields.  Use aggregate statistics in this case. #}
+  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
+        <agg_stat>
+            <agg_sl1l2>true</agg_sl1l2>
+            <boot_repl>1</boot_repl>
+            <boot_random_seed/>
+            <boot_ci>perc</boot_ci>
+            <eveq_dis>false</eveq_dis>
+            <cache_agg_stat>false</cache_agg_stat>
+            <circular_block_bootstrap>true</circular_block_bootstrap>
+        </agg_stat>
+{#- Continuous fields for which we want to use aggregate statistics. #}
+  {%- elif fcst_var_uc in ["VIS"] %}
         <agg_stat>
             <agg_sl1l2>true</agg_sl1l2>
             <boot_repl>1</boot_repl>
@@ -128,8 +139,8 @@ for now we apply the rule only to FBIAS.
         <plot_stat>median</plot_stat>
   {%- endif %}
 {%- elif (vx_stat_uc == "FBIAS") %}
-{#- Known discontinuous variables.  Use aggregate statistics in this case. #}
-  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP", "VIS"] %}
+{#- Known discontinuous fields.  Use aggregate statistics in this case. #}
+  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
         <agg_stat>
             <agg_ctc>true</agg_ctc>
             <boot_repl>1</boot_repl>
@@ -139,10 +150,21 @@ for now we apply the rule only to FBIAS.
             <cache_agg_stat>false</cache_agg_stat>
             <circular_block_bootstrap>true</circular_block_bootstrap>
         </agg_stat>
-{#- Known continuous variables.  Use summary statistics in this case. #}
+{#- Continuous fields for which we want to use aggregate statistics. #}
+  {%- elif fcst_var_uc in ["VIS"] %}
+        <agg_stat>
+            <agg_ctc>true</agg_ctc>
+            <boot_repl>1</boot_repl>
+            <boot_random_seed/>
+            <boot_ci>perc</boot_ci>
+            <eveq_dis>false</eveq_dis>
+            <cache_agg_stat>false</cache_agg_stat>
+            <circular_block_bootstrap>true</circular_block_bootstrap>
+        </agg_stat>
+{#- Known continuous fields.  Use summary statistics for these for now (may change later). #}
   {%- elif fcst_var_uc in ["DPT", "HGT", "TMP"] %}
         <plot_stat>median</plot_stat>
-{#- Default to summary statistics for unexpected variables. #}
+{#- Default to summary statistics for unexpected fields. #}
   {%- else %}
         <plot_stat>median</plot_stat>
   {%- endif %}
