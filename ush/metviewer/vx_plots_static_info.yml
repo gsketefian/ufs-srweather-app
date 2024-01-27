@@ -38,6 +38,10 @@ threshs_to_threshs_in_db: {'': '',
                            'ge30dBZ': '&gt;=30',
                            'ge40dBZ': '&gt;=40',
                            'ge50dBZ': '&gt;=50',
+                           'ge20kft': '&gt;=20',
+                           'ge30kft': '&gt;=30',
+                           'ge40kft': '&gt;=40',
+                           'ge50kft': '&gt;=50',
                            'ge258K': '&gt;=258',
                            'ge263K': '&gt;=263',
                            'ge278K': '&gt;=278',
@@ -82,7 +86,7 @@ fcst_vars:
     retop:
         long_name: 'Echo Top'
         valid_levels: ['L0']
-        valid_thresholds: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
+        valid_thresholds: ['ge20kft', 'ge30kft', 'ge40kft', 'ge50kft']
     tmp:
         long_name: 'Temperature'
         valid_levels: ['2m', '500mb', '700mb', '850mb']
