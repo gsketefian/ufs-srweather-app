@@ -75,7 +75,19 @@
   {%- endif -%}
 {%- endfor %}
         </indep>
+{%- if (vx_stat_uc in ["AUC", "BRIER"]) %}
+        <agg_stat>
+            <agg_pct>true</agg_pct>
+            <boot_repl>10</boot_repl>
+            <boot_random_seed>1</boot_random_seed>
+            <boot_ci>perc</boot_ci>
+            <eveq_dis>false</eveq_dis>
+            <cache_agg_stat>false</cache_agg_stat>
+            <circular_block_bootstrap>true</circular_block_bootstrap>
+        </agg_stat>
+{%- else %}
         <plot_stat>mean</plot_stat>
+{%- endif %}
         <tmpl>
             <data_file>plot_{{job_title}}.data</data_file>
             <plot_file>plot_{{job_title}}.png</plot_file>
