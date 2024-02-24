@@ -19,7 +19,7 @@
         <template>series_plot.R_tmpl</template>
         <dep>
             <dep1>
-                <fcst_var name="{{fcst_var_name_in_db}}">
+                <fcst_var name="{{fcst_field_name_in_db}}">
                     <stat>{{vx_stat_mv}}</stat>
                 </fcst_var>
             </dep1>
@@ -57,14 +57,14 @@
         <plot_cond/>
         <indep equalize="true" name="fcst_lead">
 {%- set fhr_start = 0 -%}
-{%- if fcst_var_uc == "APCP" %}
+{%- if fcst_field_uc == "APCP" %}
   {%- set fhr_start = 1 -%}
 {%- endif -%}
 {#- #}
 {%- set fhr_incr = 1 -%}
 {%- if obs_type == "ADPUPA" %}
   {%- set fhr_incr = 12 -%}
-{%- elif fcst_var_uc == "APCP" %}
+{%- elif fcst_field_uc == "APCP" %}
   {%- set fhr_incr = level_or_accum_no0pad | int -%}
 {%- endif -%}
 {#- #}

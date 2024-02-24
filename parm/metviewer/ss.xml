@@ -21,7 +21,7 @@
         <template>series_plot.R_tmpl</template>
         <dep>
             <dep1>
-                <fcst_var name="{{fcst_var_name_in_db}}">
+                <fcst_var name="{{fcst_field_name_in_db}}">
                     <stat>ECNT_RMSE</stat>
 {#-
 The MetViewer database contains the statistic ECNT_SPREAD_PLUS_OERR for
@@ -30,7 +30,7 @@ known or cannot be estimated.  For these, only the statistic ECNT_SPREAD
 is available, so we use that.
 #}
 {%- set plus_oerr_or_null = "_PLUS_OERR" -%}
-{%- if fcst_var_uc in ["REFC", "RETOP", "VIS"] %}
+{%- if fcst_field_uc in ["REFC", "RETOP", "VIS"] %}
   {%- set plus_oerr_or_null = "" -%}
 {%- endif %}
                     <stat>ECNT_SPREAD{{plus_oerr_or_null}}</stat>
@@ -82,14 +82,14 @@ is available, so we use that.
         <plot_cond/>
         <indep equalize="true" name="fcst_lead">
 {%- set fhr_start = 0 -%}
-{%- if fcst_var_uc == "APCP" %}
+{%- if fcst_field_uc == "APCP" %}
   {%- set fhr_start = 1 -%}
 {%- endif -%}
 {#- #}
 {%- set fhr_incr = 1 -%}
 {%- if obs_type == "ADPUPA" %}
   {%- set fhr_incr = 12 -%}
-{%- elif fcst_var_uc == "APCP" %}
+{%- elif fcst_field_uc == "APCP" %}
   {%- set fhr_incr = level_or_accum_no0pad | int -%}
 {%- endif -%}
 {#- #}
@@ -139,8 +139,8 @@ is available, so we use that.
   {%- if imdl > 1 -%} {{indent}} {%- endif -%}
   {%- set model = model_names_in_db[imdl-1] -%}
   {{ 'c(' -}}
-  {{ '"' ~ model ~ ' ' ~ fcst_var_name_in_db ~ ' ECNT_SPREAD' ~ plus_oerr_or_null ~ '",' -}}
-  {{ '"' ~ model ~ ' ' ~ fcst_var_name_in_db ~ ' ECNT_RMSE' ~ '",' -}}
+  {{ '"' ~ model ~ ' ' ~ fcst_field_name_in_db ~ ' ECNT_SPREAD' ~ plus_oerr_or_null ~ '",' -}}
+  {{ '"' ~ model ~ ' ' ~ fcst_field_name_in_db ~ ' ECNT_RMSE' ~ '",' -}}
   {{ '"RATIO"' -}}
   {{ ')' -}}
   {%- if imdl != num_models_to_plot -%} , {%- endif -%}

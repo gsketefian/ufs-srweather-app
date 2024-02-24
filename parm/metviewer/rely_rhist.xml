@@ -35,7 +35,7 @@
             <field equalize="true" name="fcst_var">
 {%- set ipf = ipf+1 %}
                 <set name="fcst_var_{{ipf}}">
-                    <val>{{fcst_var_name_in_db}}</val>
+                    <val>{{fcst_field_name_in_db}}</val>
                 </set>
             </field>
             <field equalize="true" name="fcst_init_beg">
@@ -66,7 +66,7 @@
                 </set>
             </field>
 {%- if (vx_stat_uc == "RELY") -%}
-  {%- if (fcst_var_uc in ["APCP", "REFC", "RETOP"]) %}
+  {%- if (fcst_field_uc in ["APCP", "REFC", "RETOP"]) %}
             <field equalize="true" name="interp_mthd">
     {%- set ipf = ipf+1 %}
                 <set name="interp_mthd_{{ipf}}">

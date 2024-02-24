@@ -21,7 +21,7 @@
         <template>series_plot.R_tmpl</template>
         <dep>
             <dep1>
-                <fcst_var name="{{fcst_var_name_in_db}}">
+                <fcst_var name="{{fcst_field_name_in_db}}">
                     <stat>{{vx_stat_mv}}</stat>
                 </fcst_var>
             </dep1>
@@ -84,14 +84,14 @@
         <plot_cond/>
         <indep equalize="true" name="fcst_lead">
 {%- set fhr_start = 0 -%}
-{%- if fcst_var_uc == "APCP" %}
+{%- if fcst_field_uc == "APCP" %}
   {%- set fhr_start = 1 -%}
 {%- endif -%}
 {#- #}
 {%- set fhr_incr = 1 -%}
 {%- if obs_type == "ADPUPA" %}
   {%- set fhr_incr = 12 -%}
-{%- elif fcst_var_uc == "APCP" %}
+{%- elif fcst_field_uc == "APCP" %}
   {%- set fhr_incr = level_or_accum_no0pad | int -%}
 {%- endif -%}
 {#- #}
@@ -114,7 +114,7 @@ for now we apply the rule only to FBIAS.
 #}
 {%- if (vx_stat_uc == "BIAS") %}
 {#- Known discontinuous fields.  Use aggregate statistics in this case. #}
-  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
+  {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
         <agg_stat>
             <agg_sl1l2>true</agg_sl1l2>
             <boot_repl>10</boot_repl>
@@ -125,7 +125,7 @@ for now we apply the rule only to FBIAS.
             <circular_block_bootstrap>true</circular_block_bootstrap>
         </agg_stat>
 {#- Continuous fields for which we want to use aggregate statistics. #}
-  {%- elif fcst_var_uc in ["DPT", "HGT", "TMP", "VIS", "WIND"] %}
+  {%- elif fcst_field_uc in ["DPT", "HGT", "TMP", "VIS", "WIND"] %}
         <agg_stat>
             <agg_sl1l2>true</agg_sl1l2>
             <boot_repl>10</boot_repl>
@@ -140,7 +140,7 @@ for now we apply the rule only to FBIAS.
   {%- endif %}
 {%- elif (vx_stat_uc == "FBIAS") %}
 {#- Known discontinuous fields.  Use aggregate statistics in this case. #}
-  {%- if fcst_var_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
+  {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
         <agg_stat>
             <agg_ctc>true</agg_ctc>
             <boot_repl>10</boot_repl>
@@ -151,7 +151,7 @@ for now we apply the rule only to FBIAS.
             <circular_block_bootstrap>true</circular_block_bootstrap>
         </agg_stat>
 {#- Continuous fields for which we want to use aggregate statistics. #}
-  {%- elif fcst_var_uc in ["VIS"] %}
+  {%- elif fcst_field_uc in ["VIS"] %}
         <agg_stat>
             <agg_ctc>true</agg_ctc>
             <boot_repl>10</boot_repl>
@@ -162,7 +162,7 @@ for now we apply the rule only to FBIAS.
             <circular_block_bootstrap>true</circular_block_bootstrap>
         </agg_stat>
 {#- Known continuous fields.  Use summary statistics for these for now (may change later). #}
-  {%- elif fcst_var_uc in ["DPT", "HGT", "TMP"] %}
+  {%- elif fcst_field_uc in ["DPT", "HGT", "TMP"] %}
         <plot_stat>median</plot_stat>
 {#- Default to summary statistics for unexpected fields. #}
   {%- else %}
