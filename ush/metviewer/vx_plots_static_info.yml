@@ -64,7 +64,7 @@ threshs_to_threshs_in_db: {'': '',
 # List of allowed forecast variable short names, the long name of each,
 # list of valid levels for each, and list of thresholds for each. 
 #
-fcst_vars:
+fcst_fields:
     apcp:
         long_name: 'Accumulated Precipitation'
         valid_levels: ['01h', '03h', '06h', '24h']

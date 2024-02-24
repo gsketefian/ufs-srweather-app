@@ -48,29 +48,29 @@ from templater import (
 #
 # For BIAS, RHST, and SS:
 # ======================
-# fcst_var    level_or_accum             threshold    stat types
-# --------    --------------             ---------    ----------
-# apcp        03hr, 06hr                 none         RHST, SS
-# cape        L0                         none         RHST
-# dpt         2m                         none         BIAS, RHST, SS
-# hgt         500mb                      none         RHST, SS
-# refc        L0 (BIAS only)             none         BIAS, RHST, SS
-# tmp         2m, 500mb, 700mb, 850mb    none         BIAS, RHST, SS
-# wind        500mb, 700mb, 850mb        none         BIAS, RHST, SS
+# fcst_field    level_or_accum             threshold    stat types
+# ----------    --------------             ---------    ----------
+# apcp          03hr, 06hr                 none         RHST, SS
+# cape          L0                         none         RHST
+# dpt           2m                         none         BIAS, RHST, SS
+# hgt           500mb                      none         RHST, SS
+# refc          L0 (BIAS only)             none         BIAS, RHST, SS
+# tmp           2m, 500mb, 700mb, 850mb    none         BIAS, RHST, SS
+# wind          500mb, 700mb, 850mb        none         BIAS, RHST, SS
 #
 # For AUC, BRIER, FBIAS, and RELY:
 # ===============================
-# fcst_var    level_or_accum    threshold
-# --------    --------------    ---------
-# apcp        03hr              gt0.0mm (AUC,BRIER,FBIAS,RELY), ge2.54mm (AUC,BRIER,FBIAS,RELY)
-# dpt         2m                ge288K (AUC,BRIER,RELY), ge293K (AUC,BRIER)
-# refc        L0                ge20dBZ (AUC,BRIER,FBIAS,RELY), ge30dBZ (AUC,BRIER,FBIAS,RELY), ge40dBZ (AUC,BRIER,FBIAS,RELY), ge50dBZ (AUC,BRIER,FBIAS)
-# tmp         2m, 850mb         ge288K (AUC,BRIER,RELY), ge293K (AUC,BRIER,RELY), ge298K (AUC,BRIER,RELY), ge303K (RELY)
-# wind        10m, 700mb        ge5mps (AUC,BRIER,RELY), ge10mps (AUC,BRIER,RELY)
+# fcst_field    level_or_accum    threshold
+# ----------    --------------    ---------
+# apcp          03hr              gt0.0mm (AUC,BRIER,FBIAS,RELY), ge2.54mm (AUC,BRIER,FBIAS,RELY)
+# dpt           2m                ge288K (AUC,BRIER,RELY), ge293K (AUC,BRIER)
+# refc          L0                ge20dBZ (AUC,BRIER,FBIAS,RELY), ge30dBZ (AUC,BRIER,FBIAS,RELY), ge40dBZ (AUC,BRIER,FBIAS,RELY), ge50dBZ (AUC,BRIER,FBIAS)
+# tmp           2m, 850mb         ge288K (AUC,BRIER,RELY), ge293K (AUC,BRIER,RELY), ge298K (AUC,BRIER,RELY), ge303K (RELY)
+# wind          10m, 700mb        ge5mps (AUC,BRIER,RELY), ge10mps (AUC,BRIER,RELY)
 #
 
 def get_pprint_str(x, indent_str):
-    """Format a variable as a pretty-printed string and add indentation.
+    """Format a python variable as a pretty-printed string and add indentation.
 
     Arguments:
       x:           A variable.
@@ -106,51 +106,50 @@ def get_static_info(static_info_config_fp):
     all_valid_threshs = list(threshs_to_threshs_in_db.keys())
 
     # Define local dictionaries containing static values that depend on the 
-    # forecast variable.
-    valid_fcst_vars = static_data['fcst_vars'].keys()
-    fcst_var_long_names = {}
-    valid_levels_by_fcst_var = {}
-    valid_threshs_by_fcst_var = {}
-    for fcst_var in valid_fcst_vars:
+    # forecast field.
+    valid_fcst_fields = static_data['fcst_fields'].keys()
+    fcst_field_long_names = {}
+    valid_levels_by_fcst_field = {}
+    valid_threshs_by_fcst_field = {}
+    for fcst_field in valid_fcst_fields:
   
-        fcst_var_long_names[fcst_var] = static_data['fcst_vars'][fcst_var]['long_name']
+        fcst_field_long_names[fcst_field] = static_data['fcst_fields'][fcst_field]['long_name']
 
-        # Get list of valid levels/accumulations for the current forecast
-        # variable.
-        valid_levels_by_fcst_var[fcst_var] = static_data['fcst_vars'][fcst_var]['valid_levels']
-        # Make sure all the levels/accumulations specified for the current
-        # forecast variable are in the master list of valid levels/accumulations.
-        for loa in valid_levels_by_fcst_var[fcst_var]:
+        # Get list of valid levels/accumulations for the current forecast field.
+        valid_levels_by_fcst_field[fcst_field] = static_data['fcst_fields'][fcst_field]['valid_levels']
+        # Make sure all the levels/accumulations specified for the current 
+        # forecast field are in the master list of valid levels and accumulations.
+        for loa in valid_levels_by_fcst_field[fcst_field]:
             if loa not in all_valid_levels:
                 err_msg = dedent(f"""
-                    One of the levels/accumulations (loa) in the set of valid levels/accumulations
-                    for the current forecast variable (fcst_var) is not in the master list of valid
-                    levels/accumulations (all_valid_levels):
-                      fcst_var = {fcst_var}
+                    One of the levels or accumulations (loa) in the set of valid levels and
+                    accumulations for the current forecast field (fcst_field) is not in the
+                    master list of valid levels and accumulations (all_valid_levels):
+                      fcst_field = {fcst_field}
                       loa = {loa}
                       all_valid_levels = {all_valid_levels}
-                    The master list of valid levels/accumulations as well as the list of valid levels/
-                    accumulations for the current forecast variable can be found in the following static
-                    information configuration file:
+                    The master list of valid levels and accumulations as well as the list of
+                    valid levels and accumulations for the current forecast field can be
+                    found in the following static information configuration file:
                       static_info_config_fp = {static_info_config_fp}
                     Please modify this file and rerun.
                     """)
                 logging.error(err_msg, stack_info=True)
                 raise Exception(err_msg)
 
-        # Get list of valid thresholds for the current forecast variable.
-        valid_threshs_by_fcst_var[fcst_var] = static_data['fcst_vars'][fcst_var]['valid_thresholds']
-        for thresh in valid_threshs_by_fcst_var[fcst_var]:
+        # Get list of valid thresholds for the current forecast field.
+        valid_threshs_by_fcst_field[fcst_field] = static_data['fcst_fields'][fcst_field]['valid_thresholds']
+        for thresh in valid_threshs_by_fcst_field[fcst_field]:
             if thresh not in all_valid_threshs:
                 err_msg = dedent(f"""
                     One of the thresholds (thresh) in the set of valid thresholds for the current
-                    forecast variable (fcst_var) is not in the master list of valid thresholds
+                    forecast field (fcst_field) is not in the master list of valid thresholds
                     (all_valid_threshs):
-                      fcst_var = {fcst_var}
+                      fcst_field = {fcst_field}
                       thresh = {thresh}
                       all_valid_threshs = {all_valid_threshs}
                     The master list of valid thresholds as well as the list of valid threhsolds for
-                    the current forecast variable can be found in the following static information
+                    the current forecast field can be found in the following static information
                     configuration file:
                       static_info_config_fp = {static_info_config_fp}
                     Please modify this file and rerun.
@@ -177,7 +176,7 @@ def get_static_info(static_info_config_fp):
     # Create dictionary containing valid choices for various parameters.
     # This is needed by the argument parsing function below.
     choices = {}
-    choices['fcst_var'] = sorted(valid_fcst_vars)
+    choices['fcst_field'] = sorted(valid_fcst_fields)
     choices['level'] = all_valid_levels
     choices['threshold'] = all_valid_threshs
     choices['vx_stat'] = sorted(valid_stats)
@@ -187,9 +186,9 @@ def get_static_info(static_info_config_fp):
     static_info['static_info_config_fp'] = static_info_config_fp 
     static_info['levels_to_levels_in_db'] = levels_to_levels_in_db
     static_info['threshs_to_threshs_in_db'] = threshs_to_threshs_in_db
-    static_info['fcst_var_long_names'] = fcst_var_long_names
-    static_info['valid_levels_by_fcst_var'] = valid_levels_by_fcst_var
-    static_info['valid_threshs_by_fcst_var'] = valid_threshs_by_fcst_var
+    static_info['fcst_field_long_names'] = fcst_field_long_names
+    static_info['valid_levels_by_fcst_field'] = valid_levels_by_fcst_field
+    static_info['valid_threshs_by_fcst_field'] = valid_threshs_by_fcst_field
     static_info['stat_long_names'] = stat_long_names
     static_info['stat_need_thresh'] = stat_need_thresh
     static_info['avail_mv_colors_codes'] = avail_mv_colors_codes 
@@ -285,11 +284,11 @@ def parse_args(argv, static_info):
                         required=True,
                         help='Forecast length (in integer hours)')
 
-    parser.add_argument('--fcst_var',
+    parser.add_argument('--fcst_field',
                         type=str.lower,
                         required=True, 
-                        choices=choices['fcst_var'],
-                        help='Name of forecast variable to verify')
+                        choices=choices['fcst_field'],
+                        help='Name of forecast field to verify')
 
     parser.add_argument('--level_or_accum',
                         type=str,
@@ -301,7 +300,7 @@ def parse_args(argv, static_info):
                         type=str,
                         required=False, default='',
                         choices=choices['threshold'],
-                        help='Threshold for specified forecast variable')
+                        help='Threshold for the specified forecast field')
 
     # Parse the arguments.
     cla = parser.parse_args(argv)
@@ -328,9 +327,9 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     static_info_config_fp = static_info['static_info_config_fp']
     levels_to_levels_in_db = static_info['levels_to_levels_in_db']
     threshs_to_threshs_in_db = static_info['threshs_to_threshs_in_db']
-    fcst_var_long_names = static_info['fcst_var_long_names']
-    valid_levels_by_fcst_var = static_info['valid_levels_by_fcst_var']
-    valid_threshs_by_fcst_var = static_info['valid_threshs_by_fcst_var']
+    fcst_field_long_names = static_info['fcst_field_long_names']
+    valid_levels_by_fcst_field = static_info['valid_levels_by_fcst_field']
+    valid_threshs_by_fcst_field = static_info['valid_threshs_by_fcst_field']
     stat_long_names = static_info['stat_long_names']
     stat_need_thresh = static_info['stat_need_thresh']
     avail_mv_colors_codes = static_info['avail_mv_colors_codes']
@@ -479,14 +478,14 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     # as follows:
     cla.incl_ens_means = incl_ens_means
 
-    valid_levels_or_accums = valid_levels_by_fcst_var[cla.fcst_var]
+    valid_levels_or_accums = valid_levels_by_fcst_field[cla.fcst_field]
     if cla.level_or_accum not in valid_levels_or_accums:
         err_msg = dedent(f"""
             The specified level or accumulation is not compatible with the specified
-            forecast variable:
-              cla.fcst_var = {cla.fcst_var}
+            forecast field:
+              cla.fcst_field = {cla.fcst_field}
               cla.level_or_accum = {cla.level_or_accum}
-            Valid options for level or accumulation for this forecast variable are:
+            Valid options for level or accumulation for this forecast field are:
               {valid_levels_or_accums}
             """)
         logging.error(err_msg, stack_info=True)
@@ -563,14 +562,14 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         cla.threshold = ''
 
     elif (stat_need_thresh[cla.vx_stat]):
-        valid_thresholds = valid_threshs_by_fcst_var[cla.fcst_var]
+        valid_thresholds = valid_threshs_by_fcst_field[cla.fcst_field]
         if cla.threshold not in valid_thresholds:
             err_msg = dedent(f"""
                 The specified threshold is not compatible with the specified forecast
-                variable:
-                  fcst_var = {cla.fcst_var}
+                field:
+                  fcst_field = {cla.fcst_field}
                   threshold = {cla.threshold}
-                Valid options for threshold for this forecast variable are:
+                Valid options for threshold for this forecast field are:
                   {valid_thresholds}
                 """)
             logging.error(err_msg, stack_info=True)
@@ -610,10 +609,10 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
 
     plot_title = ' '.join(filter(None,
                           [stat_long_names[cla.vx_stat], 'for',
-                           ''.join([loa_value, loa_units]), fcst_var_long_names[cla.fcst_var],
+                           ''.join([loa_value, loa_units]), fcst_field_long_names[cla.fcst_field],
                            thresh_in_plot_title]))
-    fcst_var_uc = cla.fcst_var.upper()
-    var_lvl_str = ''.join(filter(None, [fcst_var_uc, loa_value, loa_units]))
+    fcst_field_uc = cla.fcst_field.upper()
+    var_lvl_str = ''.join(filter(None, [fcst_field_uc, loa_value, loa_units]))
     thresh_str = ''.join(filter(None, [thresh_comp_oper, thresh_value, thresh_units]))
     var_lvl_thresh_str = '_'.join(filter(None, [var_lvl_str, thresh_str]))
 
@@ -696,12 +695,12 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     if incl_ens_means: num_series = num_series + num_models_to_plot
     order_series = [s for s in range(1,num_series+1)]
 
-    # Generate name of forecast variable as it appears in the MetViewer database.
-    fcst_var_name_in_db = fcst_var_uc
-    if fcst_var_uc == 'APCP': fcst_var_name_in_db = '_'.join([fcst_var_name_in_db, cla.level_or_accum[0:2]])
+    # Generate name of forecast field as it appears in the MetViewer database.
+    fcst_field_name_in_db = fcst_field_uc
+    if fcst_field_uc == 'APCP': fcst_field_name_in_db = '_'.join([fcst_field_name_in_db, cla.level_or_accum[0:2]])
     if cla.vx_stat in ['auc', 'brier', 'rely']:
-        fcst_var_name_in_db = '_'.join(filter(None,[fcst_var_name_in_db, 'ENS_FREQ', 
-                                                    ''.join([thresh_comp_oper, thresh_value])]))
+        fcst_field_name_in_db = '_'.join(filter(None,[fcst_field_name_in_db, 'ENS_FREQ', 
+                                                      ''.join([thresh_comp_oper, thresh_value])]))
         #
         # For APCP thresholds of >= 6.35mm, >= 12.7mm, and >= 25.4mm, the SRW App's
         # verification tasks pad the names of variables in the stat files with zeros
@@ -719,13 +718,13 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         #   APCP_24_ENS_FREQ_ge25.4
         #
         # The following code appends the zeros to the variable name in the database
-        # (fcst_var_name_in_db).  Note that these zeros are not necessary; for simplicity,
+        # (fcst_field_name_in_db).  Note that these zeros are not necessary; for simplicity,
         # the METplus configuration files in the SRW App should be changed so that these
         # zeros are not added.  Once that is done, the following code should be removed
         # (otherwise the variables will not be found in the database).
         #
-        if thresh_value in ['6.35']: fcst_var_name_in_db = ''.join([fcst_var_name_in_db, '0'])
-        elif thresh_value in ['12.7', '25.4']: fcst_var_name_in_db = ''.join([fcst_var_name_in_db, '00'])
+        if thresh_value in ['6.35']: fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '0'])
+        elif thresh_value in ['12.7', '25.4']: fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '00'])
 
     # Generate name for the verification statistic that MetViewer understands.
     vx_stat_mv = cla.vx_stat.upper()
@@ -733,18 +732,18 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     elif vx_stat_mv == 'AUC': vx_stat_mv = 'PSTD_ROC_AUC'
     elif vx_stat_mv == 'BRIER': vx_stat_mv = 'PSTD_BRIER'
 
-    # For the given forecast variable, generate a name for the corresponding
+    # For the given forecast field, generate a name for the corresponding
     # observation type in the MetViewer database.
     obs_type = ''
-    if cla.fcst_var == 'apcp' :
+    if cla.fcst_field == 'apcp' :
         obs_type = 'CCPA'
-    elif cla.fcst_var in ['refc', 'retop'] :
+    elif cla.fcst_field in ['refc', 'retop'] :
         obs_type = 'MRMS'
     # The level for CAPE is 'L0', which means the surface, but its obtype is ADPUPA
     # (upper air).  It's a bit unintuitive...
-    elif cla.fcst_var == 'cape':
+    elif cla.fcst_field == 'cape':
         obs_type = 'ADPUPA'
-    elif cla.fcst_var == 'vis':
+    elif cla.fcst_field == 'vis':
         obs_type = 'ADPSFC'
     elif cla.level_or_accum in ['2m','02m','10m']:
         obs_type = 'ADPSFC'
@@ -753,8 +752,8 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
 
     logging.debug(dedent(f"""
         Subset of strings passed to jinja2 template:
-          fcst_var_uc = {fcst_var_uc}
-          fcst_var_name_in_db = {fcst_var_name_in_db}
+          fcst_field_uc = {fcst_field_uc}
+          fcst_field_name_in_db = {fcst_field_name_in_db}
           vx_stat_mv = {vx_stat_mv}
           obs_type = {obs_type}
         """))
@@ -771,8 +770,8 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
                    "model_names_short": cla.model_names_short,
                    "model_color_codes": model_color_codes,
                    "model_color_codes_light": model_color_codes_light,
-                   "fcst_var_uc": fcst_var_uc,
-                   "fcst_var_name_in_db": fcst_var_name_in_db,
+                   "fcst_var_uc": fcst_field_uc,
+                   "fcst_var_name_in_db": fcst_field_name_in_db,
                    "level_in_db": level_in_db,
                    "level_or_accum_no0pad": loa_value_no0pad,
                    "thresh_in_db": thresh_in_db,
@@ -965,6 +964,8 @@ def plot_vx_metviewer(argv):
         Running MetViewer on xml file: {output_xml_fp}
         """))
     run_mv_batch(mv_batch, output_xml_fp)
+
+    return(output_xml_fp)
 #
 # -----------------------------------------------------------------------
 #
