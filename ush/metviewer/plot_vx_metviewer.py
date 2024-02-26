@@ -89,6 +89,96 @@ def get_pprint_str(x, indent_str):
     return x_str
 
 
+def get_thresh_info(thresh_in_config):
+    """Extract and form various pieces of threshold-related information from 
+       the threshold specified in the yaml plot configuration file.
+
+    Arguments:
+      thresh_in_config:  Threshold setting as it appears in the yaml plot configuration file.
+
+    Return:
+      thresh_info:       Dictionary containing varous threshold-related variables.
+    """
+
+    bad_thresh_fmt_msg = dedent('''
+        The input threshold must be either an empty string or a string of the
+        form
+          <comp_oper><value><units>
+        where <comp_oper> is a string of one or more characters representing a
+        comparison operator (e.g. "ge" for "greater than or equal to"), <value>
+        is a stirng of one or more digits and possibly a decimal representing
+        the threshold value, and <units> is a string of zero or more characters
+        representing the value's units (zero characters allowed to account for
+        the case of a unitless value).  Check the specified threshold to ensure
+        it has a valid format and rerun.  Stopping.''')
+
+    # Initialize to empty strings.
+    thresh_comp_oper = ''
+    thresh_value = ''
+    thresh_units = ''
+    thresh_in_db = ''
+    thresh_in_plot_title = ''
+
+    # Get threshold comparison operator, value, and units using regular expression.
+    thresh_parts = re.findall(r'([A-Za-z]+)(\d*\.*\d+)([A-Za-z]*)', thresh_in_config)
+
+    # If thresh_parts is not empty, then at least some parts of the threshold
+    # were extracted.  In this case, continue parsing.
+    if thresh_parts:
+        thresh_comp_oper = thresh_parts[0][0]
+        thresh_value = thresh_parts[0][1]
+        thresh_units = thresh_parts[0][2]
+
+        thresh_comp_oper_to_xml = {'lt': '&lt;',
+                                   'le': '&lt;=',
+                                   'gt': '&gt;',
+                                   'ge': '&gt;='}
+        valid_vals_thresh_comp_oper = list(thresh_comp_oper_to_xml.keys())
+        print(f'  valid_vals_thresh_comp_oper = {valid_vals_thresh_comp_oper}')
+        if thresh_comp_oper in valid_vals_thresh_comp_oper:
+            thresh_comp_oper_xml = thresh_comp_oper_to_xml[thresh_comp_oper]
+        else:
+            raise ValueError(''.join([dedent(f'''\n
+                Invalid value for threshold comparison operator:
+                  thresh_comp_oper = {thresh_comp_oper}
+                Valid values for the comparison operator are:
+                  valid_vals_thresh_comp_oper = {valid_vals_thresh_comp_oper}
+                Specified threshold is:
+                  thresh_in_config = {thresh_in_config}'''),
+                bad_thresh_fmt_msg]))
+    
+        # Form the threshold in the way that it appears in the database (for
+        # METviewer to find).
+        thresh_in_db = ''.join([thresh_comp_oper_xml, thresh_value])
+    
+        # If units are "mps", change them to "m/s" for purposes of the plot
+        # title.
+        thresh_in_plot_title = thresh_units.replace('mps', 'm/s')
+        # Form the threshold as it will appear in the plot title.  The
+        #   filter(None, [...])
+        # causes any empty strings in the list to be dropped so that unnecessary
+        # spaces (separators) are not inadvertantly added.
+        thresh_in_plot_title = ' '.join(filter(None, [thresh_comp_oper_xml, thresh_value, thresh_in_plot_title]))
+
+    # If thresh_parts is empty but thresh_in_config is not, then something
+    # must have been wrong with thresh_in_config that caused thresh_parts
+    # to be empty.
+    elif thresh_in_config:
+        raise ValueError(''.join([dedent(f'''\n
+            Specified input threshold does not have a valid format:
+              thresh_in_config = {thresh_in_config}'''),
+            bad_thresh_fmt_msg]))
+
+    # Create a dictionary containing the values to return and return it.
+    thresh_info = {'in_config': thresh_in_config,
+                   'comp_oper': thresh_comp_oper,
+                   'value': thresh_value,
+                   'units': thresh_units,
+                   'in_db': thresh_in_db,
+                   'in_plot_title': thresh_in_plot_title}
+    return thresh_info
+
+
 def get_static_info(static_info_config_fp):
     '''
     Function to read in values that are mostly static, i.e. they're usually

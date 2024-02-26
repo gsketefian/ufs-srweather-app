@@ -28,7 +28,6 @@ from python_utils import (
     load_config_file,
 )
 
-
 def make_mv_vx_plots(args):
     """Make multiple verification plots using MetViewer and the settings
     file specified as part of args.
