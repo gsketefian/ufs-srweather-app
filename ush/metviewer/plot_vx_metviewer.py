@@ -231,7 +231,7 @@ def get_static_info(static_info_config_fp):
                     Please modify this file and rerun.
                     """)
                 logging.error(err_msg, stack_info=True)
-                raise Exception(err_msg)
+                raise ValueError(err_msg)
 
     # Define local dictionaries containing static values that depend on the
     # verification statistic.
@@ -423,7 +423,7 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
             Either run on one of these hosts, or add an entry in the configuration file for "{cla.mv_host}".
             """)
         logging.error(err_msg, stack_info=True)
-        raise Exception(err_msg)
+        raise ValueError(err_msg)
 
     mv_machine_config_dict = mv_machine_config[cla.mv_host]
 
@@ -438,10 +438,11 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
               cla.mv_database_config_fp = {cla.mv_database_config_fp}
             """)
         logging.error(err_msg, stack_info=True)
-        raise Exception(err_msg)
+        raise ValueError(err_msg)
 
     # Extract the METviewer database information.
     database_info = mv_databases_dict[cla.mv_database_name]
+    valid_threshes_in_db = list(database_info['valid_threshes'])
     model_info = list(database_info['models'])
     num_models_avail_in_db = len(model_info)
     model_names_avail_in_db = [model_info[i]['long_name'] for i in range(0,num_models_avail_in_db)]
@@ -465,7 +466,28 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
                 will work only if the new model actually exists in the METviewer database).
                 """)
             logging.error(err_msg, stack_info=True)
-            raise Exception(err_msg)
+            raise ValueError(err_msg)
+
+    # If the threshold specified on the command line is not an empty string,
+    # make sure that it is one of the valid ones for this database.
+    if (cla.threshold) and (cla.threshold not in valid_threshes_in_db):
+        err_msg = dedent(f"""
+                  The specified threshold is not in the list of valid thresholds for the
+                  specified database.  Database is:
+                    cla.mv_database_name = {cla.mv_database_name}
+                  Threshold is:
+                    cla.threshold = {cla.threshold}
+                  The list of valid thresholds for this database is:
+                    valid_threshes_in_db = """)
+        indent_str = ' '*(5 + len('valid_threshes_in_db'))
+        err_msg = err_msg + get_pprint_str(valid_threshes_in_db, indent_str).lstrip()
+        err_msg = err_msg + dedent(f"""
+                  Make sure the specified threshold is one of the valid ones, or, if it
+                  exists in the database, add it to the 'valid_threshes' list in the 
+                  METviewer database configuration file given by:
+                      cla.mv_database_config_fp = {cla.mv_database_config_fp})""")
+        logging.error(err_msg, stack_info=True)
+        raise ValueError(err_msg)
 
     # Get the names in the database of those models that are to be plotted.
     inds_models_to_plot = [model_names_short_avail_in_db.index(m) for m in cla.model_names_short]
@@ -485,7 +507,7 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
                   n_ens = {n_ens}
                 """)
             logging.error(err_msg, stack_info=True)
-            raise Exception(err_msg)
+            raise ValueError(err_msg)
 
     # Make sure no model names are duplicated because METviewer will throw an 
     # error in this case.  Create a set (using curly braces) to store duplicate
@@ -500,7 +522,7 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
             Please remove duplicated models from the command line and rerun.
             """)
         logging.error(err_msg, stack_info=True)
-        raise Exception(err_msg)
+        raise ValueError(err_msg)
 
     # Make sure that there are at least as many available colors as models to
     # plot.
@@ -517,7 +539,7 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
               static_info_config_fp = {static_info_config_fp}
             """)
         logging.error(err_msg, stack_info=True)
-        raise Exception(err_msg)
+        raise ValueError(err_msg)
 
     # Pick out the plot color associated with each model from the list of 
     # available colors.  The following lists will contain the hex RGB color
@@ -563,7 +585,7 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
               {valid_levels_or_accums}
             """)
         logging.error(err_msg, stack_info=True)
-        raise Exception(err_msg)
+        raise ValueError(err_msg)
 
     # Parse the level/accumulation specified on the command line (cla.level_or_accum) 
     # to obtain its value and units.  The returned value is a list.  If the regular
@@ -592,7 +614,7 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
               loa_value_no0pad = {loa_value_no0pad}
             """)
         logging.error(err_msg, stack_info=True)
-        raise Exception(err_msg)
+        raise ValueError(err_msg)
 
     loa_value_no0pad = loa_value.lstrip('0')
     width_0pad = 0
@@ -657,7 +679,7 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
               {valid_units}
             """)
         logging.error(err_msg, stack_info=True)
-        raise Exception(err_msg)
+        raise ValueError(err_msg)
 
     # Form the plot title.
     plot_title = ' '.join(filter(None,
