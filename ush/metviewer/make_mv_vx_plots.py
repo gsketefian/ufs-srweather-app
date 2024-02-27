@@ -28,6 +28,53 @@ from python_utils import (
     load_config_file,
 )
 
+def check_for_preexisting_dir_file(dir_or_file, preexist_method):
+    """Check and handle preexisting directory or file.
+
+    Arguments:
+      dir_or_file:      Name of directory or file.
+      preexist_method:  Method to use to deal with a preexisting version of dir_or_file.
+                        This has 3 valid values:
+                          'rename':  Causes the existing dir_or_file to be renamed.
+                          'delete':  Causes the existing dir_or_file to be deleted.
+                          'quit':    Causes the script to quit if dir_or_file already exists.
+
+    Return:
+      None
+    """
+
+    valid_vals_preexist_method = ['rename', 'delete', 'quit']
+
+    if os.path.exists(dir_or_file):
+        if preexist_method == 'rename':
+            now = datetime.now()
+            renamed_dir_or_file = dir_or_file + now.strftime('.old_%Y%m%d_%H%M%S')
+            logging.info(dedent(f'''\n
+                Output directory already exists:
+                  {dir_or_file}
+                Moving (renaming) preexisting directory to:
+                  {renamed_dir_or_file}'''))
+            os.rename(dir_or_file, renamed_dir_or_file)
+        elif preexist_method == 'delete':
+            logging.info(dedent(f'''\n
+                Output directory already exists:
+                  {dir_or_file}
+                Removing existing directory...'''))
+            shutil.rmtree(dir_or_file)
+        elif preexist_method == 'quit':
+            raise FileExistsError(dedent(f'''\n
+                Output directory already exists:
+                  {dir_or_file}
+                Stopping.'''))
+        else:
+            raise ValueError(dedent(f'''\n
+                Invalid value for preexist_method:
+                  {preexist_method}
+                Valid values are:
+                  {valid_vals_preexist_method}
+                Stopping.'''))
+
+
 def make_mv_vx_plots(args):
     """Make multiple verification plots using METviewer and the settings
     file specified as part of args.
@@ -66,27 +113,7 @@ def make_mv_vx_plots(args):
 
     # Check if output directory exists and take action according to how the
     # args.preexisting_dir_method flag is set.
-    if os.path.exists(args.output_dir):
-        if args.preexisting_dir_method == 'rename':
-            now = datetime.now()
-            renamed_dir = args.output_dir + now.strftime('.old_%Y%m%d_%H%M%S')
-            logging.info(dedent(f'''\n
-                Output directory already exists:
-                  {args.output_dir}
-                Moving (renaming) preexisting directory to:
-                  {renamed_dir}'''))
-            os.rename(args.output_dir, renamed_dir)
-        elif args.preexisting_dir_method == 'delete':
-            logging.info(dedent(f'''\n
-                Output directory already exists:
-                  {args.output_dir}
-                Removing existing directory...'''))
-            shutil.rmtree(args.output_dir)
-        else:
-            raise FileExistsError(dedent(f'''\n
-                Output directory already exists:
-                  {args.output_dir}
-                Stopping.'''))
+    check_for_preexisting_dir_file(args.output_dir, args.preexisting_dir_method)
 
     # If the flag create_ordered_plots is set to True, create (if it doesn't
     # already exist) a new directory in which we will store copies of all
@@ -107,6 +134,7 @@ def make_mv_vx_plots(args):
     # see how many images were (not) successfully generated.
     num_mv_calls = 0
     num_images_generated = 0
+    missing_image_fns = []
 
     vx_stats_dict = config_dict["vx_stats"]
     for stat, stat_dict in vx_stats_dict.items():
@@ -128,6 +156,14 @@ def make_mv_vx_plots(args):
             indent_str = ' '*(5 + len('stat_dict'))
             msg = msg + get_pprint_str(stat_dict, indent_str).lstrip()
             logging.debug(msg)
+
+            # If ars.make_stat_subdirs is set to True, place the output for each
+            # statistic in a separate subdirectory under the main output directory.
+            # Otherwise, place the output directly under the main output directory.
+            if args.make_stat_subdirs:
+                output_dir_crnt_stat = os.path.join(args.output_dir, stat)
+            else:
+                output_dir_crnt_stat = args.output_dir
 
             for fcst_field, fcst_field_dict in stat_dict.items():
 
@@ -168,7 +204,7 @@ def make_mv_vx_plots(args):
                                      '--fcst_field', fcst_field,
                                      '--level_or_accum', level,
                                      '--threshold', thresh, 
-                                     '--mv_output_dir', args.output_dir]
+                                     '--mv_output_dir', output_dir_crnt_stat]
 
                         msg = dedent(f"""
                             Argument list passed to plotting script is:
@@ -197,6 +233,8 @@ def make_mv_vx_plots(args):
                         # images.
                         if os.path.isfile(output_image_fp):
                             num_images_generated += 1
+                        else:
+                            missing_image_fns.append(output_image_fn)
 
                         # If the image was successfully created and args.create_ordered_plots
                         # is set True, make a copy of the image in a designated subdirectory
@@ -219,6 +257,16 @@ def make_mv_vx_plots(args):
         Total number of image files generated:
           num_images_generated = {num_images_generated}
         """))
+
+    # If any images were not generated, print out their names.
+    num_missing_images = len(missing_image_fns)
+    if num_missing_images > 0:
+        msg = dedent(f"""
+            The following images were failed to generate:
+              missing_image_fns = """)
+        indent_str = ' '*(5 + len('missing_image_fns'))
+        msg = msg + get_pprint_str(missing_image_fns, indent_str).lstrip()
+        logging.info(msg)
 #
 # -----------------------------------------------------------------------
 #
@@ -284,6 +332,11 @@ if __name__ == "__main__":
                         required=False, default='rename',
                         choices=['rename', 'delete', 'quit'], 
                         help=dedent(f'''Method for dealing with pre-existing output directories.'''))
+
+    parser.add_argument('--make_stat_subdirs',
+                        required=False, action=argparse.BooleanOptionalAction,
+                        help=dedent(f'''Boolean flag for placing output for each statistic to be plotted in
+                                        a separate subdirectory under the output directory.'''))
 
     parser.add_argument('--create_ordered_plots',
                         required=False, action=argparse.BooleanOptionalAction,
