@@ -775,7 +775,7 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
     if fcst_field_uc == 'APCP': fcst_field_name_in_db = '_'.join([fcst_field_name_in_db, cla.level_or_accum[0:2]])
     if cla.vx_stat in ['auc', 'brier', 'rely']:
         fcst_field_name_in_db = '_'.join(filter(None,[fcst_field_name_in_db, 'ENS_FREQ', 
-                                                      ''.join([thresh_comp_oper, thresh_value])]))
+                                                      ''.join([thresh_info['comp_oper'], thresh_info['value']])]))
         #
         # For APCP thresholds of >= 6.35mm, >= 12.7mm, and >= 25.4mm, the SRW App's
         # verification tasks pad the names of variables in the stat files with zeros
@@ -798,8 +798,10 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
         # zeros are not added.  Once that is done, the following code should be removed
         # (otherwise the variables will not be found in the database).
         #
-        if thresh_value in ['6.35']: fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '0'])
-        elif thresh_value in ['12.7', '25.4']: fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '00'])
+        if thresh_info['value'] in ['6.35']:
+           fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '0'])
+        elif thresh_info['value'] in ['12.7', '25.4']:
+            fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '00'])
 
     # Generate name for the verification statistic that METviewer understands.
     vx_stat_mv = cla.vx_stat.upper()
