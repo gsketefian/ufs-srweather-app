@@ -302,12 +302,12 @@ def parse_args(argv, static_info):
 
     parser.add_argument('--mv_machine_config_fp',
                         type=str,
-                        required=False, default='mv_machine_config.yml', 
+                        required=False, default='mv_machine_config.yaml', 
                         help='METviewer machine (host) configuration file')
 
     parser.add_argument('--mv_database_config_fp',
                         type=str,
-                        required=False, default='mv_database_config.yml',
+                        required=False, default='mv_database_config.yaml',
                         help='METviewer database configuration file')
 
     parser.add_argument('--mv_database_name',
@@ -1012,7 +1012,7 @@ def plot_vx_metviewer(argv):
 
     # Get static parameters.  These include parameters (e.g. valid values) 
     # needed to parse the command line arguments.
-    static_info_config_fp = 'vx_plots_static_info.yml'
+    static_info_config_fp = 'vx_plots_static_info.yaml'
     logging.info(dedent(f"""
         Obtaining static verification info from file {static_info_config_fp} ...
         """))
