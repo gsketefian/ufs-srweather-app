@@ -29,7 +29,7 @@ from python_utils import (
 )
 
 def make_mv_vx_plots(args):
-    """Make multiple verification plots using MetViewer and the settings
+    """Make multiple verification plots using METviewer and the settings
     file specified as part of args.
 
     Arguments:
@@ -100,7 +100,7 @@ def make_mv_vx_plots(args):
         Path(ordered_plots_dir).mkdir(parents=True, exist_ok=True)
 
     # Initialze (1) the counter that keeps track of the number of times the
-    # script that generates a MetViewer xml and calls MetViewer is called and
+    # script that generates a METviewer xml and calls METviewer is called and
     # (2) the counter that keeps track of the number of images (png files)
     # that were successfully generated.  Each call to the script should
     # generate an image, so these two counters can be compared at the end to
@@ -179,12 +179,12 @@ def make_mv_vx_plots(args):
 
                         num_mv_calls += 1
                         logging.debug(dedent(f"""
-                            Calling MetViewer plotting script ...
+                            Calling METviewer plotting script ...
                               num_mv_calls = {num_mv_calls}
                             """))
                         output_xml_fp = plot_vx_metviewer(args_list)
                         logging.debug(dedent(f"""
-                            Done calling MetViewer plotting script.
+                            Done calling METviewer plotting script.
                             """))
 
                         # Keep track of the number of images that are successfully created.
@@ -214,7 +214,7 @@ def make_mv_vx_plots(args):
                             shutil.copy(output_image_fp, output_image_fp_ordered)
 
     logging.info(dedent(f"""
-        Total number of calls to MetViewer plotting script:
+        Total number of calls to METviewer plotting script:
           num_mv_calls = {num_mv_calls}
         Total number of image files generated:
           num_images_generated = {num_images_generated}
@@ -229,7 +229,7 @@ def make_mv_vx_plots(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description='Call MetViewer to create vx plots.'
+        description='Call METviewer to create vx plots.'
     )
 
     # Find the path to the directory containing the clone of the SRW App.
@@ -242,14 +242,14 @@ if __name__ == "__main__":
                         type=str,
                         required=False, default=os.path.join(expts_dir, 'mv_output'),
                         help=dedent(f'''Base directory in which to place output files (generated xmls,
-                                        MetViewer generated plots, log files, etc).  These will usually
+                                        METviewer generated plots, log files, etc).  These will usually
                                         be placed in subdirectories under this output directory.'''))
 
     parser.add_argument('--config_fp',
                         type=str,
                         required=False, default='config_mv_plots.default.yml',
                         help=dedent(f'''Name of or path (absolute or relative) to yaml user
-                                        plot configuration file for MetViewer plot generation.'''))
+                                        plot configuration file for METviewer plot generation.'''))
 
     parser.add_argument('--log_fp',
                         type=str,

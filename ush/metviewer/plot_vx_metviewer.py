@@ -134,26 +134,28 @@ def get_thresh_info(thresh_in_config):
                                    'gt': '&gt;',
                                    'ge': '&gt;='}
         valid_vals_thresh_comp_oper = list(thresh_comp_oper_to_xml.keys())
-        print(f'  valid_vals_thresh_comp_oper = {valid_vals_thresh_comp_oper}')
         if thresh_comp_oper in valid_vals_thresh_comp_oper:
             thresh_comp_oper_xml = thresh_comp_oper_to_xml[thresh_comp_oper]
         else:
-            raise ValueError(''.join([dedent(f'''\n
+            err_msg = ''.join([dedent(f'''\n
                 Invalid value for threshold comparison operator:
                   thresh_comp_oper = {thresh_comp_oper}
                 Valid values for the comparison operator are:
                   valid_vals_thresh_comp_oper = {valid_vals_thresh_comp_oper}
                 Specified threshold is:
                   thresh_in_config = {thresh_in_config}'''),
-                bad_thresh_fmt_msg]))
+                bad_thresh_fmt_msg])
+            logging.error(err_msg, stack_info=True)
+            raise ValueError(err_msg)
     
         # Form the threshold in the way that it appears in the database (for
         # METviewer to find).
         thresh_in_db = ''.join([thresh_comp_oper_xml, thresh_value])
     
-        # If units are "mps", change them to "m/s" for purposes of the plot
-        # title.
+        # For certain units, the character "p" represents "per", so in the plot
+        # title, it should be replaced with a "/".  Make replacement here.
         thresh_in_plot_title = thresh_units.replace('mps', 'm/s')
+        thresh_in_plot_title = thresh_units.replace('Jpkg', 'J/kg')
         # Form the threshold as it will appear in the plot title.  The
         #   filter(None, [...])
         # causes any empty strings in the list to be dropped so that unnecessary
@@ -164,10 +166,12 @@ def get_thresh_info(thresh_in_config):
     # must have been wrong with thresh_in_config that caused thresh_parts
     # to be empty.
     elif thresh_in_config:
-        raise ValueError(''.join([dedent(f'''\n
+        err_msg = ''.join([dedent(f'''\n
             Specified input threshold does not have a valid format:
               thresh_in_config = {thresh_in_config}'''),
-            bad_thresh_fmt_msg]))
+            bad_thresh_fmt_msg])
+        logging.error(err_msg, stack_info=True)
+        raise ValueError(err_msg)
 
     # Create a dictionary containing the values to return and return it.
     thresh_info = {'in_config': thresh_in_config,
@@ -189,23 +193,25 @@ def get_static_info(static_info_config_fp):
     # Load the yaml file containing static values.
     static_data = load_config_file(static_info_config_fp)
 
-    levels_to_levels_in_db = static_data['levels_to_levels_in_db']
-    all_valid_levels = list(levels_to_levels_in_db.keys())
-
-    threshs_to_threshs_in_db = static_data['threshs_to_threshs_in_db']
-    all_valid_threshs = list(threshs_to_threshs_in_db.keys())
+    valid_levels_to_levels_in_db = static_data['valid_levels_to_levels_in_db']
+    all_valid_levels = list(valid_levels_to_levels_in_db.keys())
 
     # Define local dictionaries containing static values that depend on the 
     # forecast field.
     valid_fcst_fields = static_data['fcst_fields'].keys()
     fcst_field_long_names = {}
     valid_levels_by_fcst_field = {}
-    valid_threshs_by_fcst_field = {}
+    valid_units_by_fcst_field = {}
     for fcst_field in valid_fcst_fields:
   
+        # Get and save long name of current the forecast field.
         fcst_field_long_names[fcst_field] = static_data['fcst_fields'][fcst_field]['long_name']
 
-        # Get list of valid levels/accumulations for the current forecast field.
+        # Get and save the list of valid units for the current forecast field.
+        valid_units_by_fcst_field[fcst_field] = static_data['fcst_fields'][fcst_field]['valid_units']
+
+        # Get and save the list of valid levels/accumulations for the current
+        # forecast field.
         valid_levels_by_fcst_field[fcst_field] = static_data['fcst_fields'][fcst_field]['valid_levels']
         # Make sure all the levels/accumulations specified for the current 
         # forecast field are in the master list of valid levels and accumulations.
@@ -227,27 +233,7 @@ def get_static_info(static_info_config_fp):
                 logging.error(err_msg, stack_info=True)
                 raise Exception(err_msg)
 
-        # Get list of valid thresholds for the current forecast field.
-        valid_threshs_by_fcst_field[fcst_field] = static_data['fcst_fields'][fcst_field]['valid_thresholds']
-        for thresh in valid_threshs_by_fcst_field[fcst_field]:
-            if thresh not in all_valid_threshs:
-                err_msg = dedent(f"""
-                    One of the thresholds (thresh) in the set of valid thresholds for the current
-                    forecast field (fcst_field) is not in the master list of valid thresholds
-                    (all_valid_threshs):
-                      fcst_field = {fcst_field}
-                      thresh = {thresh}
-                      all_valid_threshs = {all_valid_threshs}
-                    The master list of valid thresholds as well as the list of valid threhsolds for
-                    the current forecast field can be found in the following static information
-                    configuration file:
-                      static_info_config_fp = {static_info_config_fp}
-                    Please modify this file and rerun.
-                    """)
-                logging.error(err_msg, stack_info=True)
-                raise Exception(err_msg)
-
-    # Define local dictionaries containing static values that depend on the 
+    # Define local dictionaries containing static values that depend on the
     # verification statistic.
     valid_stats = static_data['stats'].keys()
     stat_long_names = {}
@@ -256,11 +242,11 @@ def get_static_info(static_info_config_fp):
         stat_long_names[stat] = static_data['stats'][stat]['long_name']
         stat_need_thresh[stat] = static_data['stats'][stat]['need_thresh']
 
-    # Get dictionary containing the available MetViewer color codes.  This 
-    # is a subset of all available colors in MetViewer (of which there are
+    # Get dictionary containing the available METviewer color codes.  This 
+    # is a subset of all available colors in METviewer (of which there are
     # thousands) which we allow the user to specify as a plot color for 
     # the models to be plotted.  In this dictionary, the keys are the color
-    # names (e.g. 'red'), and values are the corresponding codes in MetViewer.
+    # names (e.g. 'red'), and values are the corresponding codes in METviewer.
     avail_mv_colors_codes = static_data['avail_mv_colors_codes']
 
     # Create dictionary containing valid choices for various parameters.
@@ -268,17 +254,15 @@ def get_static_info(static_info_config_fp):
     choices = {}
     choices['fcst_field'] = sorted(valid_fcst_fields)
     choices['level'] = all_valid_levels
-    choices['threshold'] = all_valid_threshs
     choices['vx_stat'] = sorted(valid_stats)
     choices['color'] = list(avail_mv_colors_codes.keys())
 
     static_info = {}
     static_info['static_info_config_fp'] = static_info_config_fp 
-    static_info['levels_to_levels_in_db'] = levels_to_levels_in_db
-    static_info['threshs_to_threshs_in_db'] = threshs_to_threshs_in_db
+    static_info['valid_levels_to_levels_in_db'] = valid_levels_to_levels_in_db
     static_info['fcst_field_long_names'] = fcst_field_long_names
     static_info['valid_levels_by_fcst_field'] = valid_levels_by_fcst_field
-    static_info['valid_threshs_by_fcst_field'] = valid_threshs_by_fcst_field
+    static_info['valid_units_by_fcst_field'] = valid_units_by_fcst_field
     static_info['stat_long_names'] = stat_long_names
     static_info['stat_need_thresh'] = stat_need_thresh
     static_info['avail_mv_colors_codes'] = avail_mv_colors_codes 
@@ -289,14 +273,14 @@ def get_static_info(static_info_config_fp):
 
 def get_database_info(mv_database_config_fp):
     '''
-    Function to read in information about the MetViewer database from which
+    Function to read in information about the METviewer database from which
     verification statistics will be plotted.
     '''
 
     # Load the yaml file containing database information.
-    mv_database_info = load_config_file(mv_database_config_fp)
+    mv_databases_dict = load_config_file(mv_database_config_fp)
 
-    return mv_database_info
+    return mv_databases_dict
 
 
 def parse_args(argv, static_info):
@@ -307,29 +291,29 @@ def parse_args(argv, static_info):
     choices = static_info['choices']
 
     parser = argparse.ArgumentParser(description=dedent(f'''
-             Function to generate an xml file that MetViewer can read in order 
+             Function to generate an xml file that METviewer can read in order 
              to create a verification plot.
              '''))
 
     parser.add_argument('--mv_host',
                         type=str,
                         required=True,
-                        help='Host (name of machine) on which MetViewer is installed')
+                        help='Host (name of machine) on which METviewer is installed')
 
     parser.add_argument('--mv_machine_config_fp',
                         type=str,
                         required=False, default='mv_machine_config.yml', 
-                        help='MetViewer machine (host) configuration file')
+                        help='METviewer machine (host) configuration file')
 
     parser.add_argument('--mv_database_config_fp',
                         type=str,
                         required=False, default='mv_database_config.yml',
-                        help='MetViewer database configuration file')
+                        help='METviewer database configuration file')
 
     parser.add_argument('--mv_database_name',
                         type=str,
                         required=True,
-                        help='Name of MetViewer database')
+                        help='Name of METviewer database')
 
     # Find the path to the directory containing the clone of the SRW App.  The index of
     # .parents will have to be changed if this script is moved elsewhere in the SRW App's
@@ -340,7 +324,7 @@ def parse_args(argv, static_info):
     parser.add_argument('--mv_output_dir',
                         type=str,
                         required=False, default=os.path.join(expts_dir, 'mv_output'),
-                        help='Directory in which to place output (e.g. plots) from MetViewer')
+                        help='Directory in which to place output (e.g. plots) from METviewer')
 
     parser.add_argument('--model_names_short', nargs='+',
                         type=str.lower,
@@ -389,7 +373,6 @@ def parse_args(argv, static_info):
     parser.add_argument('--threshold',
                         type=str,
                         required=False, default='',
-                        choices=choices['threshold'],
                         help='Threshold for the specified forecast field')
 
     # Parse the arguments.
@@ -403,8 +386,8 @@ def parse_args(argv, static_info):
     return cla
 
 
-def generate_metviewer_xml(cla, static_info, mv_database_info):
-    """Function that generates an xml file that MetViewer can read (in order
+def generate_metviewer_xml(cla, static_info, mv_databases_dict):
+    """Function that generates an xml file that METviewer can read (in order
        to create a verification plot).
 
     Args:
@@ -415,11 +398,10 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     """
 
     static_info_config_fp = static_info['static_info_config_fp']
-    levels_to_levels_in_db = static_info['levels_to_levels_in_db']
-    threshs_to_threshs_in_db = static_info['threshs_to_threshs_in_db']
+    valid_levels_to_levels_in_db = static_info['valid_levels_to_levels_in_db']
     fcst_field_long_names = static_info['fcst_field_long_names']
     valid_levels_by_fcst_field = static_info['valid_levels_by_fcst_field']
-    valid_threshs_by_fcst_field = static_info['valid_threshs_by_fcst_field']
+    valid_units_by_fcst_field = static_info['valid_units_by_fcst_field']
     stat_long_names = static_info['stat_long_names']
     stat_need_thresh = static_info['stat_need_thresh']
     avail_mv_colors_codes = static_info['avail_mv_colors_codes']
@@ -433,7 +415,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     if cla.mv_host not in all_hosts:
         err_msg = dedent(f"""
             The machine/host specified on the command line (cla.mv_host) does not have a
-            corresponding entry in the MetViewer host configuration file (mv_machine_config_fp):
+            corresponding entry in the METviewer host configuration file (mv_machine_config_fp):
               cla.mv_host = {cla.mv_host}
               mv_machine_config_fp = {mv_machine_config_fp}
             Machines that do have an entry in the host configuration file are:
@@ -447,10 +429,10 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
 
     # Make sure that the database specified on the command line exists in the
     # list of databases in the database configuration file.
-    if cla.mv_database_name not in mv_database_info.keys():
+    if cla.mv_database_name not in mv_databases_dict.keys():
         err_msg = dedent(f"""
             The database specified on the command line (cla.mv_database_name) is not
-            in the set of MetViewer databases specified in the database configuration
+            in the set of METviewer databases specified in the database configuration
             file (cla.mv_database_config_fp):
               cla.mv_database_name = {cla.mv_database_name}
               cla.mv_database_config_fp = {cla.mv_database_config_fp}
@@ -458,10 +440,12 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         logging.error(err_msg, stack_info=True)
         raise Exception(err_msg)
 
-    # Extract the MetViewer database information.
-    model_info = mv_database_info[cla.mv_database_name]
-    model_names_avail_in_db = list(model_info.keys())
-    model_names_short_avail_in_db = [model_info[m]['short_name'] for m in model_names_avail_in_db]
+    # Extract the METviewer database information.
+    database_info = mv_databases_dict[cla.mv_database_name]
+    model_info = list(database_info['models'])
+    num_models_avail_in_db = len(model_info)
+    model_names_avail_in_db = [model_info[i]['long_name'] for i in range(0,num_models_avail_in_db)]
+    model_names_short_avail_in_db = [model_info[i]['short_name'] for i in range(0,num_models_avail_in_db)]
 
     # Make sure that the models specified on the command line exist in the
     # database.
@@ -470,7 +454,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
             err_msg = dedent(f"""
                 A model specified on the command line (model_name_short) is not included
                 in the entry for the specified database (cla.mv_database_name) in the 
-                MetViewer database configuration file (cla.mv_database_config_fp)
+                METviewer database configuration file (cla.mv_database_config_fp)
                   cla.mv_database_config_fp = {cla.mv_database_config_fp}
                   cla.mv_database_name = {cla.mv_database_name}
                   model_name_short = {model_name_short}
@@ -478,19 +462,19 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
                   {model_names_short_avail_in_db}
                 Either change the command line to specify only one of these models, or
                 add the new model to the database configuration file (the latter approach
-                will work only if the new model actually exists in the MetViewer database).
+                will work only if the new model actually exists in the METviewer database).
                 """)
             logging.error(err_msg, stack_info=True)
             raise Exception(err_msg)
 
     # Get the names in the database of those models that are to be plotted.
-    num_models_to_plot = len(cla.model_names_short)
-    model_names_in_db = [model_names_avail_in_db[model_names_short_avail_in_db.index(m)]
-                         for m in cla.model_names_short]
+    inds_models_to_plot = [model_names_short_avail_in_db.index(m) for m in cla.model_names_short]
+    num_models_to_plot = len(inds_models_to_plot)
+    model_names_in_db = [model_info[i]['long_name'] for i in inds_models_to_plot]
 
     # Get the number of ensemble members for each model and make sure all are
     # positive.
-    num_ens_mems_by_model = [model_info[m]['num_ens_mems'] for m in model_names_in_db]
+    num_ens_mems_by_model = [model_info[i]['num_ens_mems'] for i in inds_models_to_plot]
     for i,model in enumerate(cla.model_names_short):
         n_ens = num_ens_mems_by_model[i]
         if n_ens <= 0:
@@ -503,7 +487,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
             logging.error(err_msg, stack_info=True)
             raise Exception(err_msg)
 
-    # Make sure no model names are duplicated because MetViewer will throw an 
+    # Make sure no model names are duplicated because METviewer will throw an 
     # error in this case.  Create a set (using curly braces) to store duplicate
     # values.  Note that a set must be used here so that duplicate values are
     # not duplicated!
@@ -651,61 +635,41 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
             """))
         cla.threshold = ''
 
-    elif (stat_need_thresh[cla.vx_stat]):
-        valid_thresholds = valid_threshs_by_fcst_field[cla.fcst_field]
-        if cla.threshold not in valid_thresholds:
-            err_msg = dedent(f"""
-                The specified threshold is not compatible with the specified forecast
-                field:
-                  fcst_field = {cla.fcst_field}
-                  threshold = {cla.threshold}
-                Valid options for threshold for this forecast field are:
-                  {valid_thresholds}
-                """)
-            logging.error(err_msg, stack_info=True)
-            raise Exception(err_msg)
+    # Extract and set various pieces of threshold-related information from
+    # the specified threshold.
+    thresh_info = get_thresh_info(cla.threshold)
+    logging.info('\n'.join(['', 'Dictionary containing threshold information has been set as follows:',
+                             'thresh_info = ', get_pprint_str(thresh_info, '  '), '']))
 
-    thresh = re.findall(r'([A-Za-z]+)(\d*\.*\d+)([A-Za-z]+)', cla.threshold)
-    if thresh:
-        # Parse specified threshold to obtain comparison operator, value, and units.
-        thresh_comp_oper, thresh_value, thresh_units = list(thresh[0])
+    # Get the list of valid units for the specified forecast field.
+    valid_units = valid_units_by_fcst_field[cla.fcst_field]
+    # If the specified threshold is not empty and its units do not match any
+    # of the ones in the list of valid units, error out.
+    if (cla.threshold) and (thresh_info['units'] not in valid_units):
+        err_msg = dedent(f"""
+            The units specified in the threshold are not compatible with the list
+            of valid units for this field.  The specified field and threshold are:
+              cla.fcst_field = {cla.fcst_field}
+              cla.threshold = {cla.threshold}
+            The units extracted from the threshold are:
+              thresh_info[units] = {thresh_info['units']}
+            Valid units for this forecast field are:
+              {valid_units}
+            """)
+        logging.error(err_msg, stack_info=True)
+        raise Exception(err_msg)
 
-        if thresh_comp_oper[0] == 'l': 
-            thresh_comp_oper_xml = '&lt;'
-        elif thresh_comp_oper[0] == 'g': 
-            thresh_comp_oper_xml = '&gt;'
-
-        if thresh_comp_oper[1] == 'e': 
-            thresh_comp_oper_xml = "".join([thresh_comp_oper_xml, '='])
-
-        # For use only in the plot title, if 'mps' (meters per second) appears in
-        # the threshold units, replace with 'm/s'.
-        thresh_in_plot_title = thresh_units.replace('mps', 'm/s')
-        thresh_in_plot_title = " ".join([thresh_comp_oper_xml, thresh_value, thresh_in_plot_title])
-
-    else:
-        thresh_comp_oper = ''
-        thresh_value = ''
-        thresh_units = ''
-        thresh_in_plot_title = ''
-
-    logging.info(dedent(f"""
-        Threshold parameters have been set as follows:
-          thresh_comp_oper = {thresh_comp_oper}
-          thresh_value = {thresh_value}
-          thresh_units = {thresh_units}
-          thresh_in_plot_title = {thresh_in_plot_title}
-        """))
-
+    # Form the plot title.
     plot_title = ' '.join(filter(None,
                           [stat_long_names[cla.vx_stat], 'for',
                            ''.join([loa_value, loa_units]), fcst_field_long_names[cla.fcst_field],
-                           thresh_in_plot_title]))
+                           thresh_info['in_plot_title']]))
+
+    # Form the job title needed in the xml.
     fcst_field_uc = cla.fcst_field.upper()
     var_lvl_str = ''.join(filter(None, [fcst_field_uc, loa_value, loa_units]))
-    thresh_str = ''.join(filter(None, [thresh_comp_oper, thresh_value, thresh_units]))
+    thresh_str = ''.join(filter(None, [thresh_info['comp_oper'], thresh_info['value'], thresh_info['units']]))
     var_lvl_thresh_str = '_'.join(filter(None, [var_lvl_str, thresh_str]))
-
     models_str = '_'.join(cla.model_names_short)
     job_title = '_'.join([cla.vx_stat, var_lvl_thresh_str, models_str])
 
@@ -721,8 +685,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
 
     # Get names of level/accumulation, threshold, and models as they are set
     # in the database.
-    level_in_db = levels_to_levels_in_db[cla.level_or_accum]
-    thresh_in_db = threshs_to_threshs_in_db[cla.threshold]
+    level_in_db = valid_levels_to_levels_in_db[cla.level_or_accum]
 
     line_types = list()
     for imod in range(0,num_models_to_plot):
@@ -785,7 +748,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
     if incl_ens_means: num_series = num_series + num_models_to_plot
     order_series = [s for s in range(1,num_series+1)]
 
-    # Generate name of forecast field as it appears in the MetViewer database.
+    # Generate name of forecast field as it appears in the METviewer database.
     fcst_field_name_in_db = fcst_field_uc
     if fcst_field_uc == 'APCP': fcst_field_name_in_db = '_'.join([fcst_field_name_in_db, cla.level_or_accum[0:2]])
     if cla.vx_stat in ['auc', 'brier', 'rely']:
@@ -816,14 +779,14 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         if thresh_value in ['6.35']: fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '0'])
         elif thresh_value in ['12.7', '25.4']: fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '00'])
 
-    # Generate name for the verification statistic that MetViewer understands.
+    # Generate name for the verification statistic that METviewer understands.
     vx_stat_mv = cla.vx_stat.upper()
     if vx_stat_mv == 'BIAS': vx_stat_mv = 'ME'
     elif vx_stat_mv == 'AUC': vx_stat_mv = 'PSTD_ROC_AUC'
     elif vx_stat_mv == 'BRIER': vx_stat_mv = 'PSTD_BRIER'
 
     # For the given forecast field, generate a name for the corresponding
-    # observation type in the MetViewer database.
+    # observation type in the METviewer database.
     obs_type = ''
     if cla.fcst_field == 'apcp' :
         obs_type = 'CCPA'
@@ -864,7 +827,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
                    "fcst_field_name_in_db": fcst_field_name_in_db,
                    "level_in_db": level_in_db,
                    "level_or_accum_no0pad": loa_value_no0pad,
-                   "thresh_in_db": thresh_in_db,
+                   "thresh_in_db": thresh_info['in_db'],
                    "obs_type": obs_type,
                    "vx_stat_uc": cla.vx_stat.upper(),
                    "vx_stat_lc": cla.vx_stat.lower(),
@@ -905,7 +868,7 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
         """))
 
     # Place xmls generated below in the same directory as the plots that 
-    # MetViewer will generate from the xmls.
+    # METviewer will generate from the xmls.
     output_xml_dir = Path(os.path.join(cla.mv_output_dir, 'plots')).resolve()
     if not os.path.exists(output_xml_dir):
         os.makedirs(output_xml_dir)
@@ -942,30 +905,30 @@ def generate_metviewer_xml(cla, static_info, mv_database_info):
 
 
 def run_mv_batch(mv_batch, output_xml_fp):
-    """Function that generates a verification plot using MetViewer.
+    """Function that generates a verification plot using METviewer.
 
     Args:
-        mv_batch:       Path to MetViewer batch plotting script.
+        mv_batch:       Path to METviewer batch plotting script.
         output_xml_fp:  Full path to the xml to pass to the batch script.
 
     Returns:
         result:         Instance of subprocess.CompletedProcess class containing
-                        result of call to MetViewer batch script.
+                        result of call to METviewer batch script.
     """
 
     # Generate full path to log file that will contain output from calling the
-    # MetViewer batch script.
+    # METviewer batch script.
     p = Path(output_xml_fp)
     mv_batch_log_fp = ''.join([os.path.join(p.parent, p.stem), '.log'])
 
-    # Run MetViewer in batch mode on the xml.
+    # Run METviewer in batch mode on the xml.
     logging.info(dedent(f"""
-        Log file for call to MetViewer batch script is:
+        Log file for call to METviewer batch script is:
           mv_batch_log_fp = {mv_batch_log_fp}
         """))
     with open(mv_batch_log_fp, "w") as outfile:
         result = subprocess.run([mv_batch, output_xml_fp], stdout=outfile, stderr=outfile)
-        logging.debug('\n'.join(['', 'Result of call to MetViewer batch script:',
+        logging.debug('\n'.join(['', 'Result of call to METviewer batch script:',
                                  'result = ', get_pprint_str(vars(result), '  '), '']))
 
 
@@ -1037,21 +1000,21 @@ def plot_vx_metviewer(argv):
         """))
     cla = parse_args(argv, static_info)
 
-    # Get MetViewer database information.
+    # Get METviewer database information.
     logging.info(dedent(f"""
-        Obtaining MetViewer database info from file {cla.mv_database_config_fp} ...
+        Obtaining METviewer database info from file {cla.mv_database_config_fp} ...
         """))
-    mv_database_info = get_database_info(cla.mv_database_config_fp)
+    mv_databases_dict = get_database_info(cla.mv_database_config_fp)
 
-    # Generate a MetViewer xml.
+    # Generate a METviewer xml.
     logging.info(dedent(f"""
-        Generating a MetViewer xml ...
+        Generating a METviewer xml ...
         """))
-    mv_batch, output_xml_fp = generate_metviewer_xml(cla, static_info, mv_database_info)
+    mv_batch, output_xml_fp = generate_metviewer_xml(cla, static_info, mv_databases_dict)
 
-    # Run MetViewer on the xml to create a verification plot.
+    # Run METviewer on the xml to create a verification plot.
     logging.info(dedent(f"""
-        Running MetViewer on xml file: {output_xml_fp}
+        Running METviewer on xml file: {output_xml_fp}
         """))
     run_mv_batch(mv_batch, output_xml_fp)
 

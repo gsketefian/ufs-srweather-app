@@ -8,103 +8,63 @@
 # another or if the values are standard in MetViewer.  If the former,
 # then this should be moved to the database configuration yaml file.
 #
-levels_to_levels_in_db: {'01h': 'A1',
-                         '03h': 'A3',
-                         '06h': 'A6',
-                         '24h': 'A24',
-                         'L0': 'L0',
-                         '2m': 'Z2',
-                         '10m': 'Z10', 
-                         '500mb': 'P500',
-                         '700mb': 'P700',
-                         '850mb': 'P850'}
+valid_levels_to_levels_in_db: {'01h': 'A1',
+                               '03h': 'A3',
+                               '06h': 'A6',
+                               '24h': 'A24',
+                               'L0': 'L0',
+                               '2m': 'Z2',
+                               '10m': 'Z10', 
+                               '500mb': 'P500',
+                               '700mb': 'P700',
+                               '850mb': 'P850'}
 #
-# Dictionary containing set of allowed thresholds (the keys) that can
-# be specified on the command line along with the corresponding string 
-# used to identify that level in MetViewer and/or the database that 
-# it loads (the value).
-#
-# It is unclear whether this mapping can change from one database to
-# another or if the values are standard in MetViewer.  If the former,
-# then this should be moved to the database configuration yaml file.
-#
-threshs_to_threshs_in_db: {'': '',
-                           'gt0.0mm': '&gt;0.0',
-                           'ge0.508mm': '&gt;=0.508',
-                           'ge2.54mm': '&gt;=2.54',
-                           'ge6.35mm': '&gt;=6.35',
-                           'ge12.7mm': '&gt;=12.7',
-                           'ge25.4mm': '&gt;=25.4',
-                           'ge20dBZ': '&gt;=20',
-                           'ge30dBZ': '&gt;=30',
-                           'ge40dBZ': '&gt;=40',
-                           'ge50dBZ': '&gt;=50',
-                           'ge20kft': '&gt;=20',
-                           'ge30kft': '&gt;=30',
-                           'ge40kft': '&gt;=40',
-                           'ge50kft': '&gt;=50',
-                           'ge258K': '&gt;=258',
-                           'ge263K': '&gt;=263',
-                           'ge268K': '&gt;=268',
-                           'ge278K': '&gt;=278',
-                           'ge283K': '&gt;=283',
-                           'ge288K': '&gt;=288',
-                           'ge293K': '&gt;=293',
-                           'ge298K': '&gt;=298',
-                           'ge303K': '&gt;=303',
-                           'lt1609m': '&lt;1609',
-                           'ge8045m': '&gt;=8045',
-                           'ge5mps': '&gt;=5',
-                           'ge10mps': '&gt;=10',
-                           'ge15mps': '&gt;=15',
-                           'ge21mps': '&gt;=21',
-                           'ge5400m': '&ge;=5400',
-                           'ge5880m': '&ge;=5880'}
-#
-# List of allowed forecast variable short names, the long name of each,
-# list of valid levels for each, and list of thresholds for each. 
+# List of allowed forecast field short names, and, for each field:
+#   1) A long name
+#   2) A list of valid units
+#   3) A list of valid levels
 #
 fcst_fields:
     apcp:
         long_name: 'Accumulated Precipitation'
+        valid_units: ['mm']
         valid_levels: ['01h', '03h', '06h', '24h']
-        valid_thresholds: ['gt0.0mm', 'ge0.508mm', 'ge2.54mm', 'ge6.35mm', 'ge12.7mm', 'ge25.4mm']
     cape:
         long_name: 'Convenctive Available Potential Energy'
+        valid_units: ['Jpkg']
         valid_levels: ['L0']
-        valid_thresholds: ['']
     dpt:
         long_name: 'Dew Point'
+        valid_units: ['K']
         valid_levels: ['2m', '500mb', '700mb', '850mb']
-        valid_thresholds: ['ge278K', 'ge283K', 'ge288K', 'ge293K']
     hgt:
         long_name: 'Height'
+        valid_units: ['m']
         valid_levels: ['500mb']
-        valid_thresholds: ['ge5400m', 'ge5880m']
     refc:
         long_name: 'Composite Reflectivity'
+        valid_units: ['dbz', 'dBZ']
         valid_levels: ['L0']
-        valid_thresholds: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
     retop:
         long_name: 'Echo Top'
+        valid_units: ['kft']
         valid_levels: ['L0']
-        valid_thresholds: ['ge20kft', 'ge30kft', 'ge40kft', 'ge50kft']
     tmp:
         long_name: 'Temperature'
+        valid_units: ['K']
         valid_levels: ['2m', '500mb', '700mb', '850mb']
-        valid_thresholds: ['ge258K', 'ge268K', 'ge263K', 'ge288K', 'ge293K', 'ge298K', 'ge303K']
     vis:
         long_name: 'Visibility'
+        valid_units: ['m']
         valid_levels: ['L0']
-        valid_thresholds: ['lt1609m', 'ge8045m']
     wind:
         long_name: 'Wind'
+        valid_units: ['mps']
         valid_levels: ['10m', '500mb', '700mb', '850mb']
-        valid_thresholds: ['ge5mps', 'ge10mps', 'ge15mps', 'ge21mps']
 #
 # List of allowed verification statistic/metric short names, the long name
 # of each, and whether each requires a threshold value for a given forecast
-# variable.
+# field.
 #
 stats:
     auc:
