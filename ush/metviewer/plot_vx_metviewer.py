@@ -190,7 +190,7 @@ def get_static_info(static_info_config_fp):
     valid values for various parameters).
     '''
 
-    # Load the yaml file containing static values.
+    # Load the yaml file containing static verification parameters.
     static_data = load_config_file(static_info_config_fp)
 
     valid_levels_to_levels_in_db = static_data['valid_levels_to_levels_in_db']
@@ -198,21 +198,21 @@ def get_static_info(static_info_config_fp):
 
     # Define local dictionaries containing static values that depend on the 
     # forecast field.
-    valid_fcst_fields = static_data['fcst_fields'].keys()
+    valid_fcst_fields = static_data['valid_fcst_fields'].keys()
     fcst_field_long_names = {}
     valid_levels_by_fcst_field = {}
     valid_units_by_fcst_field = {}
     for fcst_field in valid_fcst_fields:
   
         # Get and save long name of current the forecast field.
-        fcst_field_long_names[fcst_field] = static_data['fcst_fields'][fcst_field]['long_name']
+        fcst_field_long_names[fcst_field] = static_data['valid_fcst_fields'][fcst_field]['long_name']
 
         # Get and save the list of valid units for the current forecast field.
-        valid_units_by_fcst_field[fcst_field] = static_data['fcst_fields'][fcst_field]['valid_units']
+        valid_units_by_fcst_field[fcst_field] = static_data['valid_fcst_fields'][fcst_field]['valid_units']
 
         # Get and save the list of valid levels/accumulations for the current
         # forecast field.
-        valid_levels_by_fcst_field[fcst_field] = static_data['fcst_fields'][fcst_field]['valid_levels']
+        valid_levels_by_fcst_field[fcst_field] = static_data['valid_fcst_fields'][fcst_field]['valid_levels']
         # Make sure all the levels/accumulations specified for the current 
         # forecast field are in the master list of valid levels and accumulations.
         for loa in valid_levels_by_fcst_field[fcst_field]:
@@ -235,12 +235,12 @@ def get_static_info(static_info_config_fp):
 
     # Define local dictionaries containing static values that depend on the
     # verification statistic.
-    valid_stats = static_data['stats'].keys()
+    valid_stats = static_data['valid_stats'].keys()
     stat_long_names = {}
     stat_need_thresh = {}
     for stat in valid_stats:
-        stat_long_names[stat] = static_data['stats'][stat]['long_name']
-        stat_need_thresh[stat] = static_data['stats'][stat]['need_thresh']
+        stat_long_names[stat] = static_data['valid_stats'][stat]['long_name']
+        stat_need_thresh[stat] = static_data['valid_stats'][stat]['need_thresh']
 
     # Get dictionary containing the available METviewer color codes.  This 
     # is a subset of all available colors in METviewer (of which there are

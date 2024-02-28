@@ -1,30 +1,38 @@
 #
-# Dictionary containing set of allowed levels (the keys) that can be
-# specified on the command line along with the corresponding string 
-# used to identify that level in MetViewer and/or the database that 
-# it loads (the value).
+# List of valid verification statistic/metric short names, the long name
+# of each, and whether each requires a threshold value for a given forecast
+# field.
 #
-# It is unclear whether this mapping can change from one database to
-# another or if the values are standard in MetViewer.  If the former,
-# then this should be moved to the database configuration yaml file.
+valid_stats:
+    auc:
+        long_name: 'Area Under the Curve'
+        need_thresh: True
+    bias:
+        long_name: 'Bias'
+        need_thresh: False
+    brier:
+        long_name: 'Brier Score'
+        need_thresh: True
+    fbias:
+        long_name: 'Frequency Bias'
+        need_thresh: True
+    rely:
+        long_name: 'Reliability'
+        need_thresh: True
+    rhist:
+        long_name: 'Rank Histogram'
+        need_thresh: False
+    ss:
+        long_name: 'Spread-Skill Ratio'
+        need_thresh: False
 #
-valid_levels_to_levels_in_db: {'01h': 'A1',
-                               '03h': 'A3',
-                               '06h': 'A6',
-                               '24h': 'A24',
-                               'L0': 'L0',
-                               '2m': 'Z2',
-                               '10m': 'Z10', 
-                               '500mb': 'P500',
-                               '700mb': 'P700',
-                               '850mb': 'P850'}
+# List of valid forecast field short names, and, for each field:
 #
-# List of allowed forecast field short names, and, for each field:
 #   1) A long name
 #   2) A list of valid units
 #   3) A list of valid levels
 #
-fcst_fields:
+valid_fcst_fields:
     apcp:
         long_name: 'Accumulated Precipitation'
         valid_units: ['mm']
@@ -62,32 +70,25 @@ fcst_fields:
         valid_units: ['mps']
         valid_levels: ['10m', '500mb', '700mb', '850mb']
 #
-# List of allowed verification statistic/metric short names, the long name
-# of each, and whether each requires a threshold value for a given forecast
-# field.
+# Dictionary containing set of allowed levels (the keys) that can be
+# specified on the command line along with the corresponding string 
+# used to identify that level in MetViewer and/or the database that 
+# it loads (the value).
 #
-stats:
-    auc:
-        long_name: 'Area Under the Curve'
-        need_thresh: True
-    bias:
-        long_name: 'Bias'
-        need_thresh: False
-    brier:
-        long_name: 'Brier Score'
-        need_thresh: True
-    fbias:
-        long_name: 'Frequency Bias'
-        need_thresh: True
-    rely:
-        long_name: 'Reliability'
-        need_thresh: True
-    rhist:
-        long_name: 'Rank Histogram'
-        need_thresh: False
-    ss:
-        long_name: 'Spread-Skill Ratio'
-        need_thresh: False
+# It is unclear whether this mapping can change from one database to
+# another or if the values are standard in MetViewer.  If the former,
+# then this should be moved to the database configuration yaml file.
+#
+valid_levels_to_levels_in_db: {'01h': 'A1',
+                               '03h': 'A3',
+                               '06h': 'A6',
+                               '24h': 'A24',
+                               'L0': 'L0',
+                               '2m': 'Z2',
+                               '10m': 'Z10', 
+                               '500mb': 'P500',
+                               '700mb': 'P700',
+                               '850mb': 'P850'}
 #
 # Hex codes for colors MetViewer can use for the models.  The first code is
 # for the standard version of the color while the second is for a light 

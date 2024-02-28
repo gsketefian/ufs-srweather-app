@@ -62,17 +62,21 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
                 Removing existing directory...'''))
             shutil.rmtree(dir_or_file)
         elif preexist_method == 'quit':
-            raise FileExistsError(dedent(f'''\n
+            err_msg = dedent(f'''\n
                 Output directory already exists:
                   {dir_or_file}
-                Stopping.'''))
+                Stopping.''')
+            logging.error(err_msg, stack_info=True)
+            raise FileExistsError(err_msg)
         else:
-            raise ValueError(dedent(f'''\n
+            err_msg = dedent(f'''\n
                 Invalid value for preexist_method:
                   {preexist_method}
                 Valid values are:
                   {valid_vals_preexist_method}
-                Stopping.'''))
+                Stopping.''')
+            logging.error(err_msg, stack_info=True)
+            raise ValueError(err_msg)
 
 
 def make_mv_vx_plots(args):
@@ -103,8 +107,9 @@ def make_mv_vx_plots(args):
     mv_host = config_dict['mv_host']
     mv_database_name = config_dict['mv_database_name']
     model_names = config_dict['model_names']
-
     fcst_init_info = config_dict['fcst_init_info']
+    vx_stats_dict = config_dict["vx_stats"]
+
     fcst_init_info = map(str, list(fcst_init_info.values()))
     # fcst_init_info is a list containing both strings and integers.  For
     # use below, convert it to a list of strings only.
@@ -126,6 +131,44 @@ def make_mv_vx_plots(args):
         ordered_plots_dir = os.path.join(args.output_dir, 'ordered_plots')
         Path(ordered_plots_dir).mkdir(parents=True, exist_ok=True)
 
+    # For simplicity, do not allow both the --incl_only_stat and --excl_stat
+    # options to be specified.
+    if args.incl_only_stats and args.excl_stats:
+        err_msg = dedent(f'''\n
+            For simplicity, the "--incl_only_stat" and "--excl_stat" options cannot
+            both be specified on the command line:
+              args.incl_only_stats = {args.incl_only_stats}
+              args.excl_stats = {args.excl_stats}
+            Please remove one or the other from the command line and rerun.  Stopping.''')
+        logging.error(err_msg, stack_info=True)
+        raise ValueError(err_msg)
+    
+    # Ensure that any statistics passed to the --incl_only_stat and/or the
+    # --excl_stat options also appear in the plot configuration file.
+    vx_stats_in_config = list(vx_stats_dict.keys())
+
+    if args.incl_only_stats:
+        incl_or_excl_stats = args.incl_only_stats
+        option_name = "--incl_only_stats"
+    elif args.excl_stats:
+        incl_or_excl_stats = args.excl_stats
+        option_name = "--excl_stats"
+
+    stats_not_in_config = list(set(incl_or_excl_stats).difference(vx_stats_in_config))
+
+    if stats_not_in_config:
+        err_msg = dedent(f'''\n
+            One or more statistics passed to the "{option_name}" option are not
+            included in the plot configuration file.  These are:
+              stats_not_in_config = {stats_not_in_config}
+            The plot configuration file is:
+              config_fp = {config_fp}
+            Statistics included in the plot configuration file are:
+              {vx_stats_in_config}
+            Stopping.''')
+        logging.error(err_msg, stack_info=True)
+        raise ValueError(err_msg)
+
     # Initialze (1) the counter that keeps track of the number of times the
     # script that generates a METviewer xml and calls METviewer is called and
     # (2) the counter that keeps track of the number of images (png files)
@@ -136,17 +179,26 @@ def make_mv_vx_plots(args):
     num_images_generated = 0
     missing_image_fns = []
 
-    vx_stats_dict = config_dict["vx_stats"]
     for stat, stat_dict in vx_stats_dict.items():
-
-        if stat in args.exclude_stats:
+        #
+        # Don't procecess the current statistic if it is included in the list
+        # specified by the excl_stats argument.
+        #
+        if stat in args.excl_stats:
             logging.info(dedent(f"""\n
                 Skipping plotting of statistic "{stat}" because it is in the list of 
                 stats to exclude ...
-                  args.exclude_stats = {args.exclude_stats}
+                  args.excl_stats = {args.excl_stats}
                 """))
-
-        elif (not args.include_stats) or (args.include_stats and stat in args.include_stats):
+        #
+        # Process the current statistic if either one of the following is true:
+        #
+        #   1) The args.incl_only_stats list is empty (e.g. because the incl_only_stats
+        #      argument has not been specified).
+        #   2) The args.incl_only_stats list includes the current statistic (implying
+        #      that the incl_only_stats argument was specified).
+        #
+        elif (not args.incl_only_stats) or (stat in args.incl_only_stats):
             logging.info(dedent(f"""
                 Plotting statistic "{stat}" for various forecast fields ...
                 """))
@@ -313,19 +365,41 @@ if __name__ == "__main__":
                         choices=choices_log_level,
                         help=dedent(f'''Logging level to use with the "logging" module.'''))
 
-    parser.add_argument('--include_stats', nargs='+',
-                        type=str.lower,
-                        required=False, default=[],
-                        choices=['auc', 'bias', 'brier', 'fbias', 'rely', 'rhist', 'ss'],
-                        help=dedent(f'''Stats to include in verification plot generation.  A stat
-                                        included here will still be excluded if it is not in the
-                                        yaml user plot configuration file.'''))
+    # Load the yaml file containing static verification parameters
+    # and get valid values.
+    static_info_config_fp = 'vx_plots_static_info.yaml'
+    static_data = load_config_file(static_info_config_fp)
+    valid_stats = list(static_data['valid_stats'].keys())
+    valid_fcst_fields = list(static_data['valid_fcst_fields'].keys())
 
-    parser.add_argument('--exclude_stats', nargs='+',
+    parser.add_argument('--incl_only_stats', nargs='+',
                         type=str.lower,
                         required=False, default=[],
-                        choices=['auc', 'bias', 'brier', 'fbias', 'rely', 'rhist', 'ss'],
+                        choices=valid_stats,
+                        help=dedent(f'''Stats to exclusively include in verification plot generation.  This is
+                                        a convenience option and provides a way to override the settings in the
+                                        yaml plot configuration file.  If this option is not used, then all stats
+                                        in the configuration file are plotted.  If it is used, then plots will be
+                                        generated only for the stats passed to this option.  Note that any stat
+                                        specified here must also appear in the yaml user plot configuration file
+                                        (because the script needs to know the fields, levels, and possibly
+                                        thresholds for which to generate plots for that stat).  For simplicity,
+                                        this option cannot be used together with the "--excl_stats" option.'''))
+
+    parser.add_argument('--excl_stats', nargs='+',
+                        type=str.lower,
+                        required=False, default=[],
+                        choices=valid_stats,
                         help='Stats to exclude from verification plot generation.')
+                        help=dedent(f'''Stats to exclude from verification plot generation.  This is a convenience
+                                        option and provides a way to override the settings in the yaml plot
+                                        configuration file.  If this option is not used, then all stats in the
+                                        configuration file are plotted.  If it is used, then plots will be
+                                        generated only for those stats in the configuration file that are not
+                                        also listed here.  To maintain consistency with the "--incl_only_stats"
+                                        option, any stat specified here must also appear in the yaml user plot
+                                        configuration file.  For simplicity, this option cannot be used together
+                                        with the "--incl_only_stats" option.'''))
 
     parser.add_argument('--preexisting_dir_method',
                         type=str.lower,
@@ -335,18 +409,17 @@ if __name__ == "__main__":
 
     parser.add_argument('--make_stat_subdirs',
                         required=False, action=argparse.BooleanOptionalAction,
-                        help=dedent(f'''Boolean flag for placing output for each statistic to be plotted in
-                                        a separate subdirectory under the output directory.'''))
+                        help=dedent(f'''Boolean flag for placing output for each statistic to be plotted in a
+                                        separate subdirectory under the output directory.'''))
 
     parser.add_argument('--create_ordered_plots',
                         required=False, action=argparse.BooleanOptionalAction,
-                        help=dedent(f'''Boolean flag for creating a directory that contains copies of
-                                        all the generated images (png files) and renamed such that they
-                                        are alphabetically in the same order as the user has specified
-                                        in the yaml plot configuration file (the one passed to the optional
-                                        --config_fp argument).  This is useful for creating a pdf of 
-                                        the plots from the images that includes the plots in the same 
-                                        order as in the plot configuration file.'''))
+                        help=dedent(f'''Boolean flag for creating a directory that contains copies of all the
+                                        generated images (png files) and renamed such that they are alphabetically
+                                        in the same order as the user has specified in the yaml plot configuration
+                                        file (the one passed to the optional --config_fp argument).  This is
+                                        useful for creating a pdf of the plots from the images that includes the
+                                        plots in the same order as in the plot configuration file.'''))
 
     args = parser.parse_args()
 
