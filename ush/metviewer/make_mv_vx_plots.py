@@ -79,12 +79,13 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
             raise ValueError(err_msg)
 
 
-def make_mv_vx_plots(args):
+def make_mv_vx_plots(args, valid_vals):
     """Make multiple verification plots using METviewer and the settings
     file specified as part of args.
 
     Arguments:
-      args:  Dictionary of arguments.
+      args:        Dictionary of arguments.
+      valid_vals:  Dictionary of valid values of various parameters.
     """
 
     # Set up logging.
@@ -92,11 +93,11 @@ def make_mv_vx_plots(args):
     # arguments, place the logging output in it (existing log files of the
     # same name are overwritten).  Otherwise, direct the output to the screen.
     log_level = str.upper(args.log_level)
-    FORMAT = "[%(levelname)s:%(name)s:  %(filename)s, line %(lineno)s: %(funcName)s()] %(message)s"
+    msg_format = "[%(levelname)s:%(name)s:  %(filename)s, line %(lineno)s: %(funcName)s()] %(message)s"
     if args.log_fp:
-        logging.basicConfig(level=log_level, format=FORMAT, filename=args.log_fp, filemode='w')
+        logging.basicConfig(level=log_level, format=msg_format, filename=args.log_fp, filemode='w')
     else:
-        logging.basicConfig(level=log_level, format=FORMAT)
+        logging.basicConfig(level=log_level, format=msg_format)
 
     config_fp = args.config_fp
     config_dict = load_config_file(config_fp)
@@ -131,20 +132,13 @@ def make_mv_vx_plots(args):
         ordered_plots_dir = os.path.join(args.output_dir, 'ordered_plots')
         Path(ordered_plots_dir).mkdir(parents=True, exist_ok=True)
 
-    # For simplicity, do not allow both the --incl_only_stat and --excl_stat
-    # options to be specified.
-    if args.incl_only_stats and args.excl_stats:
-        err_msg = dedent(f'''\n
-            For simplicity, the "--incl_only_stat" and "--excl_stat" options cannot
-            both be specified on the command line:
-              args.incl_only_stats = {args.incl_only_stats}
-              args.excl_stats = {args.excl_stats}
-            Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+    # Get valid values for statistics, forecast fields, and forecast levels.
+    valid_stats = valid_vals['stats']
+    valid_fields = valid_vals['fields']
+    valid_levels = valid_vals['levels']
 
-    # Ensure that any statistics passed to the --incl_only_stat option also
-    # appear in the plot configuration file.
+    # Ensure that any statistics passed to the "--incl_only_stat" option also
+    # appear in the yaml plot configuration file.
     vx_stats_in_config = list(vx_stats_dict.keys())
     stats_not_in_config = list(set(args.incl_only_stats).difference(vx_stats_in_config))
     if stats_not_in_config:
@@ -152,71 +146,106 @@ def make_mv_vx_plots(args):
             One or more statistics passed to the "--incl_only_stats" option are not
             included in the plot configuration file.  These are:
               stats_not_in_config = {stats_not_in_config}
-            The plot configuration file is:
+            Please include these in the plot configuration file and rerun.  The plot
+            configuration file is:
               config_fp = {config_fp}
-            Statistics included in the plot configuration file are:
+            Statistics currently included in the plot configuration file are:
               {vx_stats_in_config}
             Stopping.''')
         logging.error(err_msg, stack_info=True)
         raise ValueError(err_msg)
 
-    # Remove from the configuration dictionary any statistic in the list of
-    # statistics to exclude.
+    # Remove from the plot configuration dictionary any statistic in the
+    # list of statistics to exclude.
     [vx_stats_dict.pop(stat, None) for stat in args.excl_stats]
 
-    # Remove from the configuration dictionary any statistic that is not
-    # in the exclusive list of statistics to include.
+    # Remove from the plot configuration dictionary any statistic that is
+    # NOT in the exclusive list of statistics to include.
     if args.incl_only_stats:
-        vx_stats_dict = {stat: vx_stats_dict[stat] for stat in args.incl_only_stats}
+        [vx_stats_dict.pop(stat, None) for stat in valid_stats if stat not in args.incl_only_stats]
 
-    # For simplicity, do not allow both the --incl_only_field and --excl_field
-    # options to be specified.
-    if args.incl_only_fields and args.excl_fields:
-        err_msg = dedent(f'''\n
-            For simplicity, the "--incl_only_field" and "--excl_field" options cannot
-            both be specified on the command line:
-              args.incl_only_fields = {args.incl_only_fields}
-              args.excl_fields = {args.excl_fields}
-            Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+    # For each statistic to be plotted, remove from its sub-dictionary in
+    # the plot configuration dictionary any forecast field in the list of
+    # fields to exclude from plotting.
+    for stat in vx_stats_dict.copy().keys():
+        [vx_stats_dict[stat].pop(field, None) for field in args.excl_fields]
 
-    # For each statistic to be plotted, remove from its dictionary in the
-    # configuration file any forecast field in the list of fields to be
-    # excluded.
-    for stat, stat_dict in vx_stats_dict.items():
-        [stat_dict.pop(field, None) for field in args.excl_fields]
-        vx_stats_dict[stat] = stat_dict
-
-    # For each statistic to be plotted, remove from its dictionary in the
-    # configuration file any forecast field that is in the exclusive list
-    # of fields to include.
+    # For each statistic to be plotted, remove from its sub-dictionary in
+    # the plot configuration dictionary any forecast field that is NOT in
+    # the exclusive list of fields to include in the plotting.
     if args.incl_only_fields:
-        for stat, stat_dict in vx_stats_dict.items():
-            new_dict = {field: stat_dict[field] for field in args.incl_only_fields if field in stat_dict.keys()}
-            vx_stats_dict[stat] = new_dict
+        for stat in vx_stats_dict.copy().keys():
+            [vx_stats_dict[stat].pop(field, None) for field in valid_fields if field not in args.incl_only_fields]
 
     # Check that all the fields passed to the "--incl_only_fields" option
-    # appear under at least one statistic.
+    # appear in least one statistic sub-dictionary in the plot configuration
+    # dictionary.  If not, issue a warning.
     for field in args.incl_only_fields:
         field_count = 0
         for stat, stat_dict in vx_stats_dict.items():
             if field in stat_dict: field_count += 1
         if field_count == 0:
-            msg = dedent(f"""
+            msg = dedent(f"""\n
                 The field "{field}" passed to the "--incl_only_fields" option is not a
-                key in any of the dictionaries of the statistics to be plotted.  Thus,
-                no vx plots for "{field}" will be generated.  The statistics to be
-                plotted are:
-                  {list(vx_stats_dict.keys())}
+                key in any of the statistic sub-dictionaries in the plot configuration
+                dictionary.  Thus, no vx plots for "{field}" will be generated.
+                """)
+            logging.warning(msg)
+
+    # For each statistic-field combination to be plotted, remove from the
+    # corresponding sub-sub-dictionary in the plotting dictionary any level
+    # in the list of levels to exclude from plotting.
+    for stat, stat_dict in vx_stats_dict.copy().items():
+        for field, fcst_field_dict in stat_dict.copy().items():
+            [vx_stats_dict[stat][field].pop(level, None) for level in args.excl_levels]
+
+    # For each statistic-field combinatiion to be plotted, remove from the
+    # corresponding sub-sub-dictionary in the plotting dictionary any level
+    # that is NOT in the exclusive list of levels to include in the plotting.
+    if args.incl_only_levels:
+        for stat, stat_dict in vx_stats_dict.copy().items():
+            for field, fcst_field_dict in stat_dict.copy().items():
+                [vx_stats_dict[stat][field].pop(level, None) for level in valid_levels if level not in args.incl_only_levels]
+
+    # Check that all the fields passed to the "--incl_only_levels" option
+    # appear in least one statistic-field sub-sub-dictionary in the plot
+    # configuration dictionary.  If not, issue a warning.
+    for level in args.incl_only_levels:
+        level_count = 0
+        for stat, stat_dict in vx_stats_dict.items():
+            for field, fcst_field_dict in stat_dict.items():
+                if level in fcst_field_dict: level_count += 1
+        if level_count == 0:
+            msg = dedent(f"""\n
+                The level "{level}" passed to the "--incl_only_levels" option does not
+                appear in any of the sub-sub-dictionaries in the plot configuration
+                dictionary corresponding to the statistic-field combinations to be
+                plotted.  Thus, no vx plots for "{level}" will be generated.
                 """)
             logging.warning(msg)
 
     print(f'')
-    print(f'FFFFFFFFFFFFFFFF')
+    print(f'DDDDDDDDDDDDDDD')
     print(f'  vx_stats_dict = {vx_stats_dict}')
-#    lasdkjf
 
+    # Clean up leftover empty sub-dictionaries within the plotting configuration
+    # dictionary.
+    for stat, stat_dict in vx_stats_dict.copy().items():
+        for fcst_field, fcst_field_dict in stat_dict.copy().items():
+            for level, level_dict in fcst_field_dict.copy().items():
+                # If level_dict is empty, remove the key (level) from the dictionary.
+                if not level_dict:
+                    vx_stats_dict[stat][level].pop(fcst_field, None)
+            # If fcst_field_dict is empty, remove the key (fcst_field) from the dictionary.
+            if not fcst_field_dict:
+                vx_stats_dict[stat].pop(fcst_field, None)
+        # If stat_dict is empty, remove the key (stat) from the dictionary.
+        if not stat_dict:
+            vx_stats_dict.pop(stat, None)
+
+    print(f'')
+    print(f'EEEEEEEEEEEEEEEE')
+    print(f'  vx_stats_dict = {vx_stats_dict}')
 
     # Initialze (1) the counter that keeps track of the number of times the
     # script that generates a METviewer xml and calls METviewer is called and
@@ -229,36 +258,27 @@ def make_mv_vx_plots(args):
     missing_image_fns = []
 
     for stat, stat_dict in vx_stats_dict.items():
-        #
-        # Don't procecess the current statistic if it is passed as an argument
-        # to the "--excl_stats" option.
-        #
-        if stat in args.excl_stats:
+        # Don't procecess the current statistic if the plotting info dictionary
+        # corresponding to the statistic is empty.
+        if not stat_dict:
             logging.info(dedent(f"""\n
-                Skipping plotting of statistic "{stat}" because it is in the list of
-                stats to exclude ...
-                  args.excl_stats = {args.excl_stats}
+                The plotting info dictionary for statistic "{stat}" is empty.  Thus, no
+                "{stat}" plots will be generated.
                 """))
-        #
-        # Process the current statistic if either one of the following is true:
-        #
-        #   1) The "--incl_only_stats" option has not been used (so that the
-        #      args.incl_only_stats list is empty).
-        #   2) The "--incl_only_stats" option has been used and has been passed
-        #      the current statistic.
-        #
-        elif (not args.incl_only_stats) or (stat in args.incl_only_stats):
+        # Dictionary corresponding to the statistic is not empty, so process.
+        else:
             logging.info(dedent(f"""
                 Plotting statistic "{stat}" for various forecast fields ...
                 """))
             msg = dedent(f"""
-                Dictionary of fields, levels, and thresholds (if applicable) for this statistic is:
+                Dictionary of fields, levels, and thresholds (if applicable) for this
+                statistic is:
                   stat_dict = """)
             indent_str = ' '*(5 + len('stat_dict'))
             msg = msg + get_pprint_str(stat_dict, indent_str).lstrip()
             logging.debug(msg)
 
-            # If ars.make_stat_subdirs is set to True, place the output for each
+            # If args.make_stat_subdirs is set to True, place the output for each
             # statistic in a separate subdirectory under the main output directory.
             # Otherwise, place the output directly under the main output directory.
             if args.make_stat_subdirs:
@@ -267,99 +287,109 @@ def make_mv_vx_plots(args):
                 output_dir_crnt_stat = args.output_dir
 
             for fcst_field, fcst_field_dict in stat_dict.items():
-                #
-                # Don't procecess the current field if it is passed as an argument
-                # to the "--excl_fields" option.
-                #
-                if fcst_field in args.excl_fields:
+                # Don't procecess the current field if the plotting info dictionary
+                # corresponding to the field is empty.
+                if not fcst_field_dict:
                     logging.info(dedent(f"""\n
-                        Skipping plotting of field "{fcst_field}" because it is in the list of
-                        fields to exclude ...
-                          args.excl_fields = {args.excl_fields}
+                        The plotting info dictionary for field "{fcst_field}" is empty.  Thus, no
+                        "{fcst_field}" plots will be generated.
                         """))
-                #
-                # Process the current field if either one of the following is true:
-                #
-                #   1) The "--incl_only_fields" option has not been used (so that the
-                #      args.incl_only_fields list is empty).
-                #   2) The "--incl_only_fields" option has been used and has been passed
-                #      the current field.
-                #
-                elif (not args.incl_only_fields) or (fcst_field in args.incl_only_fields):
+                # Dictionary corresponding to the field is not empty, so process.
+                else:
+                    logging.info(dedent(f"""
+                        Plotting statistic "{stat}" for forecast field "{fcst_field}" at various
+                        levels ...
+                        """))
+                    msg = dedent(f"""
+                        Dictionary of levels and thresholds (if applicable) for this field is:
+                          fcst_field_dict = """)
+                    indent_str = ' '*(5 + len('fcst_field_dict'))
+                    msg = msg + get_pprint_str(fcst_field_dict, indent_str).lstrip()
+                    logging.debug(msg)
 
                     for level, level_dict in fcst_field_dict.items():
-                        logging.info(dedent(f"""
-                            Plotting statistic "{stat}" for forecast field "{fcst_field}" at level "{level}" ...
-                            """))
-                        msg = dedent(f"""
-                            Dictionary of thresholds (if applicable) for this level is:
-                              level_dict = """)
-                        indent_str = ' '*(5 + len('level_dict'))
-                        msg = msg + get_pprint_str(level_dict, indent_str).lstrip()
-                        logging.debug(msg)
-
-                        thresholds = level_dict['thresholds']
-                        for thresh in thresholds:
-                            logging.info(dedent(f"""
-                                Plotting statistic "{stat}" for forecast field "{fcst_field}" at level "{level}"
-                                and threshold "{thresh}" (threshold may be empty for certain stats) ...
+                        # Don't procecess the current level if the plotting info dictionary
+                        # corresponding to the level is empty.
+                        if not level_dict:
+                            logging.info(dedent(f"""\n
+                                The plotting info dictionary for level "{level}" is empty.  Thus, no
+                                "{level}" plots will be generated.
                                 """))
-
-                            args_list = ['--mv_host', mv_host, \
-                                         '--mv_database_name', mv_database_name, \
-                                         '--model_names', ] + model_names \
-                                      + ['--vx_stat', stat,
-                                         '--fcst_init_info'] + fcst_init_info \
-                                      + ['--fcst_len_hrs', fcst_len_hrs,
-                                         '--fcst_field', fcst_field,
-                                         '--level_or_accum', level,
-                                         '--threshold', thresh,
-                                         '--mv_output_dir', output_dir_crnt_stat]
-
+                        # Dictionary corresponding to the level is not empty, so process.
+                        else:
+                            logging.info(dedent(f"""
+                                Plotting statistic "{stat}" for forecast field "{fcst_field}" at level
+                                "{level}" ...
+                                """))
                             msg = dedent(f"""
-                                Argument list passed to plotting script is:
-                                  args_list = """)
-                            indent_str = ' '*(5 + len('args_list'))
-                            msg = msg + get_pprint_str(args_list, indent_str).lstrip()
+                                Dictionary of thresholds (if applicable) for this level is:
+                                  level_dict = """)
+                            indent_str = ' '*(5 + len('level_dict'))
+                            msg = msg + get_pprint_str(level_dict, indent_str).lstrip()
                             logging.debug(msg)
 
-                            num_mv_calls += 1
-                            logging.debug(dedent(f"""
-                                Calling METviewer plotting script ...
-                                  num_mv_calls = {num_mv_calls}
-                                """))
-                            output_xml_fp = plot_vx_metviewer(args_list)
-                            logging.debug(dedent(f"""
-                                Done calling METviewer plotting script.
-                                """))
+                            thresholds = level_dict['thresholds']
+                            for thresh in thresholds:
+                                logging.info(dedent(f"""
+                                    Plotting statistic "{stat}" for forecast field "{fcst_field}" at level "{level}"
+                                    and threshold "{thresh}" (threshold may be empty for certain stats) ...
+                                    """))
 
-                            # Keep track of the number of images that are successfully created.
-                            #
-                            # First, use the absolute path to the xml file created to generate the
-                            # path to and name of the image that should have been created.
-                            output_image_fp = os.path.splitext(output_xml_fp)[0] + '.' + 'png'
-                            output_image_fn = os.path.basename(output_image_fp)
-                            # If the image file exists, increment the count of successfully created
-                            # images.
-                            if os.path.isfile(output_image_fp):
-                                num_images_generated += 1
-                            else:
-                                missing_image_fns.append(output_image_fn)
+                                args_list = ['--mv_host', mv_host, \
+                                             '--mv_database_name', mv_database_name, \
+                                             '--model_names', ] + model_names \
+                                          + ['--vx_stat', stat,
+                                             '--fcst_init_info'] + fcst_init_info \
+                                          + ['--fcst_len_hrs', fcst_len_hrs,
+                                             '--fcst_field', fcst_field,
+                                             '--level_or_accum', level,
+                                             '--threshold', thresh,
+                                             '--mv_output_dir', output_dir_crnt_stat]
 
-                            # If the image was successfully created and args.create_ordered_plots
-                            # is set True, make a copy of the image in a designated subdirectory
-                            # that will contain renamed versions of the images such that their
-                            # alphabetical order corresponds to the order in which they appear in
-                            # the yaml plot configuration file.
-                            if os.path.isfile(output_image_fp) and args.create_ordered_plots:
-                                # Generate the name of/path to a copy of the image file such that this
-                                # name contains an index used for alphabetically ordering the files.
-                                # This ordering is useful when creating a presentation, e.g. a pdf file,
-                                # from the images.
-                                output_image_fn_ordered = '_'.join([f'p{num_mv_calls:03}', output_image_fn])
-                                output_image_fp_ordered = os.path.join(ordered_plots_dir, output_image_fn_ordered)
-                                # Copy and rename the image.
-                                shutil.copy(output_image_fp, output_image_fp_ordered)
+                                msg = dedent(f"""
+                                    Argument list passed to plotting script is:
+                                      args_list = """)
+                                indent_str = ' '*(5 + len('args_list'))
+                                msg = msg + get_pprint_str(args_list, indent_str).lstrip()
+                                logging.debug(msg)
+
+                                num_mv_calls += 1
+                                logging.debug(dedent(f"""
+                                    Calling METviewer plotting script ...
+                                      num_mv_calls = {num_mv_calls}
+                                    """))
+                                output_xml_fp = plot_vx_metviewer(args_list)
+                                logging.debug(dedent(f"""
+                                    Done calling METviewer plotting script.
+                                    """))
+
+                                # Keep track of the number of images that are successfully created.
+                                #
+                                # First, use the absolute path to the xml file created to generate the
+                                # path to and name of the image that should have been created.
+                                output_image_fp = os.path.splitext(output_xml_fp)[0] + '.' + 'png'
+                                output_image_fn = os.path.basename(output_image_fp)
+                                # If the image file exists, increment the count of successfully created
+                                # images.
+                                if os.path.isfile(output_image_fp):
+                                    num_images_generated += 1
+                                else:
+                                    missing_image_fns.append(output_image_fn)
+
+                                # If the image was successfully created and args.create_ordered_plots
+                                # is set True, make a copy of the image in a designated subdirectory
+                                # that will contain renamed versions of the images such that their
+                                # alphabetical order corresponds to the order in which they appear in
+                                # the yaml plot configuration file.
+                                if os.path.isfile(output_image_fp) and args.create_ordered_plots:
+                                    # Generate the name of/path to a copy of the image file such that this
+                                    # name contains an index used for alphabetically ordering the files.
+                                    # This ordering is useful when creating a presentation, e.g. a pdf file,
+                                    # from the images.
+                                    output_image_fn_ordered = '_'.join([f'p{num_mv_calls:03}', output_image_fn])
+                                    output_image_fp_ordered = os.path.join(ordered_plots_dir, output_image_fn_ordered)
+                                    # Copy and rename the image.
+                                    shutil.copy(output_image_fp, output_image_fp_ordered)
 
     logging.info(dedent(f"""
         Total number of calls to METviewer plotting script:
@@ -377,14 +407,9 @@ def make_mv_vx_plots(args):
         indent_str = ' '*(5 + len('missing_image_fns'))
         msg = msg + get_pprint_str(missing_image_fns, indent_str).lstrip()
         logging.info(msg)
-#
-# -----------------------------------------------------------------------
-#
-# Call the function defined above.
-#
-# -----------------------------------------------------------------------
-#
-if __name__ == "__main__":
+
+
+def main():
 
     parser = argparse.ArgumentParser(
         description='Call METviewer to create vx plots.'
@@ -399,21 +424,21 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir',
                         type=str,
                         required=False, default=os.path.join(expts_dir, 'mv_output'),
-                        help=dedent(f'''Base directory in which to place output files (generated xmls,
-                                        METviewer generated plots, log files, etc).  These will usually
-                                        be placed in subdirectories under this output directory.'''))
+                        help=dedent(f'''Base directory in which to place output files (generated xmls, METviewer
+                                        generated plots, log files, etc).  These will usually be placed in
+                                        subdirectories under this output directory.'''))
 
     parser.add_argument('--config_fp',
                         type=str,
                         required=False, default='config_mv_plots.default.yml',
-                        help=dedent(f'''Name of or path (absolute or relative) to yaml user
-                                        plot configuration file for METviewer plot generation.'''))
+                        help=dedent(f'''Name of or path (absolute or relative) to yaml user plot configuration
+                                        file for METviewer plot generation.'''))
 
     parser.add_argument('--log_fp',
                         type=str,
                         required=False, default='',
-                        help=dedent(f'''Name of or path (absolute or relative) to log file.  If
-                                        not specified, the output goes to screen.'''))
+                        help=dedent(f'''Name of or path (absolute or relative) to log file.  If not specified,
+                                        the output goes to screen.'''))
 
     choices_log_level = [pair for lvl in list(logging._nameToLevel.keys())
                               for pair in (str.lower(lvl), str.upper(lvl))]
@@ -423,8 +448,8 @@ if __name__ == "__main__":
                         choices=choices_log_level,
                         help=dedent(f'''Logging level to use with the "logging" module.'''))
 
-    # Load the yaml file containing static verification parameters
-    # and get valid values.
+    # Load the yaml file containing static verification parameters and get
+    # valid values.
     static_info_config_fp = 'vx_plots_static_info.yaml'
     static_data = load_config_file(static_info_config_fp)
     valid_stats = list(static_data['valid_stats'].keys())
@@ -490,7 +515,6 @@ if __name__ == "__main__":
                                         with the "--incl_only_fields" option.'''))
 
     parser.add_argument('--incl_only_levels', nargs='+',
-                        type=str.lower,
                         required=False, default=[],
                         choices=valid_fcst_levels,
                         help=dedent(f'''Forecast levels to exclusively include in verification plot generation.
@@ -508,7 +532,6 @@ if __name__ == "__main__":
                                         together with the "--excl_levels" option.'''))
 
     parser.add_argument('--excl_levels', nargs='+',
-                        type=str.lower,
                         required=False, default=[],
                         choices=valid_fcst_levels,
                         help=dedent(f'''Forecast levels to exclude from verification plot generation.  This is a
@@ -541,5 +564,56 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    make_mv_vx_plots(args)
+    # For simplicity, do not allow the "--incl_only_stat" and "--excl_stat"
+    # options to be specified simultaneously.
+    if args.incl_only_stats and args.excl_stats:
+        err_msg = dedent(f'''\n
+            For simplicity, the "--incl_only_stat" and "--excl_stat" options cannot
+            both be specified on the command line:
+              args.incl_only_stats = {args.incl_only_stats}
+              args.excl_stats = {args.excl_stats}
+            Please remove one or the other from the command line and rerun.  Stopping.''')
+        logging.error(err_msg, stack_info=True)
+        raise ValueError(err_msg)
+
+    # For simplicity, do not allow the "--incl_only_field" and "--excl_field"
+    # options to be specified simultaneously.
+    if args.incl_only_fields and args.excl_fields:
+        err_msg = dedent(f'''\n
+            For simplicity, the "--incl_only_field" and "--excl_field" options cannot
+            both be specified on the command line:
+              args.incl_only_fields = {args.incl_only_fields}
+              args.excl_fields = {args.excl_fields}
+            Please remove one or the other from the command line and rerun.  Stopping.''')
+        logging.error(err_msg, stack_info=True)
+        raise ValueError(err_msg)
+
+    # For simplicity, do not allow the "--incl_only_level" and "--excl_level"
+    # options to be specified simultaneously.
+    if args.incl_only_levels and args.excl_levels:
+        err_msg = dedent(f'''\n
+            For simplicity, the "--incl_only_level" and "--excl_level" options cannot
+            both be specified on the command line:
+              args.incl_only_levels = {args.incl_only_levels}
+              args.excl_levels = {args.excl_levels}
+            Please remove one or the other from the command line and rerun.  Stopping.''')
+        logging.error(err_msg, stack_info=True)
+        raise ValueError(err_msg)
+
+    # Call the driver function to read and parse the plot configuration
+    # dictionary and call the METviewer batch script to generate plots.
+    valid_vals = {'stats': valid_stats,
+                  'fields': valid_fcst_fields,
+                  'levels': valid_fcst_levels}
+    make_mv_vx_plots(args, valid_vals)
+
+#
+# -----------------------------------------------------------------------
+#
+# Call the function defined above.
+#
+# -----------------------------------------------------------------------
+#
+if __name__ == "__main__":
+    main()
 
