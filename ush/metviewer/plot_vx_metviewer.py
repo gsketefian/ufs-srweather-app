@@ -291,9 +291,9 @@ def parse_args(argv, static_info):
     choices = static_info['choices']
 
     parser = argparse.ArgumentParser(description=dedent(f'''
-             Function to generate an xml file that METviewer can read in order 
-             to create a verification plot.
-             '''))
+        Function to generate an xml file that METviewer can read in order 
+        to create a verification plot.
+        '''))
 
     parser.add_argument('--mv_host',
                         type=str,
@@ -350,8 +350,9 @@ def parse_args(argv, static_info):
     parser.add_argument('--fcst_init_info', nargs=3,
                         type=str,
                         required=True, 
-                        help=dedent(f'''Initialization time of first forecast (in YYYYMMDDHH),
-                                        number of forecasts, and forecast initialization interval (in HH)'''))
+                        help=dedent(f'''
+                            Initialization time of first forecast (in YYYYMMDDHH), number of forecasts,
+                            and forecast initialization interval (in HH)'''))
 
     parser.add_argument('--fcst_len_hrs',
                         type=int,
@@ -472,20 +473,20 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
     # make sure that it is one of the valid ones for this database.
     if (cla.threshold) and (cla.threshold not in valid_threshes_in_db):
         err_msg = dedent(f"""
-                  The specified threshold is not in the list of valid thresholds for the
-                  specified database.  Database is:
-                    cla.mv_database_name = {cla.mv_database_name}
-                  Threshold is:
-                    cla.threshold = {cla.threshold}
-                  The list of valid thresholds for this database is:
-                    valid_threshes_in_db = """)
+            The specified threshold is not in the list of valid thresholds for the
+            specified database.  Database is:
+              cla.mv_database_name = {cla.mv_database_name}
+            Threshold is:
+              cla.threshold = {cla.threshold}
+            The list of valid thresholds for this database is:
+              valid_threshes_in_db = """)
         indent_str = ' '*(5 + len('valid_threshes_in_db'))
         err_msg = err_msg + get_pprint_str(valid_threshes_in_db, indent_str).lstrip()
         err_msg = err_msg + dedent(f"""
-                  Make sure the specified threshold is one of the valid ones, or, if it
-                  exists in the database, add it to the 'valid_threshes' list in the 
-                  METviewer database configuration file given by:
-                      cla.mv_database_config_fp = {cla.mv_database_config_fp})""")
+            Make sure the specified threshold is one of the valid ones, or, if it
+            exists in the database, add it to the 'valid_threshes' list in the 
+            METviewer database configuration file given by:
+              cla.mv_database_config_fp = {cla.mv_database_config_fp})""")
         logging.error(err_msg, stack_info=True)
         raise ValueError(err_msg)
 
