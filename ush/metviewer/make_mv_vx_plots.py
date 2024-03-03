@@ -137,7 +137,7 @@ def make_mv_vx_plots(args, valid_vals):
     valid_fields = valid_vals['fields']
     valid_levels = valid_vals['levels']
 
-    # Ensure that any statistics passed to the "--incl_only_stat" option also
+    # Ensure that any statistics passed to the "--incl_only_stats" option also
     # appear in the yaml plot configuration file.
     vx_stats_in_config = list(vx_stats_dict.keys())
     stats_not_in_config = list(set(args.incl_only_stats).difference(vx_stats_in_config))
@@ -494,7 +494,7 @@ def main():
                                         in the yaml plot configuration file.  If this option is not used, then
                                         all fields listed under a given vx statistic in the configuration file
                                         are plotted (as long as that statistic is to be plotted, i.e. it is not
-                                        excluded via the "--excl_stat" option).  If it is used, then plots for
+                                        excluded via the "--excl_stats" option).  If it is used, then plots for
                                         that statistic will be generated only for the fields passed to this
                                         option.  For a statistic that is to be plotted, if a field specified
                                         here is not listed in the configuration file under that statistic, then
@@ -511,8 +511,8 @@ def main():
                                         yaml plot configuration file.  If this option is not used, then all fields
                                         in the configuration file are plotted.  If it is used, then plots will be
                                         generated only for those fields in the configuration file that are not
-                                        also listed here.  For simplicity, this option cannot be used together
-                                        with the "--incl_only_fields" option.'''))
+                                        listed here.  For simplicity, this option cannot be used together with
+                                        the "--incl_only_fields" option.'''))
 
     parser.add_argument('--incl_only_levels', nargs='+',
                         required=False, default=[],
@@ -522,8 +522,8 @@ def main():
                                         in the yaml plot configuration file.  If this option is not used, then
                                         all levels listed under a given vx statistic and field combination in
                                         the configuration file are plotted (as long as that statistic and field
-                                        combination is to be plotted, i.e. it is not excluded via the "--excl_stat"
-                                        and/or "--excl_field" options).  If it is used, then plots for that
+                                        combination is to be plotted, i.e. it is not excluded via the "--excl_stats"
+                                        and/or "--excl_fields" options).  If it is used, then plots for that
                                         statistic-field combination will be generated only for the levels passed
                                         to this option.  For a statistic-field combination that is to be plotted,
                                         if a level specified here is not listed in the configuration file under
@@ -539,8 +539,8 @@ def main():
                                         yaml plot configuration file.  If this option is not used, then all levels
                                         in the configuration file are plotted.  If it is used, then plots will be
                                         generated only for those levels in the configuration file that are not
-                                        also listed here.  For simplicity, this option cannot be used together
-                                        with the "--incl_only_levels" option.'''))
+                                        listed here.  For simplicity, this option cannot be used together with
+                                        the "--incl_only_levels" option.'''))
 
     parser.add_argument('--preexisting_dir_method',
                         type=str.lower,
@@ -564,36 +564,36 @@ def main():
 
     args = parser.parse_args()
 
-    # For simplicity, do not allow the "--incl_only_stat" and "--excl_stat"
+    # For simplicity, do not allow the "--incl_only_stats" and "--excl_stats"
     # options to be specified simultaneously.
     if args.incl_only_stats and args.excl_stats:
         err_msg = dedent(f'''\n
-            For simplicity, the "--incl_only_stat" and "--excl_stat" options cannot
-            both be specified on the command line:
+            For simplicity, the "--incl_only_stats" and "--excl_stats" options
+            cannot both be specified on the command line:
               args.incl_only_stats = {args.incl_only_stats}
               args.excl_stats = {args.excl_stats}
             Please remove one or the other from the command line and rerun.  Stopping.''')
         logging.error(err_msg, stack_info=True)
         raise ValueError(err_msg)
 
-    # For simplicity, do not allow the "--incl_only_field" and "--excl_field"
+    # For simplicity, do not allow the "--incl_only_fields" and "--excl_fields"
     # options to be specified simultaneously.
     if args.incl_only_fields and args.excl_fields:
         err_msg = dedent(f'''\n
-            For simplicity, the "--incl_only_field" and "--excl_field" options cannot
-            both be specified on the command line:
+            For simplicity, the "--incl_only_fields" and "--excl_fields" options
+            cannot both be specified on the command line:
               args.incl_only_fields = {args.incl_only_fields}
               args.excl_fields = {args.excl_fields}
             Please remove one or the other from the command line and rerun.  Stopping.''')
         logging.error(err_msg, stack_info=True)
         raise ValueError(err_msg)
 
-    # For simplicity, do not allow the "--incl_only_level" and "--excl_level"
+    # For simplicity, do not allow the "--incl_only_levels" and "--excl_levels"
     # options to be specified simultaneously.
     if args.incl_only_levels and args.excl_levels:
         err_msg = dedent(f'''\n
-            For simplicity, the "--incl_only_level" and "--excl_level" options cannot
-            both be specified on the command line:
+            For simplicity, the "--incl_only_levels" and "--excl_levels" options
+            cannot both be specified on the command line:
               args.incl_only_levels = {args.incl_only_levels}
               args.excl_levels = {args.excl_levels}
             Please remove one or the other from the command line and rerun.  Stopping.''')
