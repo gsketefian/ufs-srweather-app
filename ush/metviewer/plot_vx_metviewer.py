@@ -242,11 +242,12 @@ def get_static_info(static_info_config_fp):
         stat_long_names[stat] = static_data['valid_stats'][stat]['long_name']
         stat_need_thresh[stat] = static_data['valid_stats'][stat]['need_thresh']
 
-    # Get dictionary containing the available METviewer color codes.  This 
+    # Get dictionary containing the available METviewer color codes.  This
     # is a subset of all available colors in METviewer (of which there are
-    # thousands) which we allow the user to specify as a plot color for 
+    # thousands) which we allow the user to specify as a plot color for the
     # the models to be plotted.  In this dictionary, the keys are the color
-    # names (e.g. 'red'), and values are the corresponding codes in METviewer.
+    # names (e.g. 'red'), and the values are the corresponding codes in
+    # METviewer.
     avail_mv_colors_codes = static_data['avail_mv_colors_codes']
 
     # Create dictionary containing valid choices for various parameters.

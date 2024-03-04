@@ -28,9 +28,9 @@ valid_stats:
 #
 # List of valid forecast field short names, and, for each field:
 #
-#   1) A long name
-#   2) A list of valid units
-#   3) A list of valid levels
+#   1) A long name;
+#   2) A list of valid units; and
+#   3) A list of valid levels.
 #
 valid_fcst_fields:
     apcp:
@@ -71,9 +71,9 @@ valid_fcst_fields:
         valid_levels: ['10m', '500mb', '700mb', '850mb']
 #
 # Dictionary containing set of allowed levels (the keys) that can be
-# specified on the command line along with the corresponding string 
-# used to identify that level in MetViewer and/or the database that 
-# it loads (the value).
+# specified on the command line along with the corresponding strings
+# used to identify each level in MetViewer and/or the database that 
+# it loads (the values).
 #
 # It is unclear whether this mapping can change from one database to
 # another or if the values are standard in MetViewer.  If the former,
