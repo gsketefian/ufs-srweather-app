@@ -183,7 +183,7 @@ def get_thresh_info(thresh_in_config):
     return thresh_info
 
 
-def get_static_info(static_info_config_fp):
+def get_valid_plot_params(valid_plot_params_config_fp):
     '''
     Function to read in values that are mostly static, i.e. they're usually
     not expected to change from one call to this script to another (e.g.
@@ -191,7 +191,7 @@ def get_static_info(static_info_config_fp):
     '''
 
     # Load the yaml file containing static verification parameters.
-    static_data = load_config_file(static_info_config_fp)
+    static_data = load_config_file(valid_plot_params_config_fp)
 
     valid_levels_to_levels_in_db = static_data['valid_levels_to_levels_in_db']
     all_valid_levels = list(valid_levels_to_levels_in_db.keys())
@@ -226,8 +226,8 @@ def get_static_info(static_info_config_fp):
                       all_valid_levels = {all_valid_levels}
                     The master list of valid levels and accumulations as well as the list of
                     valid levels and accumulations for the current forecast field can be
-                    found in the following static information configuration file:
-                      static_info_config_fp = {static_info_config_fp}
+                    found in the following valid plot parameters configuration file:
+                      valid_plot_params_config_fp = {valid_plot_params_config_fp}
                     Please modify this file and rerun.
                     """)
                 logging.error(err_msg, stack_info=True)
@@ -258,18 +258,18 @@ def get_static_info(static_info_config_fp):
     choices['vx_stat'] = sorted(valid_stats)
     choices['color'] = list(avail_mv_colors_codes.keys())
 
-    static_info = {}
-    static_info['static_info_config_fp'] = static_info_config_fp 
-    static_info['valid_levels_to_levels_in_db'] = valid_levels_to_levels_in_db
-    static_info['fcst_field_long_names'] = fcst_field_long_names
-    static_info['valid_levels_by_fcst_field'] = valid_levels_by_fcst_field
-    static_info['valid_units_by_fcst_field'] = valid_units_by_fcst_field
-    static_info['stat_long_names'] = stat_long_names
-    static_info['stat_need_thresh'] = stat_need_thresh
-    static_info['avail_mv_colors_codes'] = avail_mv_colors_codes 
-    static_info['choices'] = choices
+    valid_plot_params = {}
+    valid_plot_params['valid_plot_params_config_fp'] = valid_plot_params_config_fp 
+    valid_plot_params['valid_levels_to_levels_in_db'] = valid_levels_to_levels_in_db
+    valid_plot_params['fcst_field_long_names'] = fcst_field_long_names
+    valid_plot_params['valid_levels_by_fcst_field'] = valid_levels_by_fcst_field
+    valid_plot_params['valid_units_by_fcst_field'] = valid_units_by_fcst_field
+    valid_plot_params['stat_long_names'] = stat_long_names
+    valid_plot_params['stat_need_thresh'] = stat_need_thresh
+    valid_plot_params['avail_mv_colors_codes'] = avail_mv_colors_codes 
+    valid_plot_params['choices'] = choices
 
-    return static_info
+    return valid_plot_params
 
 
 def get_database_info(mv_database_config_fp):
@@ -284,12 +284,12 @@ def get_database_info(mv_database_config_fp):
     return mv_databases_dict
 
 
-def parse_args(argv, static_info):
+def parse_args(argv, valid_plot_params):
     '''
     Function to parse arguments for this script.
     '''
 
-    choices = static_info['choices']
+    choices = valid_plot_params['choices']
 
     parser = argparse.ArgumentParser(description=dedent(f'''
         Function to generate an xml file that METviewer can read in order 
@@ -388,7 +388,7 @@ def parse_args(argv, static_info):
     return cla
 
 
-def generate_metviewer_xml(cla, static_info, mv_databases_dict):
+def generate_metviewer_xml(cla, valid_plot_params, mv_databases_dict):
     """Function that generates an xml file that METviewer can read (in order
        to create a verification plot).
 
@@ -399,14 +399,14 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
         None
     """
 
-    static_info_config_fp = static_info['static_info_config_fp']
-    valid_levels_to_levels_in_db = static_info['valid_levels_to_levels_in_db']
-    fcst_field_long_names = static_info['fcst_field_long_names']
-    valid_levels_by_fcst_field = static_info['valid_levels_by_fcst_field']
-    valid_units_by_fcst_field = static_info['valid_units_by_fcst_field']
-    stat_long_names = static_info['stat_long_names']
-    stat_need_thresh = static_info['stat_need_thresh']
-    avail_mv_colors_codes = static_info['avail_mv_colors_codes']
+    valid_plot_params_config_fp = valid_plot_params['valid_plot_params_config_fp']
+    valid_levels_to_levels_in_db = valid_plot_params['valid_levels_to_levels_in_db']
+    fcst_field_long_names = valid_plot_params['fcst_field_long_names']
+    valid_levels_by_fcst_field = valid_plot_params['valid_levels_by_fcst_field']
+    valid_units_by_fcst_field = valid_plot_params['valid_units_by_fcst_field']
+    stat_long_names = valid_plot_params['stat_long_names']
+    stat_need_thresh = valid_plot_params['stat_need_thresh']
+    avail_mv_colors_codes = valid_plot_params['avail_mv_colors_codes']
 
     # Load the machine configuration file into a dictionary and find in it the
     # machine specified on the command line.
@@ -536,9 +536,9 @@ def generate_metviewer_xml(cla, static_info, mv_databases_dict):
               num_models_to_plot = {num_models_to_plot}
               num_avail_colors = {num_avail_colors}
             Either reduce the number of models to plot specified on the command 
-            line or add new colors in the static information configuration file
-            (static_info_config_fp):
-              static_info_config_fp = {static_info_config_fp}
+            line or add new colors in the valid plot parameters configuration file
+            (valid_plot_params_config_fp):
+              valid_plot_params_config_fp = {valid_plot_params_config_fp}
             """)
         logging.error(err_msg, stack_info=True)
         raise ValueError(err_msg)
@@ -1014,17 +1014,17 @@ def plot_vx_metviewer(argv):
 
     # Get static parameters.  These include parameters (e.g. valid values) 
     # needed to parse the command line arguments.
-    static_info_config_fp = 'vx_plots_static_info.yaml'
+    valid_plot_params_config_fp = 'valid_plot_params.yaml'
     logging.info(dedent(f"""
-        Obtaining static verification info from file {static_info_config_fp} ...
+        Obtaining static verification info from file {valid_plot_params_config_fp} ...
         """))
-    static_info = get_static_info(static_info_config_fp)
+    valid_plot_params = get_valid_plot_params(valid_plot_params_config_fp)
 
     # Parse arguments.
     logging.info(dedent(f"""
         Processing command line arguments ...
         """))
-    cla = parse_args(argv, static_info)
+    cla = parse_args(argv, valid_plot_params)
 
     # Get METviewer database information.
     logging.info(dedent(f"""
@@ -1036,7 +1036,7 @@ def plot_vx_metviewer(argv):
     logging.info(dedent(f"""
         Generating a METviewer xml ...
         """))
-    mv_batch, output_xml_fp = generate_metviewer_xml(cla, static_info, mv_databases_dict)
+    mv_batch, output_xml_fp = generate_metviewer_xml(cla, valid_plot_params, mv_databases_dict)
 
     # Run METviewer on the xml to create a verification plot.
     logging.info(dedent(f"""
