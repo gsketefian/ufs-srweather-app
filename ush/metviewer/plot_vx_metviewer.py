@@ -310,7 +310,7 @@ def parse_args(argv, valid_plot_params):
 
     parser.add_argument('--mv_machine_config_fp',
                         type=str,
-                        required=False, default='mv_machine_config.yaml', 
+                        required=False, default='mv_machines.yaml', 
                         help='METviewer machine (host) configuration file')
 
     parser.add_argument('--mv_databases_config_fp',
