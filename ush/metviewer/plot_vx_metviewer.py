@@ -190,40 +190,54 @@ def get_valid_plot_params(valid_plot_params_config_fp):
     valid values for various parameters).
     '''
 
-    # Load the yaml file containing static verification parameters.
-    static_data = load_config_file(valid_plot_params_config_fp)
+    # Load the yaml configuration file that specifies valid values for various
+    # verification plotting parameters.
+    valid_plot_params = load_config_file(valid_plot_params_config_fp)
 
-    valid_levels_to_levels_in_db = static_data['valid_levels_to_levels_in_db']
-    all_valid_levels = list(valid_levels_to_levels_in_db.keys())
+    # Get the list valid statistics.  Then define local dictionaries containing
+    # values that depend on the verification statistic.
+    valid_stats = valid_plot_params['valid_stats'].keys()
+    stat_long_names = {}
+    stat_need_thresh = {}
+    for stat in valid_stats:
+        stat_long_names[stat] = valid_plot_params['valid_stats'][stat]['long_name']
+        stat_need_thresh[stat] = valid_plot_params['valid_stats'][stat]['need_thresh']
 
-    # Define local dictionaries containing static values that depend on the 
+    # Get list of valid forecast fields.
+    valid_fcst_fields = valid_plot_params['valid_fcst_fields'].keys()
+
+    # Get list of valid forecast field levels.  This is a list of all levels
+    # regardless of field (i.e. a "master" list).
+    valid_levels_to_levels_in_db = valid_plot_params['valid_levels_to_levels_in_db']
+    valid_levels_all_fields = list(valid_levels_to_levels_in_db.keys())
+
+    # Form local dictionaries containing valid values that depend on the
     # forecast field.
-    valid_fcst_fields = static_data['valid_fcst_fields'].keys()
     fcst_field_long_names = {}
     valid_levels_by_fcst_field = {}
     valid_units_by_fcst_field = {}
     for fcst_field in valid_fcst_fields:
   
         # Get and save long name of current the forecast field.
-        fcst_field_long_names[fcst_field] = static_data['valid_fcst_fields'][fcst_field]['long_name']
+        fcst_field_long_names[fcst_field] = valid_plot_params['valid_fcst_fields'][fcst_field]['long_name']
 
         # Get and save the list of valid units for the current forecast field.
-        valid_units_by_fcst_field[fcst_field] = static_data['valid_fcst_fields'][fcst_field]['valid_units']
+        valid_units_by_fcst_field[fcst_field] = valid_plot_params['valid_fcst_fields'][fcst_field]['valid_units']
 
         # Get and save the list of valid levels/accumulations for the current
         # forecast field.
-        valid_levels_by_fcst_field[fcst_field] = static_data['valid_fcst_fields'][fcst_field]['valid_levels']
+        valid_levels_by_fcst_field[fcst_field] = valid_plot_params['valid_fcst_fields'][fcst_field]['valid_levels']
         # Make sure all the levels/accumulations specified for the current 
         # forecast field are in the master list of valid levels and accumulations.
         for loa in valid_levels_by_fcst_field[fcst_field]:
-            if loa not in all_valid_levels:
+            if loa not in valid_levels_all_fields:
                 err_msg = dedent(f"""
                     One of the levels or accumulations (loa) in the set of valid levels and
                     accumulations for the current forecast field (fcst_field) is not in the
-                    master list of valid levels and accumulations (all_valid_levels):
+                    master list of valid levels and accumulations (valid_levels_all_fields):
                       fcst_field = {fcst_field}
                       loa = {loa}
-                      all_valid_levels = {all_valid_levels}
+                      valid_levels_all_fields = {valid_levels_all_fields}
                     The master list of valid levels and accumulations as well as the list of
                     valid levels and accumulations for the current forecast field can be
                     found in the following valid plot parameters configuration file:
@@ -233,31 +247,24 @@ def get_valid_plot_params(valid_plot_params_config_fp):
                 logging.error(err_msg, stack_info=True)
                 raise ValueError(err_msg)
 
-    # Define local dictionaries containing static values that depend on the
-    # verification statistic.
-    valid_stats = static_data['valid_stats'].keys()
-    stat_long_names = {}
-    stat_need_thresh = {}
-    for stat in valid_stats:
-        stat_long_names[stat] = static_data['valid_stats'][stat]['long_name']
-        stat_need_thresh[stat] = static_data['valid_stats'][stat]['need_thresh']
-
     # Get dictionary containing the available METviewer color codes.  This
     # is a subset of all available colors in METviewer (of which there are
     # thousands) which we allow the user to specify as a plot color for the
     # the models to be plotted.  In this dictionary, the keys are the color
     # names (e.g. 'red'), and the values are the corresponding codes in
-    # METviewer.
-    avail_mv_colors_codes = static_data['avail_mv_colors_codes']
+    # METviewer.  If more colors are needed, they should be added to the 
+    # list in the valid verification plot parameters configuration file.
+    avail_mv_colors_codes = valid_plot_params['avail_mv_colors_codes']
 
     # Create dictionary containing valid choices for various parameters.
     # This is needed by the argument parsing function below.
     choices = {}
     choices['fcst_field'] = sorted(valid_fcst_fields)
-    choices['level'] = all_valid_levels
+    choices['level'] = valid_levels_all_fields
     choices['vx_stat'] = sorted(valid_stats)
     choices['color'] = list(avail_mv_colors_codes.keys())
 
+    # Create dictionary containing return values and return it.
     valid_plot_params = {}
     valid_plot_params['valid_plot_params_config_fp'] = valid_plot_params_config_fp 
     valid_plot_params['valid_levels_to_levels_in_db'] = valid_levels_to_levels_in_db
