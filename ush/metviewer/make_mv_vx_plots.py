@@ -458,13 +458,13 @@ def main():
                         choices=choices_log_level,
                         help=dedent(f'''Logging level to use with the "logging" module.'''))
 
-    # Load the yaml file containing static verification parameters and get
-    # valid values.
-    valid_plot_params_config_fp = 'valid_plot_params.yaml'
-    static_data = load_config_file(valid_plot_params_config_fp)
-    valid_stats = list(static_data['valid_stats'].keys())
-    valid_fcst_fields = list(static_data['valid_fcst_fields'].keys())
-    valid_fcst_levels = list(static_data['valid_levels_to_levels_in_db'].keys())
+    # Load the yaml file containing valid values of verification plotting
+    # parameters and get valid values.
+    valid_vx_plot_params_config_fp = 'valid_vx_plot_params.yaml'
+    valid_vx_plot_params = load_config_file(valid_vx_plot_params_config_fp)
+    valid_stats = list(valid_vx_plot_params['valid_stats'].keys())
+    valid_fcst_fields = list(valid_vx_plot_params['valid_fcst_fields'].keys())
+    valid_fcst_levels = list(valid_vx_plot_params['valid_levels_to_levels_in_db'].keys())
 
     parser.add_argument('--incl_only_stats', nargs='+',
                         type=str.lower,

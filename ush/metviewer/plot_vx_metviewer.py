@@ -160,7 +160,8 @@ def get_thresh_info(thresh_in_config):
         #   filter(None, [...])
         # causes any empty strings in the list to be dropped so that unnecessary
         # spaces (separators) are not inadvertantly added.
-        thresh_in_plot_title = ' '.join(filter(None, [thresh_comp_oper_xml, thresh_value, thresh_in_plot_title]))
+        thresh_in_plot_title = ' '.join(filter(None,
+                               [thresh_comp_oper_xml, thresh_value, thresh_in_plot_title]))
 
     # If thresh_parts is empty but thresh_in_config is not, then something
     # must have been wrong with thresh_in_config that caused thresh_parts
@@ -183,32 +184,30 @@ def get_thresh_info(thresh_in_config):
     return thresh_info
 
 
-def get_valid_plot_params(valid_plot_params_config_fp):
+def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     '''
-    Function to read in values that are mostly static, i.e. they're usually
-    not expected to change from one call to this script to another (e.g.
-    valid values for various parameters).
+    Function to read in valid values of verification plotting parameters.
     '''
 
     # Load the yaml configuration file that specifies valid values for various
     # verification plotting parameters.
-    valid_plot_params = load_config_file(valid_plot_params_config_fp)
+    valid_vx_plot_params = load_config_file(valid_vx_plot_params_config_fp)
 
     # Get the list valid statistics.  Then define local dictionaries containing
     # values that depend on the verification statistic.
-    valid_stats = valid_plot_params['valid_stats'].keys()
+    valid_stats = valid_vx_plot_params['valid_stats'].keys()
     stat_long_names = {}
     stat_need_thresh = {}
     for stat in valid_stats:
-        stat_long_names[stat] = valid_plot_params['valid_stats'][stat]['long_name']
-        stat_need_thresh[stat] = valid_plot_params['valid_stats'][stat]['need_thresh']
+        stat_long_names[stat] = valid_vx_plot_params['valid_stats'][stat]['long_name']
+        stat_need_thresh[stat] = valid_vx_plot_params['valid_stats'][stat]['need_thresh']
 
     # Get list of valid forecast fields.
-    valid_fcst_fields = valid_plot_params['valid_fcst_fields'].keys()
+    valid_fcst_fields = valid_vx_plot_params['valid_fcst_fields'].keys()
 
     # Get list of valid forecast field levels.  This is a list of all levels
     # regardless of field (i.e. a "master" list).
-    valid_levels_to_levels_in_db = valid_plot_params['valid_levels_to_levels_in_db']
+    valid_levels_to_levels_in_db = valid_vx_plot_params['valid_levels_to_levels_in_db']
     valid_levels_all_fields = list(valid_levels_to_levels_in_db.keys())
 
     # Form local dictionaries containing valid values that depend on the
@@ -219,14 +218,18 @@ def get_valid_plot_params(valid_plot_params_config_fp):
     for fcst_field in valid_fcst_fields:
   
         # Get and save long name of current the forecast field.
-        fcst_field_long_names[fcst_field] = valid_plot_params['valid_fcst_fields'][fcst_field]['long_name']
+        fcst_field_long_names[fcst_field] \
+        = valid_vx_plot_params['valid_fcst_fields'][fcst_field]['long_name']
 
         # Get and save the list of valid units for the current forecast field.
-        valid_units_by_fcst_field[fcst_field] = valid_plot_params['valid_fcst_fields'][fcst_field]['valid_units']
+        valid_units_by_fcst_field[fcst_field] \
+        = valid_vx_plot_params['valid_fcst_fields'][fcst_field]['valid_units']
 
         # Get and save the list of valid levels/accumulations for the current
         # forecast field.
-        valid_levels_by_fcst_field[fcst_field] = valid_plot_params['valid_fcst_fields'][fcst_field]['valid_levels']
+        valid_levels_by_fcst_field[fcst_field] \
+        = valid_vx_plot_params['valid_fcst_fields'][fcst_field]['valid_levels']
+
         # Make sure all the levels/accumulations specified for the current 
         # forecast field are in the master list of valid levels and accumulations.
         for loa in valid_levels_by_fcst_field[fcst_field]:
@@ -240,8 +243,8 @@ def get_valid_plot_params(valid_plot_params_config_fp):
                       valid_levels_all_fields = {valid_levels_all_fields}
                     The master list of valid levels and accumulations as well as the list of
                     valid levels and accumulations for the current forecast field can be
-                    found in the following valid plot parameters configuration file:
-                      valid_plot_params_config_fp = {valid_plot_params_config_fp}
+                    found in the following configuration file:
+                      valid_vx_plot_params_config_fp = {valid_vx_plot_params_config_fp}
                     Please modify this file and rerun.
                     """)
                 logging.error(err_msg, stack_info=True)
@@ -254,7 +257,7 @@ def get_valid_plot_params(valid_plot_params_config_fp):
     # names (e.g. 'red'), and the values are the corresponding codes in
     # METviewer.  If more colors are needed, they should be added to the 
     # list in the valid verification plot parameters configuration file.
-    avail_mv_colors_codes = valid_plot_params['avail_mv_colors_codes']
+    avail_mv_colors_codes = valid_vx_plot_params['avail_mv_colors_codes']
 
     # Create dictionary containing valid choices for various parameters.
     # This is needed by the argument parsing function below.
@@ -265,18 +268,18 @@ def get_valid_plot_params(valid_plot_params_config_fp):
     choices['color'] = list(avail_mv_colors_codes.keys())
 
     # Create dictionary containing return values and return it.
-    valid_plot_params = {}
-    valid_plot_params['valid_plot_params_config_fp'] = valid_plot_params_config_fp 
-    valid_plot_params['valid_levels_to_levels_in_db'] = valid_levels_to_levels_in_db
-    valid_plot_params['fcst_field_long_names'] = fcst_field_long_names
-    valid_plot_params['valid_levels_by_fcst_field'] = valid_levels_by_fcst_field
-    valid_plot_params['valid_units_by_fcst_field'] = valid_units_by_fcst_field
-    valid_plot_params['stat_long_names'] = stat_long_names
-    valid_plot_params['stat_need_thresh'] = stat_need_thresh
-    valid_plot_params['avail_mv_colors_codes'] = avail_mv_colors_codes 
-    valid_plot_params['choices'] = choices
+    valid_vx_plot_params = {}
+    valid_vx_plot_params['valid_vx_plot_params_config_fp'] = valid_vx_plot_params_config_fp 
+    valid_vx_plot_params['valid_levels_to_levels_in_db'] = valid_levels_to_levels_in_db
+    valid_vx_plot_params['fcst_field_long_names'] = fcst_field_long_names
+    valid_vx_plot_params['valid_levels_by_fcst_field'] = valid_levels_by_fcst_field
+    valid_vx_plot_params['valid_units_by_fcst_field'] = valid_units_by_fcst_field
+    valid_vx_plot_params['stat_long_names'] = stat_long_names
+    valid_vx_plot_params['stat_need_thresh'] = stat_need_thresh
+    valid_vx_plot_params['avail_mv_colors_codes'] = avail_mv_colors_codes 
+    valid_vx_plot_params['choices'] = choices
 
-    return valid_plot_params
+    return valid_vx_plot_params
 
 
 def get_database_info(mv_databases_config_fp):
@@ -291,12 +294,12 @@ def get_database_info(mv_databases_config_fp):
     return mv_databases_dict
 
 
-def parse_args(argv, valid_plot_params):
+def parse_args(argv, valid_vx_plot_params):
     '''
     Function to parse arguments for this script.
     '''
 
-    choices = valid_plot_params['choices']
+    choices = valid_vx_plot_params['choices']
 
     parser = argparse.ArgumentParser(description=dedent(f'''
         Function to generate an xml file that METviewer can read in order 
@@ -395,9 +398,10 @@ def parse_args(argv, valid_plot_params):
     return cla
 
 
-def generate_metviewer_xml(cla, valid_plot_params, mv_databases_dict):
-    """Function that generates an xml file that METviewer can read (in order
-       to create a verification plot).
+def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
+    """
+    Function that generates an xml file that METviewer can read (to be used
+    elsewhere to create a verification plot).
 
     Args:
         argv:  Command-line arguments
@@ -406,14 +410,15 @@ def generate_metviewer_xml(cla, valid_plot_params, mv_databases_dict):
         None
     """
 
-    valid_plot_params_config_fp = valid_plot_params['valid_plot_params_config_fp']
-    valid_levels_to_levels_in_db = valid_plot_params['valid_levels_to_levels_in_db']
-    fcst_field_long_names = valid_plot_params['fcst_field_long_names']
-    valid_levels_by_fcst_field = valid_plot_params['valid_levels_by_fcst_field']
-    valid_units_by_fcst_field = valid_plot_params['valid_units_by_fcst_field']
-    stat_long_names = valid_plot_params['stat_long_names']
-    stat_need_thresh = valid_plot_params['stat_need_thresh']
-    avail_mv_colors_codes = valid_plot_params['avail_mv_colors_codes']
+    # Get valid values for various verification plotting parameters.
+    valid_vx_plot_params_config_fp = valid_vx_plot_params['valid_vx_plot_params_config_fp']
+    valid_levels_to_levels_in_db = valid_vx_plot_params['valid_levels_to_levels_in_db']
+    fcst_field_long_names = valid_vx_plot_params['fcst_field_long_names']
+    valid_levels_by_fcst_field = valid_vx_plot_params['valid_levels_by_fcst_field']
+    valid_units_by_fcst_field = valid_vx_plot_params['valid_units_by_fcst_field']
+    stat_long_names = valid_vx_plot_params['stat_long_names']
+    stat_need_thresh = valid_vx_plot_params['stat_need_thresh']
+    avail_mv_colors_codes = valid_vx_plot_params['avail_mv_colors_codes']
 
     # Load the machine configuration file into a dictionary and find in it the
     # machine specified on the command line.
@@ -543,9 +548,8 @@ def generate_metviewer_xml(cla, valid_plot_params, mv_databases_dict):
               num_models_to_plot = {num_models_to_plot}
               num_avail_colors = {num_avail_colors}
             Either reduce the number of models to plot specified on the command 
-            line or add new colors in the valid plot parameters configuration file
-            (valid_plot_params_config_fp):
-              valid_plot_params_config_fp = {valid_plot_params_config_fp}
+            line or add new colors in the following configuration file:
+              valid_vx_plot_params_config_fp = {valid_vx_plot_params_config_fp}
             """)
         logging.error(err_msg, stack_info=True)
         raise ValueError(err_msg)
@@ -1019,19 +1023,19 @@ def plot_vx_metviewer(argv):
     logging.info('\n'.join(['', 'Logger details:',
                             'logger = ', get_pprint_str(vars(logger), '  '), '']))
 
-    # Get static parameters.  These include parameters (e.g. valid values) 
-    # needed to parse the command line arguments.
-    valid_plot_params_config_fp = 'valid_plot_params.yaml'
+    # Get valid values for various verification plotting parameters.  Some
+    # of these are needed below when parsing the command line arguments.
+    valid_vx_plot_params_config_fp = 'valid_vx_plot_params.yaml'
     logging.info(dedent(f"""
-        Obtaining static verification info from file {valid_plot_params_config_fp} ...
+        Obtaining valid values of verification parameters from file {valid_vx_plot_params_config_fp} ...
         """))
-    valid_plot_params = get_valid_plot_params(valid_plot_params_config_fp)
+    valid_vx_plot_params = get_valid_vx_plot_params(valid_vx_plot_params_config_fp)
 
     # Parse arguments.
     logging.info(dedent(f"""
         Processing command line arguments ...
         """))
-    cla = parse_args(argv, valid_plot_params)
+    cla = parse_args(argv, valid_vx_plot_params)
 
     # Get METviewer database information.
     logging.info(dedent(f"""
@@ -1043,7 +1047,7 @@ def plot_vx_metviewer(argv):
     logging.info(dedent(f"""
         Generating a METviewer xml ...
         """))
-    mv_batch, output_xml_fp = generate_metviewer_xml(cla, valid_plot_params, mv_databases_dict)
+    mv_batch, output_xml_fp = generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict)
 
     # Run METviewer on the xml to create a verification plot.
     logging.info(dedent(f"""
