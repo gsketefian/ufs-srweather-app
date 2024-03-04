@@ -460,8 +460,8 @@ def main():
 
     # Load the yaml file containing static verification parameters and get
     # valid values.
-    static_info_config_fp = 'vx_plots_static_info.yaml'
-    static_data = load_config_file(static_info_config_fp)
+    valid_plot_params_config_fp = 'valid_plot_params.yaml'
+    static_data = load_config_file(valid_plot_params_config_fp)
     valid_stats = list(static_data['valid_stats'].keys())
     valid_fcst_fields = list(static_data['valid_fcst_fields'].keys())
     valid_fcst_levels = list(static_data['valid_levels_to_levels_in_db'].keys())
