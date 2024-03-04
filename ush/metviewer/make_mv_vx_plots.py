@@ -109,13 +109,13 @@ def make_mv_vx_plots(args, valid_vals):
     mv_database_name = config_dict['mv_database_name']
     model_names = config_dict['model_names']
     fcst_init_info = config_dict['fcst_init_info']
+    fcst_len_hrs = config_dict['fcst_len_hrs']
     vx_stats_dict = config_dict["vx_stats"]
 
     fcst_init_info = map(str, list(fcst_init_info.values()))
     # fcst_init_info is a list containing both strings and integers.  For
     # use below, convert it to a list of strings only.
     fcst_init_info = [str(elem) for elem in fcst_init_info]
-    fcst_len_hrs = str(config_dict['fcst_len_hrs'])
 
     # Check if output directory exists and take action according to how the
     # args.preexisting_dir_method flag is set.
@@ -347,7 +347,7 @@ def make_mv_vx_plots(args, valid_vals):
                                              '--model_names', ] + model_names \
                                           + ['--vx_stat', stat,
                                              '--fcst_init_info'] + fcst_init_info \
-                                          + ['--fcst_len_hrs', fcst_len_hrs,
+                                          + ['--fcst_len_hrs', str(fcst_len_hrs),
                                              '--fcst_field', fcst_field,
                                              '--level_or_accum', level,
                                              '--threshold', thresh,
