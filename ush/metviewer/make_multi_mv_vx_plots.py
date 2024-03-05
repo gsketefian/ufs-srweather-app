@@ -112,10 +112,15 @@ def make_mv_vx_plots(args, valid_vals):
     fcst_len_hrs = plot_config_dict['fcst_len_hrs']
     vx_stats_dict = plot_config_dict["vx_stats"]
 
-    fcst_init_info = map(str, list(fcst_init_info.values()))
-    # fcst_init_info is a list containing both strings and integers.  For
-    # use below, convert it to a list of strings only.
-    fcst_init_info = [str(elem) for elem in fcst_init_info]
+    # Some of the values in the fcst_init_info dictionary are strings while
+    # others are integers.  Also, we don't need the keys.  Thus, convert 
+    # that variable into a list containing only string values since that's
+    # what jinja2 templates expect.
+    fcst_init_info = [str(elem) for elem in fcst_init_info.values()]
+
+    # Convert fcst_len_hrs from an integer to a string since that's what
+    # the jinja2 templates exptect.
+    fcst_len_hrs = str(fcst_len_hrs)
 
     # Check if output directory exists and take action according to how the
     # args.preexisting_dir_method flag is set.
@@ -127,7 +132,7 @@ def make_mv_vx_plots(args, valid_vals):
     # images are ordered via an index in their name.  This allows a pdf to
     # quickly be created from this directory (e.g. using tools available in
     # Adobe Acrobat) that contains all the plots in the order they were
-    # listed in the yaml plot configuration file that this script reads in.
+    # listed in the plot configuration file that this script reads in.
     if args.create_ordered_plots:
         ordered_plots_dir = os.path.join(args.output_dir, 'ordered_plots')
         Path(ordered_plots_dir).mkdir(parents=True, exist_ok=True)
@@ -138,7 +143,7 @@ def make_mv_vx_plots(args, valid_vals):
     valid_levels = valid_vals['levels']
 
     # Ensure that any statistics passed to the "--incl_only_stats" option also
-    # appear in the yaml plot configuration file.
+    # appear in the plot configuration file.
     vx_stats_in_config = list(vx_stats_dict.keys())
     stats_not_in_config = list(set(args.incl_only_stats).difference(vx_stats_in_config))
     if stats_not_in_config:
@@ -189,8 +194,8 @@ def make_mv_vx_plots(args, valid_vals):
             msg = dedent(f"""\n
                 The field "{field}" passed to the "--incl_only_fields" option does not
                 appear as a key in any of the statistic (sub-)dictionaries in the plot
-                configuration dictionary specified in the yaml plot configuration file.
-                The plot configuration file is:
+                configuration dictionary specified in the plot configuration file.  The
+                plot configuration file is:
                   plot_config_fp = {plot_config_fp}
                 Thus, no vx plots involving the field "{field}" will be generated.
                 """)
@@ -224,7 +229,7 @@ def make_mv_vx_plots(args, valid_vals):
             msg = dedent(f"""\n
                 The level "{level}" passed to the "--incl_only_levels" option does not
                 appear as a key in any of the statistic-field (sub-sub-)dictionaries in
-                the plot configuration dictionary specified in the yaml plot configuration
+                the plot configuration dictionary specified in the plot configuration
                 file.  The plot configuration file is:
                   plot_config_fp = {plot_config_fp}
                 Thus, no vx plots at level "{level}" will be generated.
@@ -347,7 +352,7 @@ def make_mv_vx_plots(args, valid_vals):
                                              '--model_names', ] + model_names \
                                           + ['--vx_stat', stat,
                                              '--fcst_init_info'] + fcst_init_info \
-                                          + ['--fcst_len_hrs', str(fcst_len_hrs),
+                                          + ['--fcst_len_hrs', fcst_len_hrs,
                                              '--fcst_field', fcst_field,
                                              '--level_or_accum', level,
                                              '--threshold', thresh,
@@ -387,7 +392,7 @@ def make_mv_vx_plots(args, valid_vals):
                                 # is set True, make a copy of the image in a designated subdirectory
                                 # that will contain renamed versions of the images such that their
                                 # alphabetical order corresponds to the order in which they appear in
-                                # the yaml plot configuration file.
+                                # the plot configuration file.
                                 if os.path.isfile(output_image_fp) and args.create_ordered_plots:
                                     # Generate the name of/path to a copy of the image file such that this
                                     # name contains an index used for alphabetically ordering the files.
@@ -473,14 +478,14 @@ def main():
                         help=dedent(f'''
                             Verification statistics to exclusively include in verification plot
                             generation.  This is a convenience option that provides a way to override
-                            the settings in the yaml plot configuration file.  If this option is not
-                            used, then all statistics in the configuration file are plotted.  If it
-                            is used, then plots will be generated only for the statistics passed to
-                            this option.  Note that any statistic specified here must also appear in
-                            the yaml user plot configuration file (because METviewer needs to know
-                            the fields, levels, and possibly thresholds for which to generate plots
-                            for that statistic).  For simplicity, this option cannot be used together
-                            with the "--excl_stats" option.'''))
+                            the settings in the plot configuration file.  If this option is not used,
+                            then all statistics in the configuration file are plotted.  If it is used,
+                            then plots will be generated only for the statistics passed to this option.
+                            Note that any statistic specified here must also appear in the plot
+                            configuration file (because METviewer needs to know the fields, levels,
+                            and possibly thresholds for which to generate plots for that statistic).
+                            For simplicity, this option cannot be used together with the "--excl_stats"
+                            option.'''))
 
     parser.add_argument('--excl_stats', nargs='+',
                         type=str.lower,
@@ -489,9 +494,9 @@ def main():
                         help=dedent(f'''
                             Verification statistics to exclude from verification plot generation.
                             This is a convenience option that provides a way to override the settings
-                            in the yaml plot configuration file.  If this option is not used, then
-                            all statistics in the configuration file are plotted.  If it is used,
-                            then plots will be generated only for those statistics in the configuration
+                            in the plot configuration file.  If this option is not used, then all
+                            statistics in the configuration file are plotted.  If it is used, then
+                            plots will be generated only for those statistics in the configuration
                             file that are not also listed here.  If a statistic listed here does not
                             appear in the configuration file, an informational message is issued and
                             no plot is generated for the statistic.  For simplicity, this option
@@ -504,9 +509,9 @@ def main():
                         help=dedent(f'''
                             Forecast fields to exclusively include in verification plot generation.
                             This is a convenience option that provides a way to override the settings
-                            in the yaml plot configuration file.  If this option is not used, then
-                            all fields listed under a given vx statistic in the configuration file
-                            are plotted (as long as that statistic is to be plotted, i.e. it is not
+                            in the plot configuration file.  If this option is not used, then all
+                            fields listed under a given vx statistic in the configuration file are
+                            plotted (as long as that statistic is to be plotted, i.e. it is not
                             excluded via the "--excl_stats" option).  If it is used, then plots for
                             that statistic will be generated only for the fields passed to this
                             option.  For a statistic that is to be plotted, if a field specified
@@ -522,8 +527,8 @@ def main():
                         help=dedent(f'''
                             Forecast fields to exclude from verification plot generation.  This is a
                             convenience option that provides a way to override the settings in the
-                            yaml plot configuration file.  If this option is not used, then all fields
-                            in the configuration file are plotted.  If it is used, then plots will be
+                            plot configuration file.  If this option is not used, then all fields in
+                            the configuration file are plotted.  If it is used, then plots will be
                             generated only for those fields in the configuration file that are not
                             listed here.  For simplicity, this option cannot be used together with
                             the "--incl_only_fields" option.'''))
@@ -534,9 +539,9 @@ def main():
                         help=dedent(f'''
                             Forecast levels to exclusively include in verification plot generation.
                             This is a convenience option that provides a way to override the settings
-                            in the yaml plot configuration file.  If this option is not used, then
-                            all levels listed under a given vx statistic and field combination in
-                            the configuration file are plotted (as long as that statistic and field
+                            in the plot configuration file.  If this option is not used, then all
+                            levels listed under a given vx statistic and field combination in the
+                            configuration file are plotted (as long as that statistic and field
                             combination is to be plotted, i.e. it is not excluded via the "--excl_stats"
                             and/or "--excl_fields" options).  If it is used, then plots for that
                             statistic-field combination will be generated only for the levels passed
@@ -552,8 +557,8 @@ def main():
                         help=dedent(f'''
                             Forecast levels to exclude from verification plot generation.  This is a
                             convenience option that provides a way to override the settings in the
-                            yaml plot configuration file.  If this option is not used, then all levels
-                            in the configuration file are plotted.  If it is used, then plots will be
+                            plot configuration file.  If this option is not used, then all levels in
+                            the configuration file are plotted.  If it is used, then plots will be
                             generated only for those levels in the configuration file that are not
                             listed here.  For simplicity, this option cannot be used together with
                             the "--incl_only_levels" option.'''))
@@ -575,10 +580,10 @@ def main():
                         help=dedent(f'''
                             Flag for creating a directory that contains copies of all the generated
                             images (png files) and renamed such that they are alphabetically in the
-                            same order as the user has specified in the yaml plot configuration file
-                            (the one passed to the optional "--plot_config_fp" argument).  This is
-                            useful for creating a pdf of the plots from the images that includes the
-                            plots in the same order as in the plot configuration file.'''))
+                            same order as the user has specified in the plot configuration file (the
+                            one passed to the optional "--plot_config_fp" argument).  This is useful
+                            for creating a pdf of the plots from the images that includes the plots
+                            in the same order as in the plot configuration file.'''))
 
     args = parser.parse_args()
 

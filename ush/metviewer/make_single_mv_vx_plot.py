@@ -91,10 +91,10 @@ def get_pprint_str(x, indent_str):
 
 def get_thresh_info(thresh_in_config):
     """Extract and form various pieces of threshold-related information from 
-       the threshold specified in the yaml plot configuration file.
+       the threshold specified on the command line.
 
     Arguments:
-      thresh_in_config:  Threshold setting as it appears in the yaml plot configuration file.
+      thresh_in_config:  Threshold setting specified on the command line.
 
     Return:
       thresh_info:       Dictionary containing varous threshold-related variables.
@@ -189,8 +189,8 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     Function to read in valid values of verification plotting parameters.
     '''
 
-    # Load the yaml configuration file that specifies valid values for various
-    # verification plotting parameters.
+    # Load the yaml file that specifies valid values for various verification
+    # plotting parameters.
     valid_vx_plot_params = load_config_file(valid_vx_plot_params_config_fp)
 
     # Get the list valid statistics.  Then define local dictionaries containing
