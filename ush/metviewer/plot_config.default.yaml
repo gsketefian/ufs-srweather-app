@@ -15,165 +15,107 @@ stats_fields_levels_threshes:
     #
     auc:
         apcp:
-            03h:
-                thresholds: ['gt0.0mm', 'ge2.54mm']
+            03h: ['gt0.0mm', 'ge2.54mm']
         dpt:
-            2m:
-                thresholds: ['ge288K', 'ge293K']
+            2m: ['ge288K', 'ge293K']
         refc:
-            L0:
-                thresholds: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
+            L0: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
         tmp:
-            2m:
-                thresholds: ['ge293K', 'ge298K']
-            850mb:
-                thresholds: ['ge288K']
+            2m: ['ge293K', 'ge298K']
+            850mb: ['ge288K']
         wind:
-            10m:
-                thresholds: ['ge5mps', 'ge10mps']
-            700mb:
-                thresholds: ['ge10mps']
+            10m: ['ge5mps', 'ge10mps']
+            700mb: ['ge10mps']
     #
     bias:
         dpt:
-            2m:
-                thresholds: ['']
+            2m: []
         refc:
-            L0:
-                thresholds: ['']
+            L0: []
         tmp:
-            2m:
-                thresholds: ['']
-            500mb:
-                thresholds: ['']
-            700mb:
-                thresholds: ['']
-            850mb:
-                thresholds: ['']
+            2m: []
+            500mb: []
+            700mb: []
+            850mb: []
         wind:
-            10m:
-                thresholds: ['']
-            700mb:
-                thresholds: ['']
-            850mb:
-                thresholds: ['']
+            10m: []
+            700mb: []
+            850mb: []
     #
     brier:
         apcp:
-            03h:
-                thresholds: ['gt0.0mm', 'ge2.54mm']
+            03h: ['gt0.0mm', 'ge2.54mm']
         dpt:
-            2m:
-                thresholds: ['ge288K', 'ge293K']
+            2m: ['ge288K', 'ge293K']
         refc:
-            L0:
-                thresholds: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
+            L0: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
         tmp:
-            2m:
-                thresholds: ['ge293K', 'ge298K']
-            850mb:
-                thresholds: ['ge288K']
+            2m: ['ge293K', 'ge298K']
+            850mb: ['ge288K']
         wind:
-            10m:
-                thresholds: ['ge5mps', 'ge10mps']
-            700mb:
-                thresholds: ['ge10mps']
+            10m: ['ge5mps', 'ge10mps']
+            700mb: ['ge10mps']
     #
     fbias:
         apcp:
-            03h:
-                thresholds: ['gt0.0mm', 'ge2.54mm']
+            03h: ['gt0.0mm', 'ge2.54mm']
         refc:
-            L0:
-                thresholds: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
+            L0: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ']
     #
     rely:
         apcp:
-            03h:
-                thresholds: ['gt0.0mm', 'ge0.508mm', 'ge2.54mm', 'ge6.35mm']
-            06h:
-                thresholds: ['ge6.35mm', 'ge12.7mm']
-            24h:
-                thresholds: ['ge25.4mm']
+            03h: ['gt0.0mm', 'ge0.508mm', 'ge2.54mm', 'ge6.35mm']
+            06h: ['ge6.35mm', 'ge12.7mm']
+            24h: ['ge25.4mm']
         dpt:
-            2m:
-                thresholds: ['ge288K', 'ge293K']
+            2m: ['ge288K', 'ge293K']
         refc:
-            L0:
-                thresholds: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ']
+            L0: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ']
         tmp:
-            2m:
-                thresholds: ['ge293K', 'ge298K', 'ge303K']
-            850mb:
-                thresholds: ['ge288K']
+            2m: ['ge293K', 'ge298K', 'ge303K']
+            850mb: ['ge288K']
         wind:
-            10m:
-                thresholds: ['ge5mps', 'ge10mps']
-            700mb:
-                thresholds: ['ge10mps']
+            10m: ['ge5mps', 'ge10mps']
+            700mb: ['ge10mps']
     #
     rhist:
         apcp:
-            03h:
-                thresholds: ['']
-            06h:
-                thresholds: ['']
-            24h:
-                thresholds: ['']
+            03h: []
+            06h: []
+            24h: []
         cape:
-            L0:
-                thresholds: ['']
+            L0: []
         dpt:
-            2m:
-                thresholds: ['']
+            2m: []
         hgt:
-            500mb:
-                thresholds: ['']
+            500mb: []
         refc:
-            L0:
-                thresholds: ['']
+            L0: []
         tmp:
-            2m:
-                thresholds: ['']
-            500mb:
-                thresholds: ['']
-            850mb:
-                thresholds: ['']
+            2m: []
+            500mb: []
+            850mb: []
         wind:
-            10m:
-                thresholds: ['']
-            500mb:
-                thresholds: ['']
-            850mb:
-                thresholds: ['']
+            10m: []
+            500mb: []
+            850mb: []
     #
     ss:
         apcp:
-            03h:
-                thresholds: ['']
+            03h: []
         dpt:
-            2m:
-                thresholds: ['']
+            2m: []
         hgt:
-            500mb:
-                thresholds: ['']
+            500mb: []
         refc:
-            L0:
-                thresholds: ['']
+            L0: []
         tmp:
-            2m:
-                thresholds: ['']
-            500mb:
-                thresholds: ['']
-            700mb:
-                thresholds: ['']
-            850mb:
-                thresholds: ['']
+            2m: []
+            500mb: []
+            700mb: []
+            850mb: []
         wind:
-            500mb:
-                thresholds: ['']
-            700mb:
-                thresholds: ['']
-            850mb:
-                thresholds: ['']
+            500mb: []
+            700mb: []
+            850mb: []
 

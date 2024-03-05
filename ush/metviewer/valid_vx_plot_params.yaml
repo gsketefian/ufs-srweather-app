@@ -6,25 +6,25 @@
 valid_vx_stats:
     auc:
         long_name: 'Area Under the Curve'
-        need_thresh: True
+        needs_thresh: True
     bias:
         long_name: 'Bias'
-        need_thresh: False
+        needs_thresh: False
     brier:
         long_name: 'Brier Score'
-        need_thresh: True
+        needs_thresh: True
     fbias:
         long_name: 'Frequency Bias'
-        need_thresh: True
+        needs_thresh: True
     rely:
         long_name: 'Reliability'
-        need_thresh: True
+        needs_thresh: True
     rhist:
         long_name: 'Rank Histogram'
-        need_thresh: False
+        needs_thresh: False
     ss:
         long_name: 'Spread-Skill Ratio'
-        need_thresh: False
+        needs_thresh: False
 #
 # List of valid forecast field short names, and, for each field:
 #

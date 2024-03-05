@@ -198,10 +198,10 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     # statistic.
     valid_vx_stats = valid_vx_plot_params['valid_vx_stats'].keys()
     stat_long_names = {}
-    stat_need_thresh = {}
+    stat_needs_thresh = {}
     for stat in valid_vx_stats:
         stat_long_names[stat] = valid_vx_plot_params['valid_vx_stats'][stat]['long_name']
-        stat_need_thresh[stat] = valid_vx_plot_params['valid_vx_stats'][stat]['need_thresh']
+        stat_needs_thresh[stat] = valid_vx_plot_params['valid_vx_stats'][stat]['needs_thresh']
 
     # Get list of valid forecast fields.
     valid_fcst_fields = valid_vx_plot_params['valid_fcst_fields'].keys()
@@ -277,7 +277,7 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     valid_vx_plot_params['valid_fcst_levels_by_fcst_field'] = valid_fcst_levels_by_fcst_field
     valid_vx_plot_params['valid_units_by_fcst_field'] = valid_units_by_fcst_field
     valid_vx_plot_params['stat_long_names'] = stat_long_names
-    valid_vx_plot_params['stat_need_thresh'] = stat_need_thresh
+    valid_vx_plot_params['stat_needs_thresh'] = stat_needs_thresh
     valid_vx_plot_params['avail_mv_colors_codes'] = avail_mv_colors_codes 
     valid_vx_plot_params['choices'] = choices
 
@@ -419,7 +419,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     valid_fcst_levels_by_fcst_field = valid_vx_plot_params['valid_fcst_levels_by_fcst_field']
     valid_units_by_fcst_field = valid_vx_plot_params['valid_units_by_fcst_field']
     stat_long_names = valid_vx_plot_params['stat_long_names']
-    stat_need_thresh = valid_vx_plot_params['stat_need_thresh']
+    stat_needs_thresh = valid_vx_plot_params['stat_needs_thresh']
     avail_mv_colors_codes = valid_vx_plot_params['avail_mv_colors_codes']
 
     # Load the machine configuration file into a dictionary and find in it the
@@ -660,8 +660,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
           loa_units = {loa_units}
         """))
 
-    if (not stat_need_thresh[cla.vx_stat]) and (cla.threshold):
-        no_thresh_stats = [key for key,val in stat_need_thresh.items() if val]
+    if (not stat_needs_thresh[cla.vx_stat]) and (cla.threshold):
+        no_thresh_stats = [key for key,val in stat_needs_thresh.items() if val]
         no_thresh_stats_fmt_str = ",\n".join("              {!r}: {!r}".format(k, v)
                                              for k, v in stat_long_names.items() if k in no_thresh_stats).lstrip()
         logging.debug(dedent(f"""

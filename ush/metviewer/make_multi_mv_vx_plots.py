@@ -79,7 +79,7 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
             raise ValueError(err_msg)
 
 
-def make_mv_vx_plots(args, valid_vals):
+def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     """Make multiple verification plots using METviewer and the settings
     file specified as part of args.
 
@@ -247,9 +247,13 @@ def make_mv_vx_plots(args, valid_vals):
     # dictionary.
     for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.copy().items():
         for field, levels_threshes_dict in fields_levels_threshes_dict.copy().items():
-            for level, level_dict in levels_threshes_dict.copy().items():
-                # If level_dict is empty, remove the key (level) from the dictionary.
-                if not level_dict:
+            for level, threshes_list in levels_threshes_dict.copy().items():
+                # If the current statistic needs a threshold but threshes_list for the
+                # current level is empty, remove the level (which is the key) from the
+                # dictionary.  If the statistic doesn't need a threshold, it is acceptable
+                # for the current level to have an empty threhold list, so don't remove
+                # the level in that case.
+                if stat_needs_thresh[stat] and (not threshes_list):
                     stats_fields_levels_threshes_dict[stat][field].pop(level, None)
             # If levels_threshes_dict is empty, remove the key (field) from the
             # dictionary.
@@ -326,28 +330,45 @@ def make_mv_vx_plots(args, valid_vals):
                     msg = msg + get_pprint_str(levels_threshes_dict, indent_str).lstrip()
                     logging.debug(msg)
 
-                    for level, level_dict in levels_threshes_dict.items():
-                        # Don't procecess the current level if the plotting info dictionary
-                        # corresponding to the level is empty.
-                        if not level_dict:
+                    for level, threshes_list in levels_threshes_dict.items():
+                        # Don't procecess the current level if the current statistic is one that
+                        # needs a threshold and the threshold list corresponding to the current
+                        # level is empty.
+                        if stat_needs_thresh[stat] and (not threshes_list):
                             logging.info(dedent(f"""\n
-                                The plotting info dictionary for level "{level}" is empty.  Thus, no
-                                "{level}" plots will be generated.
+                                The list of thresholds for level "{level}" is empty.  Thus, no plots at
+                                level "{level}" will be generated.
                                 """))
-                        # Dictionary corresponding to the level is not empty, so process.
+                        # Dictionary corresponding to the level is not empty, or it is empty but
+                        # the statistic doesn't need a threshold, so process.
                         else:
                             logging.info(dedent(f"""
                                 Plotting statistic "{stat}" for forecast field "{field}" at level "{level}" ...
                                 """))
-                            msg = dedent(f"""
-                                Dictionary of thresholds (if applicable) for this level is:
-                                  level_dict = """)
-                            indent_str = ' '*(5 + len('level_dict'))
-                            msg = msg + get_pprint_str(level_dict, indent_str).lstrip()
-                            logging.debug(msg)
+                            if stat_needs_thresh[stat]:
+                                msg = dedent(f"""
+                                    Dictionary of thresholds (if applicable) for this level is:
+                                      threshes_list = """)
+                                indent_str = ' '*(5 + len('threshes_list'))
+                                msg = msg + get_pprint_str(threshes_list, indent_str).lstrip()
+                                logging.debug(msg)
+                            else:
+                                if threshes_list:
+                                    msg = dedent(f"""
+                                        The current statistic (stat) does not need a threshold, but it has been
+                                        assigned a non-empty list of thresholds (threshes_list) in the plot
+                                        configuration file:
+                                          stat = {stat}
+                                          stat_needs_thresh[stat] = {stat_needs_thresh[stat]}
+                                          threshes_list = {threshes_list}
+                                        Please correct this in the plot configuration file, which is:
+                                          plot_config_fp = {plot_config_fp}
+                                        Ignoring specified thresholds and resetting threshes_list to a list
+                                        containing a single empty string.""")
+                                    logging.warning(msg)
+                                threshes_list = ['']
 
-                            thresholds = level_dict['thresholds']
-                            for thresh in thresholds:
+                            for thresh in threshes_list:
                                 logging.info(dedent(f"""
                                     Plotting statistic "{stat}" for forecast field "{field}" at level "{level}"
                                     and threshold "{thresh}" (threshold may be empty for certain stats) ...
@@ -476,6 +497,12 @@ def main():
     valid_vx_stats = list(valid_vx_plot_params['valid_vx_stats'].keys())
     valid_fcst_fields = list(valid_vx_plot_params['valid_fcst_fields'].keys())
     valid_fcst_levels = list(valid_vx_plot_params['valid_fcst_levels_to_levels_in_db'].keys())
+
+    # Create dictionary that specifies whether each vx statistic (the keys)
+    # needs a threshold.
+    stat_needs_thresh = {}
+    for stat in valid_vx_stats:
+        stat_needs_thresh[stat] = valid_vx_plot_params['valid_vx_stats'][stat]['needs_thresh']
 
     parser.add_argument('--incl_only_stats', nargs='+',
                         type=str.lower,
@@ -681,7 +708,7 @@ cannot be used together with the "--incl_only_threshes" option.'''))
     valid_vals = {'vx_stats': valid_vx_stats,
                   'fcst_fields': valid_fcst_fields,
                   'fcst_levels': valid_fcst_levels}
-    make_mv_vx_plots(args, valid_vals)
+    make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh)
 
 #
 # -----------------------------------------------------------------------
