@@ -138,9 +138,9 @@ def make_mv_vx_plots(args, valid_vals):
         Path(ordered_plots_dir).mkdir(parents=True, exist_ok=True)
 
     # Get valid values for statistics, forecast fields, and forecast levels.
-    valid_stats = valid_vals['stats']
-    valid_fields = valid_vals['fields']
-    valid_levels = valid_vals['levels']
+    valid_vx_stats = valid_vals['vx_stats']
+    valid_fcst_fields = valid_vals['fcst_fields']
+    valid_fcst_levels = valid_vals['fcst_levels']
 
     # Ensure that any statistics passed to the "--incl_only_stats" option also
     # appear in the plot configuration file.
@@ -167,7 +167,7 @@ def make_mv_vx_plots(args, valid_vals):
     # Remove from the plot configuration dictionary any statistic that is
     # NOT in the exclusive list of statistics to include.
     if args.incl_only_stats:
-        [vx_stats_dict.pop(stat, None) for stat in valid_stats if stat not in args.incl_only_stats]
+        [vx_stats_dict.pop(stat, None) for stat in valid_vx_stats if stat not in args.incl_only_stats]
 
     # For each statistic to be plotted, remove from its sub-dictionary in
     # the plot configuration dictionary any forecast field in the list of
@@ -181,7 +181,7 @@ def make_mv_vx_plots(args, valid_vals):
     if args.incl_only_fields:
         for stat in vx_stats_dict.copy().keys():
             [vx_stats_dict[stat].pop(field, None)
-             for field in valid_fields if field not in args.incl_only_fields]
+             for field in valid_fcst_fields if field not in args.incl_only_fields]
 
     # Check that all the fields passed to the "--incl_only_fields" option
     # appear in at least one statistic sub-dictionary in the plot configuration
@@ -215,7 +215,7 @@ def make_mv_vx_plots(args, valid_vals):
         for stat, stat_dict in vx_stats_dict.copy().items():
             for field, fcst_field_dict in stat_dict.copy().items():
                 [vx_stats_dict[stat][field].pop(level, None)
-                 for level in valid_levels if level not in args.incl_only_levels]
+                 for level in valid_fcst_levels if level not in args.incl_only_levels]
 
     # Check that all the fields passed to the "--incl_only_levels" option
     # appear in at least one statistic-field sub-sub-dictionary in the plot
@@ -243,14 +243,14 @@ def make_mv_vx_plots(args, valid_vals):
     # Clean up leftover empty sub-dictionaries within the plotting configuration
     # dictionary.
     for stat, stat_dict in vx_stats_dict.copy().items():
-        for fcst_field, fcst_field_dict in stat_dict.copy().items():
+        for field, fcst_field_dict in stat_dict.copy().items():
             for level, level_dict in fcst_field_dict.copy().items():
                 # If level_dict is empty, remove the key (level) from the dictionary.
                 if not level_dict:
-                    vx_stats_dict[stat][level].pop(fcst_field, None)
-            # If fcst_field_dict is empty, remove the key (fcst_field) from the dictionary.
+                    vx_stats_dict[stat][level].pop(field, None)
+            # If fcst_field_dict is empty, remove the key (field) from the dictionary.
             if not fcst_field_dict:
-                vx_stats_dict[stat].pop(fcst_field, None)
+                vx_stats_dict[stat].pop(field, None)
         # If stat_dict is empty, remove the key (stat) from the dictionary.
         if not stat_dict:
             vx_stats_dict.pop(stat, None)
@@ -298,19 +298,18 @@ def make_mv_vx_plots(args, valid_vals):
             else:
                 output_dir_crnt_stat = args.output_dir
 
-            for fcst_field, fcst_field_dict in stat_dict.items():
+            for field, fcst_field_dict in stat_dict.items():
                 # Don't procecess the current field if the plotting info dictionary
                 # corresponding to the field is empty.
                 if not fcst_field_dict:
                     logging.info(dedent(f"""\n
-                        The plotting info dictionary for field "{fcst_field}" is empty.  Thus, no
-                        "{fcst_field}" plots will be generated.
+                        The plotting info dictionary for field "{field}" is empty.  Thus, no
+                        "{field}" plots will be generated.
                         """))
                 # Dictionary corresponding to the field is not empty, so process.
                 else:
                     logging.info(dedent(f"""
-                        Plotting statistic "{stat}" for forecast field "{fcst_field}" at various
-                        levels ...
+                        Plotting statistic "{stat}" for forecast field "{field}" at various levels ...
                         """))
                     msg = dedent(f"""
                         Dictionary of levels and thresholds (if applicable) for this field is:
@@ -330,8 +329,7 @@ def make_mv_vx_plots(args, valid_vals):
                         # Dictionary corresponding to the level is not empty, so process.
                         else:
                             logging.info(dedent(f"""
-                                Plotting statistic "{stat}" for forecast field "{fcst_field}" at level
-                                "{level}" ...
+                                Plotting statistic "{stat}" for forecast field "{field}" at level "{level}" ...
                                 """))
                             msg = dedent(f"""
                                 Dictionary of thresholds (if applicable) for this level is:
@@ -343,7 +341,7 @@ def make_mv_vx_plots(args, valid_vals):
                             thresholds = level_dict['thresholds']
                             for thresh in thresholds:
                                 logging.info(dedent(f"""
-                                    Plotting statistic "{stat}" for forecast field "{fcst_field}" at level "{level}"
+                                    Plotting statistic "{stat}" for forecast field "{field}" at level "{level}"
                                     and threshold "{thresh}" (threshold may be empty for certain stats) ...
                                     """))
 
@@ -353,7 +351,7 @@ def make_mv_vx_plots(args, valid_vals):
                                           + ['--vx_stat', stat,
                                              '--fcst_init_info'] + fcst_init_info \
                                           + ['--fcst_len_hrs', fcst_len_hrs,
-                                             '--fcst_field', fcst_field,
+                                             '--fcst_field', field,
                                              '--level_or_accum', level,
                                              '--threshold', thresh,
                                              '--mv_output_dir', output_dir_crnt_stat]
@@ -467,14 +465,14 @@ def main():
     # parameters and get valid values.
     valid_vx_plot_params_config_fp = 'valid_vx_plot_params.yaml'
     valid_vx_plot_params = load_config_file(valid_vx_plot_params_config_fp)
-    valid_stats = list(valid_vx_plot_params['valid_stats'].keys())
+    valid_vx_stats = list(valid_vx_plot_params['valid_vx_stats'].keys())
     valid_fcst_fields = list(valid_vx_plot_params['valid_fcst_fields'].keys())
-    valid_fcst_levels = list(valid_vx_plot_params['valid_levels_to_levels_in_db'].keys())
+    valid_fcst_levels = list(valid_vx_plot_params['valid_fcst_levels_to_levels_in_db'].keys())
 
     parser.add_argument('--incl_only_stats', nargs='+',
                         type=str.lower,
                         required=False, default=[],
-                        choices=valid_stats,
+                        choices=valid_vx_stats,
                         help=dedent(f'''
                             Verification statistics to exclusively include in verification plot
                             generation.  This is a convenience option that provides a way to override
@@ -490,7 +488,7 @@ def main():
     parser.add_argument('--excl_stats', nargs='+',
                         type=str.lower,
                         required=False, default=[],
-                        choices=valid_stats,
+                        choices=valid_vx_stats,
                         help=dedent(f'''
                             Verification statistics to exclude from verification plot generation.
                             This is a convenience option that provides a way to override the settings
@@ -625,9 +623,9 @@ def main():
 
     # Call the driver function to read and parse the plot configuration
     # dictionary and call the METviewer batch script to generate plots.
-    valid_vals = {'stats': valid_stats,
-                  'fields': valid_fcst_fields,
-                  'levels': valid_fcst_levels}
+    valid_vals = {'vx_stats': valid_vx_stats,
+                  'fcst_fields': valid_fcst_fields,
+                  'fcst_levels': valid_fcst_levels}
     make_mv_vx_plots(args, valid_vals)
 
 #

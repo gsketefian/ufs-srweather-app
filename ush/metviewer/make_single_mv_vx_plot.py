@@ -193,54 +193,56 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     # plotting parameters.
     valid_vx_plot_params = load_config_file(valid_vx_plot_params_config_fp)
 
-    # Get the list valid statistics.  Then define local dictionaries containing
-    # values that depend on the verification statistic.
-    valid_stats = valid_vx_plot_params['valid_stats'].keys()
+    # Get the list of valid verification statistics.  Then define local
+    # dictionaries containing values that depend on the verification
+    # statistic.
+    valid_vx_stats = valid_vx_plot_params['valid_vx_stats'].keys()
     stat_long_names = {}
     stat_need_thresh = {}
-    for stat in valid_stats:
-        stat_long_names[stat] = valid_vx_plot_params['valid_stats'][stat]['long_name']
-        stat_need_thresh[stat] = valid_vx_plot_params['valid_stats'][stat]['need_thresh']
+    for stat in valid_vx_stats:
+        stat_long_names[stat] = valid_vx_plot_params['valid_vx_stats'][stat]['long_name']
+        stat_need_thresh[stat] = valid_vx_plot_params['valid_vx_stats'][stat]['need_thresh']
 
     # Get list of valid forecast fields.
     valid_fcst_fields = valid_vx_plot_params['valid_fcst_fields'].keys()
 
     # Get list of valid forecast field levels.  This is a list of all levels
     # regardless of field (i.e. a "master" list).
-    valid_levels_to_levels_in_db = valid_vx_plot_params['valid_levels_to_levels_in_db']
-    valid_levels_all_fields = list(valid_levels_to_levels_in_db.keys())
+    valid_fcst_levels_to_levels_in_db = valid_vx_plot_params['valid_fcst_levels_to_levels_in_db']
+    valid_fcst_levels_all_fields = list(valid_fcst_levels_to_levels_in_db.keys())
 
     # Form local dictionaries containing valid values that depend on the
     # forecast field.
     fcst_field_long_names = {}
-    valid_levels_by_fcst_field = {}
+    valid_fcst_levels_by_fcst_field = {}
     valid_units_by_fcst_field = {}
-    for fcst_field in valid_fcst_fields:
+    for field in valid_fcst_fields:
   
         # Get and save long name of current the forecast field.
-        fcst_field_long_names[fcst_field] \
-        = valid_vx_plot_params['valid_fcst_fields'][fcst_field]['long_name']
+        fcst_field_long_names[field] \
+        = valid_vx_plot_params['valid_fcst_fields'][field]['long_name']
 
         # Get and save the list of valid units for the current forecast field.
-        valid_units_by_fcst_field[fcst_field] \
-        = valid_vx_plot_params['valid_fcst_fields'][fcst_field]['valid_units']
+        valid_units_by_fcst_field[field] \
+        = valid_vx_plot_params['valid_fcst_fields'][field]['valid_units']
 
         # Get and save the list of valid levels/accumulations for the current
         # forecast field.
-        valid_levels_by_fcst_field[fcst_field] \
-        = valid_vx_plot_params['valid_fcst_fields'][fcst_field]['valid_levels']
+        valid_fcst_levels_by_fcst_field[field] \
+        = valid_vx_plot_params['valid_fcst_fields'][field]['valid_fcst_levels']
 
         # Make sure all the levels/accumulations specified for the current 
         # forecast field are in the master list of valid levels and accumulations.
-        for loa in valid_levels_by_fcst_field[fcst_field]:
-            if loa not in valid_levels_all_fields:
+        for loa in valid_fcst_levels_by_fcst_field[field]:
+            if loa not in valid_fcst_levels_all_fields:
                 err_msg = dedent(f"""
-                    One of the levels or accumulations (loa) in the set of valid levels and
-                    accumulations for the current forecast field (fcst_field) is not in the
-                    master list of valid levels and accumulations (valid_levels_all_fields):
-                      fcst_field = {fcst_field}
+                    One of the levels or accumulations (loa) in the set of valid forecast
+                    levels and accumulations for the current forecast field (field) is not
+                    in the master list of valid forecast levels and accumulations
+                    (valid_fcst_levels_all_fields):
+                      field = {field}
                       loa = {loa}
-                      valid_levels_all_fields = {valid_levels_all_fields}
+                      valid_fcst_levels_all_fields = {valid_fcst_levels_all_fields}
                     The master list of valid levels and accumulations as well as the list of
                     valid levels and accumulations for the current forecast field can be
                     found in the following configuration file:
@@ -263,16 +265,16 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     # This is needed by the argument parsing function below.
     choices = {}
     choices['fcst_field'] = sorted(valid_fcst_fields)
-    choices['level'] = valid_levels_all_fields
-    choices['vx_stat'] = sorted(valid_stats)
+    choices['fcst_level'] = valid_fcst_levels_all_fields
+    choices['vx_stat'] = sorted(valid_vx_stats)
     choices['color'] = list(avail_mv_colors_codes.keys())
 
     # Create dictionary containing return values and return it.
     valid_vx_plot_params = {}
     valid_vx_plot_params['valid_vx_plot_params_config_fp'] = valid_vx_plot_params_config_fp 
-    valid_vx_plot_params['valid_levels_to_levels_in_db'] = valid_levels_to_levels_in_db
+    valid_vx_plot_params['valid_fcst_levels_to_levels_in_db'] = valid_fcst_levels_to_levels_in_db
     valid_vx_plot_params['fcst_field_long_names'] = fcst_field_long_names
-    valid_vx_plot_params['valid_levels_by_fcst_field'] = valid_levels_by_fcst_field
+    valid_vx_plot_params['valid_fcst_levels_by_fcst_field'] = valid_fcst_levels_by_fcst_field
     valid_vx_plot_params['valid_units_by_fcst_field'] = valid_units_by_fcst_field
     valid_vx_plot_params['stat_long_names'] = stat_long_names
     valid_vx_plot_params['stat_need_thresh'] = stat_need_thresh
@@ -379,7 +381,7 @@ def parse_args(argv, valid_vx_plot_params):
     parser.add_argument('--level_or_accum',
                         type=str,
                         required=False,
-                        choices=choices['level'],
+                        choices=choices['fcst_level'],
                         help='Vertical level or accumulation period')
 
     parser.add_argument('--threshold',
@@ -412,9 +414,9 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Get valid values for various verification plotting parameters.
     valid_vx_plot_params_config_fp = valid_vx_plot_params['valid_vx_plot_params_config_fp']
-    valid_levels_to_levels_in_db = valid_vx_plot_params['valid_levels_to_levels_in_db']
+    valid_fcst_levels_to_levels_in_db = valid_vx_plot_params['valid_fcst_levels_to_levels_in_db']
     fcst_field_long_names = valid_vx_plot_params['fcst_field_long_names']
-    valid_levels_by_fcst_field = valid_vx_plot_params['valid_levels_by_fcst_field']
+    valid_fcst_levels_by_fcst_field = valid_vx_plot_params['valid_fcst_levels_by_fcst_field']
     valid_units_by_fcst_field = valid_vx_plot_params['valid_units_by_fcst_field']
     stat_long_names = valid_vx_plot_params['stat_long_names']
     stat_need_thresh = valid_vx_plot_params['stat_need_thresh']
@@ -587,15 +589,16 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # as follows:
     cla.incl_ens_means = incl_ens_means
 
-    valid_levels_or_accums = valid_levels_by_fcst_field[cla.fcst_field]
-    if cla.level_or_accum not in valid_levels_or_accums:
+    valid_fcst_levels_or_accums = valid_fcst_levels_by_fcst_field[cla.fcst_field]
+    if cla.level_or_accum not in valid_fcst_levels_or_accums:
         err_msg = dedent(f"""
-            The specified level or accumulation is not compatible with the specified
-            forecast field:
+            The specified forecast level or accumulation is not compatible with the
+            specified forecast field:
               cla.fcst_field = {cla.fcst_field}
               cla.level_or_accum = {cla.level_or_accum}
-            Valid options for level or accumulation for this forecast field are:
-              {valid_levels_or_accums}
+            Valid options for forecast level or accumulation for this forecast field
+            are:
+              {valid_fcst_levels_or_accums}
             """)
         logging.error(err_msg, stack_info=True)
         raise ValueError(err_msg)
@@ -720,7 +723,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Get names of level/accumulation, threshold, and models as they are set
     # in the database.
-    level_in_db = valid_levels_to_levels_in_db[cla.level_or_accum]
+    level_in_db = valid_fcst_levels_to_levels_in_db[cla.level_or_accum]
 
     line_types = list()
     for imod in range(0,num_models_to_plot):

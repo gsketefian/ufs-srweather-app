@@ -3,7 +3,7 @@
 # of each, and whether each requires a threshold value for a given forecast
 # field.
 #
-valid_stats:
+valid_vx_stats:
     auc:
         long_name: 'Area Under the Curve'
         need_thresh: True
@@ -36,39 +36,39 @@ valid_fcst_fields:
     apcp:
         long_name: 'Accumulated Precipitation'
         valid_units: ['mm']
-        valid_levels: ['01h', '03h', '06h', '24h']
+        valid_fcst_levels: ['01h', '03h', '06h', '24h']
     cape:
         long_name: 'Convenctive Available Potential Energy'
         valid_units: ['Jpkg']
-        valid_levels: ['L0']
+        valid_fcst_levels: ['L0']
     dpt:
         long_name: 'Dew Point'
         valid_units: ['K']
-        valid_levels: ['2m', '500mb', '700mb', '850mb']
+        valid_fcst_levels: ['2m', '500mb', '700mb', '850mb']
     hgt:
         long_name: 'Height'
         valid_units: ['m']
-        valid_levels: ['500mb']
+        valid_fcst_levels: ['500mb']
     refc:
         long_name: 'Composite Reflectivity'
         valid_units: ['dbz', 'dBZ']
-        valid_levels: ['L0']
+        valid_fcst_levels: ['L0']
     retop:
         long_name: 'Echo Top'
         valid_units: ['kft']
-        valid_levels: ['L0']
+        valid_fcst_levels: ['L0']
     tmp:
         long_name: 'Temperature'
         valid_units: ['K']
-        valid_levels: ['2m', '500mb', '700mb', '850mb']
+        valid_fcst_levels: ['2m', '500mb', '700mb', '850mb']
     vis:
         long_name: 'Visibility'
         valid_units: ['m']
-        valid_levels: ['L0']
+        valid_fcst_levels: ['L0']
     wind:
         long_name: 'Wind'
         valid_units: ['mps']
-        valid_levels: ['10m', '500mb', '700mb', '850mb']
+        valid_fcst_levels: ['10m', '500mb', '700mb', '850mb']
 #
 # Dictionary containing set of allowed levels (the keys) that can be
 # specified on the command line along with the corresponding strings
@@ -79,16 +79,16 @@ valid_fcst_fields:
 # another or if the values are standard in MetViewer.  If the former,
 # then this should be moved to the database configuration yaml file.
 #
-valid_levels_to_levels_in_db: {'01h': 'A1',
-                               '03h': 'A3',
-                               '06h': 'A6',
-                               '24h': 'A24',
-                               'L0': 'L0',
-                               '2m': 'Z2',
-                               '10m': 'Z10', 
-                               '500mb': 'P500',
-                               '700mb': 'P700',
-                               '850mb': 'P850'}
+valid_fcst_levels_to_levels_in_db: {'01h': 'A1',
+                                    '03h': 'A3',
+                                    '06h': 'A6',
+                                    '24h': 'A24',
+                                    'L0': 'L0',
+                                    '2m': 'Z2',
+                                    '10m': 'Z10', 
+                                    '500mb': 'P500',
+                                    '700mb': 'P700',
+                                    '850mb': 'P850'}
 #
 # Hex codes for colors MetViewer can use for the models.  The first code is
 # for the standard version of the color while the second is for a light 
