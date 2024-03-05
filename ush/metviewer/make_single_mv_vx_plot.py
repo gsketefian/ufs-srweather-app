@@ -137,7 +137,7 @@ def get_thresh_info(thresh_in_config):
         if thresh_comp_oper in valid_vals_thresh_comp_oper:
             thresh_comp_oper_xml = thresh_comp_oper_to_xml[thresh_comp_oper]
         else:
-            err_msg = ''.join([dedent(f'''\n
+            msg = ''.join([dedent(f'''\n
                 Invalid value for threshold comparison operator:
                   thresh_comp_oper = {thresh_comp_oper}
                 Valid values for the comparison operator are:
@@ -145,8 +145,8 @@ def get_thresh_info(thresh_in_config):
                 Specified threshold is:
                   thresh_in_config = {thresh_in_config}'''),
                 bad_thresh_fmt_msg])
-            logging.error(err_msg, stack_info=True)
-            raise ValueError(err_msg)
+            logging.error(msg, stack_info=True)
+            raise ValueError(msg)
     
         # Form the threshold in the way that it appears in the database (for
         # METviewer to find).
@@ -167,12 +167,12 @@ def get_thresh_info(thresh_in_config):
     # must have been wrong with thresh_in_config that caused thresh_parts
     # to be empty.
     elif thresh_in_config:
-        err_msg = ''.join([dedent(f'''\n
+        msg = ''.join([dedent(f'''\n
             Specified input threshold does not have a valid format:
               thresh_in_config = {thresh_in_config}'''),
             bad_thresh_fmt_msg])
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Create a dictionary containing the values to return and return it.
     thresh_info = {'in_config': thresh_in_config,
@@ -235,7 +235,7 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
         # forecast field are in the master list of valid levels and accumulations.
         for loa in valid_fcst_levels_by_fcst_field[field]:
             if loa not in valid_fcst_levels_all_fields:
-                err_msg = dedent(f"""
+                msg = dedent(f"""
                     One of the levels or accumulations (loa) in the set of valid forecast
                     levels and accumulations for the current forecast field (field) is not
                     in the master list of valid forecast levels and accumulations
@@ -249,8 +249,8 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
                       valid_vx_plot_params_config_fp = {valid_vx_plot_params_config_fp}
                     Please modify this file and rerun.
                     """)
-                logging.error(err_msg, stack_info=True)
-                raise ValueError(err_msg)
+                logging.error(msg, stack_info=True)
+                raise ValueError(msg)
 
     # Get dictionary containing the available METviewer color codes.  This
     # is a subset of all available colors in METviewer (of which there are
@@ -429,7 +429,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     all_hosts = sorted(list(mv_machine_config.keys()))
     if cla.mv_host not in all_hosts:
-        err_msg = dedent(f"""
+        msg = dedent(f"""
             The machine/host specified on the command line (cla.mv_host) does not have a
             corresponding entry in the METviewer host configuration file (mv_machine_config_fp):
               cla.mv_host = {cla.mv_host}
@@ -438,23 +438,23 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
               {all_hosts}
             Either run on one of these hosts, or add an entry in the configuration file for "{cla.mv_host}".
             """)
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     mv_machine_config_dict = mv_machine_config[cla.mv_host]
 
     # Make sure that the database specified on the command line exists in the
     # list of databases in the database configuration file.
     if cla.mv_database_name not in mv_databases_dict.keys():
-        err_msg = dedent(f"""
+        msg = dedent(f"""
             The database specified on the command line (cla.mv_database_name) is not
             in the set of METviewer databases specified in the database configuration
             file (cla.mv_databases_config_fp):
               cla.mv_database_name = {cla.mv_database_name}
               cla.mv_databases_config_fp = {cla.mv_databases_config_fp}
             """)
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Extract the METviewer database information.
     database_info = mv_databases_dict[cla.mv_database_name]
@@ -468,7 +468,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # database.
     for i,model_name_short in enumerate(cla.model_names_short):
         if model_name_short not in model_names_short_avail_in_db:
-            err_msg = dedent(f"""
+            msg = dedent(f"""
                 A model specified on the command line (model_name_short) is not included
                 in the entry for the specified database (cla.mv_database_name) in the 
                 METviewer database configuration file (cla.mv_databases_config_fp)
@@ -481,13 +481,13 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                 add the new model to the database configuration file (the latter approach
                 will work only if the new model actually exists in the METviewer database).
                 """)
-            logging.error(err_msg, stack_info=True)
-            raise ValueError(err_msg)
+            logging.error(msg, stack_info=True)
+            raise ValueError(msg)
 
     # If the threshold specified on the command line is not an empty string,
     # make sure that it is one of the valid ones for this database.
     if (cla.threshold) and (cla.threshold not in valid_threshes_in_db):
-        err_msg = dedent(f"""
+        msg = dedent(f"""
             The specified threshold is not in the list of valid thresholds for the
             specified database.  Database is:
               cla.mv_database_name = {cla.mv_database_name}
@@ -496,14 +496,14 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             The list of valid thresholds for this database is:
               valid_threshes_in_db = """)
         indent_str = ' '*(5 + len('valid_threshes_in_db'))
-        err_msg = err_msg + get_pprint_str(valid_threshes_in_db, indent_str).lstrip()
-        err_msg = err_msg + dedent(f"""
+        msg = msg + get_pprint_str(valid_threshes_in_db, indent_str).lstrip()
+        msg = msg + dedent(f"""
             Make sure the specified threshold is one of the valid ones, or, if it
             exists in the database, add it to the 'valid_threshes' list in the 
             METviewer database configuration file given by:
               cla.mv_databases_config_fp = {cla.mv_databases_config_fp})""")
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Get the names in the database of those models that are to be plotted.
     inds_models_to_plot = [model_names_short_avail_in_db.index(m) for m in cla.model_names_short]
@@ -516,14 +516,14 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     for i,model in enumerate(cla.model_names_short):
         n_ens = num_ens_mems_by_model[i]
         if n_ens <= 0:
-            err_msg = dedent(f"""
+            msg = dedent(f"""
                 The number of ensemble members for the current model must be greater
                 than or equal to 0:
                   model = {model}
                   n_ens = {n_ens}
                 """)
-            logging.error(err_msg, stack_info=True)
-            raise ValueError(err_msg)
+            logging.error(msg, stack_info=True)
+            raise ValueError(msg)
 
     # Make sure no model names are duplicated because METviewer will throw an 
     # error in this case.  Create a set (using curly braces) to store duplicate
@@ -531,20 +531,20 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # not duplicated!
     duplicates = {m for m in cla.model_names_short if cla.model_names_short.count(m) > 1}
     if len(duplicates) > 0:
-        err_msg = dedent(f"""
+        msg = dedent(f"""
             A model can appear only once in the set of models to plot specified on
             the command line.  However, the following models are duplicated:
               duplicates = {duplicates}
             Please remove duplicated models from the command line and rerun.
             """)
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Make sure that there are at least as many available colors as models to
     # plot.
     num_avail_colors = len(avail_mv_colors_codes)
     if num_models_to_plot > num_avail_colors:
-        err_msg = dedent(f"""
+        msg = dedent(f"""
             The number of models to plot (num_models_to_plot) must be less than
             or equal to the number of available colors:
               num_models_to_plot = {num_models_to_plot}
@@ -553,8 +553,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             line or add new colors in the following configuration file:
               valid_vx_plot_params_config_fp = {valid_vx_plot_params_config_fp}
             """)
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Pick out the plot color associated with each model from the list of 
     # available colors.  The following lists will contain the hex RGB color
@@ -591,7 +591,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     valid_fcst_levels_or_accums = valid_fcst_levels_by_fcst_field[cla.fcst_field]
     if cla.level_or_accum not in valid_fcst_levels_or_accums:
-        err_msg = dedent(f"""
+        msg = dedent(f"""
             The specified forecast level or accumulation is not compatible with the
             specified forecast field:
               cla.fcst_field = {cla.fcst_field}
@@ -600,8 +600,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             are:
               {valid_fcst_levels_or_accums}
             """)
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Parse the level/accumulation specified on the command line (cla.level_or_accum) 
     # to obtain its value and units.  The returned value is a list.  If the regular
@@ -619,7 +619,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     valid_loa_units = ['', 'h', 'm', 'mb']
     if loa_units not in valid_loa_units:
-        err_msg = dedent(f"""
+        msg = dedent(f"""
             Unknown units (loa_units) for level or accumulation:
               loa_units = {loa_units}
             Valid units are:
@@ -629,8 +629,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
               loa_value = {loa_value}
               loa_value_no0pad = {loa_value_no0pad}
             """)
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     loa_value_no0pad = loa_value.lstrip('0')
     width_0pad = 0
@@ -684,7 +684,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # If the specified threshold is not empty and its units do not match any
     # of the ones in the list of valid units, error out.
     if (cla.threshold) and (thresh_info['units'] not in valid_units):
-        err_msg = dedent(f"""
+        msg = dedent(f"""
             The units specified in the threshold are not compatible with the list
             of valid units for this field.  The specified field and threshold are:
               cla.fcst_field = {cla.fcst_field}
@@ -694,8 +694,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             Valid units for this forecast field are:
               {valid_units}
             """)
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Form the plot title.
     plot_title = ' '.join(filter(None,

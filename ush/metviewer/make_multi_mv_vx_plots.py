@@ -62,21 +62,21 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
                 Removing existing directory...'''))
             shutil.rmtree(dir_or_file)
         elif preexist_method == 'quit':
-            err_msg = dedent(f'''\n
+            msg = dedent(f'''\n
                 Output directory already exists:
                   {dir_or_file}
                 Stopping.''')
-            logging.error(err_msg, stack_info=True)
-            raise FileExistsError(err_msg)
+            logging.error(msg, stack_info=True)
+            raise FileExistsError(msg)
         else:
-            err_msg = dedent(f'''\n
+            msg = dedent(f'''\n
                 Invalid value for preexist_method:
                   {preexist_method}
                 Valid values are:
                   {valid_vals_preexist_method}
                 Stopping.''')
-            logging.error(err_msg, stack_info=True)
-            raise ValueError(err_msg)
+            logging.error(msg, stack_info=True)
+            raise ValueError(msg)
 
 
 def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
@@ -111,6 +111,35 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     fcst_init_info = plot_config_dict['fcst_init_info']
     fcst_len_hrs = plot_config_dict['fcst_len_hrs']
     stats_fields_levels_threshes_dict = plot_config_dict["stats_fields_levels_threshes"]
+
+    # Load the yaml-format METviewer database configuration file and extract
+    # from it the list of valid threshold values for the database specified
+    # in the plot configuration file.
+    mv_databases_config_fp = 'mv_databases.yaml'
+    mv_databases_dict = load_config_file(mv_databases_config_fp)
+    valid_threshes_for_db = list(mv_databases_dict[mv_database_name]['valid_threshes'])
+
+    # Ensure that any thresholds passed to the "--incl_only_threshes" option
+    # are valid ones for the METviewer database specified in the plot
+    # configuration file.
+    threshes_not_in_db = list(set(args.incl_only_threshes).difference(valid_threshes_for_db))
+    if threshes_not_in_db:
+        msg = dedent(f'''\n
+            One or more thresholds passed to the "--incl_only_threshes" option are
+            not valid for the specified database.  The specified database is:
+              mv_database_name = {mv_database_name}
+            The specified thresholds that are not valid for this database are:
+              threshes_not_in_db = {threshes_not_in_db}
+            If these thresholds are in fact in the database, then add them to the
+            list of valid thresholds in the database configuration file and rerun.
+            The database configuration file is: 
+              mv_databases_config_fp = {mv_databases_config_fp}
+            Thresholds that are currently specified in this file as valid for the
+            database are:
+              {valid_threshes_for_db}
+            Stopping.''')
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Some of the values in the fcst_init_info dictionary are strings while
     # others are integers.  Also, we don't need the keys.  Thus, convert 
@@ -147,7 +176,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     vx_stats_in_config = list(stats_fields_levels_threshes_dict.keys())
     stats_not_in_config = list(set(args.incl_only_stats).difference(vx_stats_in_config))
     if stats_not_in_config:
-        err_msg = dedent(f'''\n
+        msg = dedent(f'''\n
             One or more statistics passed to the "--incl_only_stats" option are not
             included in the plot configuration file.  These are:
               stats_not_in_config = {stats_not_in_config}
@@ -157,8 +186,8 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
             Statistics currently included in the plot configuration file are:
               {vx_stats_in_config}
             Stopping.''')
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Remove from the plot configuration dictionary any statistic in the
     # list of statistics to exclude.
@@ -658,50 +687,50 @@ cannot be used together with the "--incl_only_threshes" option.'''))
     # For simplicity, do not allow the "--incl_only_stats" and "--excl_stats"
     # options to be specified simultaneously.
     if args.incl_only_stats and args.excl_stats:
-        err_msg = dedent(f'''\n
+        msg = dedent(f'''\n
             For simplicity, the "--incl_only_stats" and "--excl_stats" options
             cannot both be specified on the command line:
               args.incl_only_stats = {args.incl_only_stats}
               args.excl_stats = {args.excl_stats}
             Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # For simplicity, do not allow the "--incl_only_fields" and "--excl_fields"
     # options to be specified simultaneously.
     if args.incl_only_fields and args.excl_fields:
-        err_msg = dedent(f'''\n
+        msg = dedent(f'''\n
             For simplicity, the "--incl_only_fields" and "--excl_fields" options
             cannot both be specified on the command line:
               args.incl_only_fields = {args.incl_only_fields}
               args.excl_fields = {args.excl_fields}
             Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # For simplicity, do not allow the "--incl_only_levels" and "--excl_levels"
     # options to be specified simultaneously.
     if args.incl_only_levels and args.excl_levels:
-        err_msg = dedent(f'''\n
+        msg = dedent(f'''\n
             For simplicity, the "--incl_only_levels" and "--excl_levels" options
             cannot both be specified on the command line:
               args.incl_only_levels = {args.incl_only_levels}
               args.excl_levels = {args.excl_levels}
             Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # For simplicity, do not allow the "--incl_only_threshes" and "--excl_threshes"
     # options to be specified simultaneously.
     if args.incl_only_threshes and args.excl_threshes:
-        err_msg = dedent(f'''\n
+        msg = dedent(f'''\n
             For simplicity, the "--incl_only_threshes" and "--excl_threshes" options
             cannot both be specified on the command line:
               args.incl_only_threshes = {args.incl_only_threshes}
               args.excl_threshes = {args.excl_threshes}
             Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
+        logging.error(msg, stack_info=True)
+        raise ValueError(msg)
 
     # Call the driver function to read and parse the plot configuration
     # dictionary and call the METviewer batch script to generate plots.
