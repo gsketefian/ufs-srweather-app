@@ -969,7 +969,7 @@ def run_mv_batch(mv_batch, output_xml_fp):
                                  'result = ', get_pprint_str(vars(result), '  '), '']))
 
 
-def plot_vx_metviewer(argv):
+def make_single_mv_vx_plot(argv):
     #
     # Create a logger if necessary.
     #
@@ -1064,5 +1064,5 @@ def plot_vx_metviewer(argv):
 # -----------------------------------------------------------------------
 #
 if __name__ == "__main__":
-    plot_vx_metviewer(sys.argv[1:])
+    make_single_mv_vx_plot(sys.argv[1:])
 

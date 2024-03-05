@@ -15,8 +15,8 @@ from textwrap import dedent
 import pprint
 import subprocess
 
-from plot_vx_metviewer import plot_vx_metviewer
-from plot_vx_metviewer import get_pprint_str
+from make_single_mv_vx_plot import make_single_mv_vx_plot
+from make_single_mv_vx_plot import get_pprint_str
 
 from pathlib import Path
 file = Path(__file__).resolve()
@@ -365,7 +365,7 @@ def make_mv_vx_plots(args, valid_vals):
                                     Calling METviewer plotting script ...
                                       num_mv_calls = {num_mv_calls}
                                     """))
-                                output_xml_fp = plot_vx_metviewer(args_list)
+                                output_xml_fp = make_single_mv_vx_plot(args_list)
                                 logging.debug(dedent(f"""
                                     Done calling METviewer plotting script.
                                     """))
