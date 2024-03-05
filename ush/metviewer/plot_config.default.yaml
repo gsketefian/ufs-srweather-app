@@ -11,7 +11,7 @@ fcst_init_info:
 
 fcst_len_hrs: 36
 
-vx_stats:
+stats_fields_levels_threshes:
     #
     auc:
         apcp:

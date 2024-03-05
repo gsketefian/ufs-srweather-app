@@ -99,18 +99,47 @@ def make_mv_vx_plots(args, valid_vals):
     else:
         logging.basicConfig(level=log_level, format=msg_format)
 
+    # Read in the plot configuration file.
     plot_config_fp = args.plot_config_fp
     plot_config_dict = load_config_file(plot_config_fp)
     logging.info(dedent(f"""
         Reading in plot configuration file: {plot_config_fp}
         """))
-
     mv_host = plot_config_dict['mv_host']
     mv_database_name = plot_config_dict['mv_database_name']
     model_names = plot_config_dict['model_names']
     fcst_init_info = plot_config_dict['fcst_init_info']
     fcst_len_hrs = plot_config_dict['fcst_len_hrs']
-    vx_stats_dict = plot_config_dict["vx_stats"]
+    stats_fields_levels_threshes_dict = plot_config_dict["stats_fields_levels_threshes"]
+
+    # Load the yaml-format METviewer database configuration file and extract
+    # from it the list of valid threshold values for the database specified
+    # in the plot configuration file.
+    mv_databases_config_fp = 'mv_databases.yaml'
+    mv_databases_dict = load_config_file(mv_databases_config_fp)
+    valid_threshes_for_db = list(mv_databases_dict[mv_database_name]['valid_threshes'])
+
+    # Ensure that any thresholds passed to the "--incl_only_threshes" option
+    # are valid ones for the METviewer database specified in the plot
+    # configuration file.
+    threshes_not_in_db = list(set(args.incl_only_threshes).difference(valid_threshes_for_db))
+    if threshes_not_in_db:
+        err_msg = dedent(f'''\n
+            One or more thresholds passed to the "--incl_only_threshes" option are
+            not valid for the specified database.  The specified database is:
+              mv_database_name = {mv_database_name}
+            The specified thresholds that are not valid for this database are:
+              threshes_not_in_db = {threshes_not_in_db}
+            If these thresholds are in fact in the database, then add them to the
+            list of valid thresholds in the database configuration file and rerun.
+            The database configuration file is: 
+              mv_databases_config_fp = {mv_databases_config_fp}
+            Thresholds that are currently specified in this file as valid for the
+            database are:
+              {valid_threshes_for_db}
+            Stopping.''')
+        logging.error(err_msg, stack_info=True)
+        raise ValueError(err_msg)
 
     # Some of the values in the fcst_init_info dictionary are strings while
     # others are integers.  Also, we don't need the keys.  Thus, convert 
@@ -142,9 +171,9 @@ def make_mv_vx_plots(args, valid_vals):
     valid_fcst_fields = valid_vals['fcst_fields']
     valid_fcst_levels = valid_vals['fcst_levels']
 
-    # Ensure that any statistics passed to the "--incl_only_stats" option also
-    # appear in the plot configuration file.
-    vx_stats_in_config = list(vx_stats_dict.keys())
+    # Ensure that any statistic passed to the "--incl_only_stats" option also
+    # appears in the plot configuration file.
+    vx_stats_in_config = list(stats_fields_levels_threshes_dict.keys())
     stats_not_in_config = list(set(args.incl_only_stats).difference(vx_stats_in_config))
     if stats_not_in_config:
         err_msg = dedent(f'''\n
@@ -162,25 +191,27 @@ def make_mv_vx_plots(args, valid_vals):
 
     # Remove from the plot configuration dictionary any statistic in the
     # list of statistics to exclude.
-    [vx_stats_dict.pop(stat, None) for stat in args.excl_stats]
+    [stats_fields_levels_threshes_dict.pop(stat, None) for stat in args.excl_stats]
 
     # Remove from the plot configuration dictionary any statistic that is
     # NOT in the exclusive list of statistics to include.
     if args.incl_only_stats:
-        [vx_stats_dict.pop(stat, None) for stat in valid_vx_stats if stat not in args.incl_only_stats]
+        [stats_fields_levels_threshes_dict.pop(stat, None)
+         for stat in valid_vx_stats if stat not in args.incl_only_stats]
 
     # For each statistic to be plotted, remove from its sub-dictionary in
     # the plot configuration dictionary any forecast field in the list of
     # fields to exclude from plotting.
-    for stat in vx_stats_dict.copy().keys():
-        [vx_stats_dict[stat].pop(field, None) for field in args.excl_fields]
+    for stat in stats_fields_levels_threshes_dict.copy().keys():
+        [stats_fields_levels_threshes_dict[stat].pop(field, None)
+         for field in args.excl_fields]
 
     # For each statistic to be plotted, remove from its sub-dictionary in
     # the plot configuration dictionary any forecast field that is NOT in
     # the exclusive list of fields to include in the plotting.
     if args.incl_only_fields:
-        for stat in vx_stats_dict.copy().keys():
-            [vx_stats_dict[stat].pop(field, None)
+        for stat in stats_fields_levels_threshes_dict.copy().keys():
+            [stats_fields_levels_threshes_dict[stat].pop(field, None)
              for field in valid_fcst_fields if field not in args.incl_only_fields]
 
     # Check that all the fields passed to the "--incl_only_fields" option
@@ -188,7 +219,7 @@ def make_mv_vx_plots(args, valid_vals):
     # dictionary.  If not, issue a warning.
     for field in args.incl_only_fields:
         field_count = 0
-        for stat, stat_dict in vx_stats_dict.items():
+        for stat, stat_dict in stats_fields_levels_threshes_dict.items():
             if field in stat_dict: field_count += 1
         if field_count == 0:
             msg = dedent(f"""\n
@@ -204,17 +235,18 @@ def make_mv_vx_plots(args, valid_vals):
     # For each statistic-field combination to be plotted, remove from the
     # corresponding sub-sub-dictionary in the plotting dictionary any level
     # in the list of levels to exclude from plotting.
-    for stat, stat_dict in vx_stats_dict.copy().items():
+    for stat, stat_dict in stats_fields_levels_threshes_dict.copy().items():
         for field, fcst_field_dict in stat_dict.copy().items():
-            [vx_stats_dict[stat][field].pop(level, None) for level in args.excl_levels]
+            [stats_fields_levels_threshes_dict[stat][field].pop(level, None)
+             for level in args.excl_levels]
 
     # For each statistic-field combinatiion to be plotted, remove from the
     # corresponding sub-sub-dictionary in the plotting dictionary any level
     # that is NOT in the exclusive list of levels to include in the plotting.
     if args.incl_only_levels:
-        for stat, stat_dict in vx_stats_dict.copy().items():
+        for stat, stat_dict in stats_fields_levels_threshes_dict.copy().items():
             for field, fcst_field_dict in stat_dict.copy().items():
-                [vx_stats_dict[stat][field].pop(level, None)
+                [stats_fields_levels_threshes_dict[stat][field].pop(level, None)
                  for level in valid_fcst_levels if level not in args.incl_only_levels]
 
     # Check that all the fields passed to the "--incl_only_levels" option
@@ -222,7 +254,7 @@ def make_mv_vx_plots(args, valid_vals):
     # configuration dictionary.  If not, issue a warning.
     for level in args.incl_only_levels:
         level_count = 0
-        for stat, stat_dict in vx_stats_dict.items():
+        for stat, stat_dict in stats_fields_levels_threshes_dict.items():
             for field, fcst_field_dict in stat_dict.items():
                 if level in fcst_field_dict: level_count += 1
         if level_count == 0:
@@ -238,26 +270,29 @@ def make_mv_vx_plots(args, valid_vals):
 
     print(f'')
     print(f'DDDDDDDDDDDDDDD')
-    print(f'  vx_stats_dict = {vx_stats_dict}')
+    print(f'  stats_fields_levels_threshes_dict = {stats_fields_levels_threshes_dict}')
 
     # Clean up leftover empty sub-dictionaries within the plotting configuration
     # dictionary.
-    for stat, stat_dict in vx_stats_dict.copy().items():
+    for stat, stat_dict in stats_fields_levels_threshes_dict.copy().items():
         for field, fcst_field_dict in stat_dict.copy().items():
             for level, level_dict in fcst_field_dict.copy().items():
                 # If level_dict is empty, remove the key (level) from the dictionary.
                 if not level_dict:
-                    vx_stats_dict[stat][level].pop(field, None)
+                    stats_fields_levels_threshes_dict[stat][field].pop(level, None)
             # If fcst_field_dict is empty, remove the key (field) from the dictionary.
             if not fcst_field_dict:
-                vx_stats_dict[stat].pop(field, None)
+                stats_fields_levels_threshes_dict[stat].pop(field, None)
         # If stat_dict is empty, remove the key (stat) from the dictionary.
         if not stat_dict:
-            vx_stats_dict.pop(stat, None)
+            stats_fields_levels_threshes_dict.pop(stat, None)
 
     print(f'')
     print(f'EEEEEEEEEEEEEEEE')
-    print(f'  vx_stats_dict = {vx_stats_dict}')
+    print(f'  stats_fields_levels_threshes_dict = {stats_fields_levels_threshes_dict}')
+    #gggg
+
+#    if not stats_fields_levels_threshes_dict:
 
     # Initialze (1) the counter that keeps track of the number of times the
     # script that generates a METviewer xml and calls METviewer is called and
@@ -269,7 +304,7 @@ def make_mv_vx_plots(args, valid_vals):
     num_images_generated = 0
     missing_image_fns = []
 
-    for stat, stat_dict in vx_stats_dict.items():
+    for stat, stat_dict in stats_fields_levels_threshes_dict.items():
         # Don't procecess the current statistic if the plotting info dictionary
         # corresponding to the statistic is empty.
         if not stat_dict:
