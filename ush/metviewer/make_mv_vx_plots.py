@@ -99,18 +99,18 @@ def make_mv_vx_plots(args, valid_vals):
     else:
         logging.basicConfig(level=log_level, format=msg_format)
 
-    config_fp = args.config_fp
-    config_dict = load_config_file(config_fp)
+    plot_config_fp = args.plot_config_fp
+    plot_config_dict = load_config_file(plot_config_fp)
     logging.info(dedent(f"""
-        Reading in plot configuration file: {config_fp}
+        Reading in plot configuration file: {plot_config_fp}
         """))
 
-    mv_host = config_dict['mv_host']
-    mv_database_name = config_dict['mv_database_name']
-    model_names = config_dict['model_names']
-    fcst_init_info = config_dict['fcst_init_info']
-    fcst_len_hrs = config_dict['fcst_len_hrs']
-    vx_stats_dict = config_dict["vx_stats"]
+    mv_host = plot_config_dict['mv_host']
+    mv_database_name = plot_config_dict['mv_database_name']
+    model_names = plot_config_dict['model_names']
+    fcst_init_info = plot_config_dict['fcst_init_info']
+    fcst_len_hrs = plot_config_dict['fcst_len_hrs']
+    vx_stats_dict = plot_config_dict["vx_stats"]
 
     fcst_init_info = map(str, list(fcst_init_info.values()))
     # fcst_init_info is a list containing both strings and integers.  For
@@ -148,7 +148,7 @@ def make_mv_vx_plots(args, valid_vals):
               stats_not_in_config = {stats_not_in_config}
             Please include these in the plot configuration file and rerun.  The plot
             configuration file is:
-              config_fp = {config_fp}
+              plot_config_fp = {plot_config_fp}
             Statistics currently included in the plot configuration file are:
               {vx_stats_in_config}
             Stopping.''')
@@ -191,7 +191,7 @@ def make_mv_vx_plots(args, valid_vals):
                 appear as a key in any of the statistic (sub-)dictionaries in the plot
                 configuration dictionary specified in the yaml plot configuration file.
                 The plot configuration file is:
-                  config_fp = {config_fp}
+                  plot_config_fp = {plot_config_fp}
                 Thus, no vx plots involving the field "{field}" will be generated.
                 """)
             logging.warning(msg)
@@ -226,7 +226,7 @@ def make_mv_vx_plots(args, valid_vals):
                 appear as a key in any of the statistic-field (sub-sub-)dictionaries in
                 the plot configuration dictionary specified in the yaml plot configuration
                 file.  The plot configuration file is:
-                  config_fp = {config_fp}
+                  plot_config_fp = {plot_config_fp}
                 Thus, no vx plots at level "{level}" will be generated.
                 """)
             logging.warning(msg)
@@ -436,9 +436,9 @@ def main():
                             generated plots, log files, etc).  These will usually be placed in
                             subdirectories under this output directory.'''))
 
-    parser.add_argument('--config_fp',
+    parser.add_argument('--plot_config_fp',
                         type=str,
-                        required=False, default='config_mv_plots.default.yml',
+                        required=False, default='plot_config.default.yaml',
                         help=dedent(f'''
                             Name of or path (absolute or relative) to yaml user plot configuration
                             file for METviewer plot generation.'''))
@@ -576,9 +576,9 @@ def main():
                             Flag for creating a directory that contains copies of all the generated
                             images (png files) and renamed such that they are alphabetically in the
                             same order as the user has specified in the yaml plot configuration file
-                            (the one passed to the optional "--config_fp" argument).  This is useful
-                            for creating a pdf of the plots from the images that includes the plots
-                            in the same order as in the plot configuration file.'''))
+                            (the one passed to the optional "--plot_config_fp" argument).  This is
+                            useful for creating a pdf of the plots from the images that includes the
+                            plots in the same order as in the plot configuration file.'''))
 
     args = parser.parse_args()
 
