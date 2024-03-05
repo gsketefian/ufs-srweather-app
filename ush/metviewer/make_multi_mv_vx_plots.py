@@ -112,35 +112,6 @@ def make_mv_vx_plots(args, valid_vals):
     fcst_len_hrs = plot_config_dict['fcst_len_hrs']
     stats_fields_levels_threshes_dict = plot_config_dict["stats_fields_levels_threshes"]
 
-    # Load the yaml-format METviewer database configuration file and extract
-    # from it the list of valid threshold values for the database specified
-    # in the plot configuration file.
-    mv_databases_config_fp = 'mv_databases.yaml'
-    mv_databases_dict = load_config_file(mv_databases_config_fp)
-    valid_threshes_for_db = list(mv_databases_dict[mv_database_name]['valid_threshes'])
-
-    # Ensure that any thresholds passed to the "--incl_only_threshes" option
-    # are valid ones for the METviewer database specified in the plot
-    # configuration file.
-    threshes_not_in_db = list(set(args.incl_only_threshes).difference(valid_threshes_for_db))
-    if threshes_not_in_db:
-        err_msg = dedent(f'''\n
-            One or more thresholds passed to the "--incl_only_threshes" option are
-            not valid for the specified database.  The specified database is:
-              mv_database_name = {mv_database_name}
-            The specified thresholds that are not valid for this database are:
-              threshes_not_in_db = {threshes_not_in_db}
-            If these thresholds are in fact in the database, then add them to the
-            list of valid thresholds in the database configuration file and rerun.
-            The database configuration file is: 
-              mv_databases_config_fp = {mv_databases_config_fp}
-            Thresholds that are currently specified in this file as valid for the
-            database are:
-              {valid_threshes_for_db}
-            Stopping.''')
-        logging.error(err_msg, stack_info=True)
-        raise ValueError(err_msg)
-
     # Some of the values in the fcst_init_info dictionary are strings while
     # others are integers.  Also, we don't need the keys.  Thus, convert 
     # that variable into a list containing only string values since that's
@@ -219,8 +190,8 @@ def make_mv_vx_plots(args, valid_vals):
     # dictionary.  If not, issue a warning.
     for field in args.incl_only_fields:
         field_count = 0
-        for stat, stat_dict in stats_fields_levels_threshes_dict.items():
-            if field in stat_dict: field_count += 1
+        for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.items():
+            if field in fields_levels_threshes_dict: field_count += 1
         if field_count == 0:
             msg = dedent(f"""\n
                 The field "{field}" passed to the "--incl_only_fields" option does not
@@ -235,8 +206,8 @@ def make_mv_vx_plots(args, valid_vals):
     # For each statistic-field combination to be plotted, remove from the
     # corresponding sub-sub-dictionary in the plotting dictionary any level
     # in the list of levels to exclude from plotting.
-    for stat, stat_dict in stats_fields_levels_threshes_dict.copy().items():
-        for field, fcst_field_dict in stat_dict.copy().items():
+    for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.copy().items():
+        for field, levels_threshes_dict in fields_levels_threshes_dict.copy().items():
             [stats_fields_levels_threshes_dict[stat][field].pop(level, None)
              for level in args.excl_levels]
 
@@ -244,8 +215,8 @@ def make_mv_vx_plots(args, valid_vals):
     # corresponding sub-sub-dictionary in the plotting dictionary any level
     # that is NOT in the exclusive list of levels to include in the plotting.
     if args.incl_only_levels:
-        for stat, stat_dict in stats_fields_levels_threshes_dict.copy().items():
-            for field, fcst_field_dict in stat_dict.copy().items():
+        for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.copy().items():
+            for field, levels_threshes_dict in fields_levels_threshes_dict.copy().items():
                 [stats_fields_levels_threshes_dict[stat][field].pop(level, None)
                  for level in valid_fcst_levels if level not in args.incl_only_levels]
 
@@ -254,9 +225,9 @@ def make_mv_vx_plots(args, valid_vals):
     # configuration dictionary.  If not, issue a warning.
     for level in args.incl_only_levels:
         level_count = 0
-        for stat, stat_dict in stats_fields_levels_threshes_dict.items():
-            for field, fcst_field_dict in stat_dict.items():
-                if level in fcst_field_dict: level_count += 1
+        for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.items():
+            for field, levels_threshes_dict in fields_levels_threshes_dict.items():
+                if level in levels_threshes_dict: level_count += 1
         if level_count == 0:
             msg = dedent(f"""\n
                 The level "{level}" passed to the "--incl_only_levels" option does not
@@ -274,17 +245,19 @@ def make_mv_vx_plots(args, valid_vals):
 
     # Clean up leftover empty sub-dictionaries within the plotting configuration
     # dictionary.
-    for stat, stat_dict in stats_fields_levels_threshes_dict.copy().items():
-        for field, fcst_field_dict in stat_dict.copy().items():
-            for level, level_dict in fcst_field_dict.copy().items():
+    for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.copy().items():
+        for field, levels_threshes_dict in fields_levels_threshes_dict.copy().items():
+            for level, level_dict in levels_threshes_dict.copy().items():
                 # If level_dict is empty, remove the key (level) from the dictionary.
                 if not level_dict:
                     stats_fields_levels_threshes_dict[stat][field].pop(level, None)
-            # If fcst_field_dict is empty, remove the key (field) from the dictionary.
-            if not fcst_field_dict:
+            # If levels_threshes_dict is empty, remove the key (field) from the
+            # dictionary.
+            if not levels_threshes_dict:
                 stats_fields_levels_threshes_dict[stat].pop(field, None)
-        # If stat_dict is empty, remove the key (stat) from the dictionary.
-        if not stat_dict:
+        # If fields_levels_threshes_dict is empty, remove the key (stat) from
+        # the dictionary.
+        if not fields_levels_threshes_dict:
             stats_fields_levels_threshes_dict.pop(stat, None)
 
     print(f'')
@@ -304,10 +277,10 @@ def make_mv_vx_plots(args, valid_vals):
     num_images_generated = 0
     missing_image_fns = []
 
-    for stat, stat_dict in stats_fields_levels_threshes_dict.items():
+    for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.items():
         # Don't procecess the current statistic if the plotting info dictionary
         # corresponding to the statistic is empty.
-        if not stat_dict:
+        if not fields_levels_threshes_dict:
             logging.info(dedent(f"""\n
                 The plotting info dictionary for statistic "{stat}" is empty.  Thus, no
                 "{stat}" plots will be generated.
@@ -320,9 +293,9 @@ def make_mv_vx_plots(args, valid_vals):
             msg = dedent(f"""
                 Dictionary of fields, levels, and thresholds (if applicable) for this
                 statistic is:
-                  stat_dict = """)
-            indent_str = ' '*(5 + len('stat_dict'))
-            msg = msg + get_pprint_str(stat_dict, indent_str).lstrip()
+                  fields_levels_threshes_dict = """)
+            indent_str = ' '*(5 + len('fields_levels_threshes_dict'))
+            msg = msg + get_pprint_str(fields_levels_threshes_dict, indent_str).lstrip()
             logging.debug(msg)
 
             # If args.make_stat_subdirs is set to True, place the output for each
@@ -333,10 +306,10 @@ def make_mv_vx_plots(args, valid_vals):
             else:
                 output_dir_crnt_stat = args.output_dir
 
-            for field, fcst_field_dict in stat_dict.items():
+            for field, levels_threshes_dict in fields_levels_threshes_dict.items():
                 # Don't procecess the current field if the plotting info dictionary
                 # corresponding to the field is empty.
-                if not fcst_field_dict:
+                if not levels_threshes_dict:
                     logging.info(dedent(f"""\n
                         The plotting info dictionary for field "{field}" is empty.  Thus, no
                         "{field}" plots will be generated.
@@ -348,12 +321,12 @@ def make_mv_vx_plots(args, valid_vals):
                         """))
                     msg = dedent(f"""
                         Dictionary of levels and thresholds (if applicable) for this field is:
-                          fcst_field_dict = """)
-                    indent_str = ' '*(5 + len('fcst_field_dict'))
-                    msg = msg + get_pprint_str(fcst_field_dict, indent_str).lstrip()
+                          levels_threshes_dict = """)
+                    indent_str = ' '*(5 + len('levels_threshes_dict'))
+                    msg = msg + get_pprint_str(levels_threshes_dict, indent_str).lstrip()
                     logging.debug(msg)
 
-                    for level, level_dict in fcst_field_dict.items():
+                    for level, level_dict in levels_threshes_dict.items():
                         # Don't procecess the current level if the plotting info dictionary
                         # corresponding to the level is empty.
                         if not level_dict:
@@ -596,6 +569,41 @@ def main():
                             listed here.  For simplicity, this option cannot be used together with
                             the "--incl_only_levels" option.'''))
 
+    parser.add_argument('--incl_only_threshes', nargs='+',
+                        required=False, default=[],
+                        #choices=valid_fcst_threshes,
+                        help=dedent(f'''
+Forecast thresholds to exclusively include in verification plot generation.
+This is a convenience option that provides a way to override the settings
+in the plot configuration file.  This option has no effect on the plotting
+of vx statistics that do not require a threshold.  For statistics that
+require a threshold, the behavior is as follows.  If this option is not
+used, then all thresholds listed under a given vx statistic, field, and
+level combination in the configuration file are plotted (as long as that
+statistic, field, and threshold combination is to be plotted, i.e. it is
+not excluded via the "--excl_stats", "--excl_fields", and/or "--excl_levels"
+options).  If it is used, then plots for that statistic-field-level
+combination will be generated only for the thresholds passed to this
+option.  For a statistic-field-level combination that is to be plotted,
+if a threshold specified here is not listed in the configuration file
+under that statistic, field, and level, then no plots are generated for
+that statistic-field-level-threshold combination.  For simplicity, this
+option cannot be used together with the "--excl_threshes" option.'''))
+
+    parser.add_argument('--excl_threshes', nargs='+',
+                        required=False, default=[],
+                        #choices=valid_fcst_threshes,
+                        help=dedent(f'''
+Forecast thresholds to exclude from verification plot generation.  This
+is a convenience option that provides a way to override the settings in
+the plot configuration file.  This option has no effect on the plotting
+of vx statistics that do not require a threshold.  For statistics that
+require a threshold, the behavior is as follows.  If this option is not
+used, then all thresholds in the configuration file are plotted.  If it
+is used, then plots will be generated only for those thresholds in the
+configuration file that are not listed here.  For simplicity, this option
+cannot be used together with the "--incl_only_threshes" option.'''))
+
     parser.add_argument('--preexisting_dir_method',
                         type=str.lower,
                         required=False, default='rename',
@@ -652,6 +660,18 @@ def main():
             cannot both be specified on the command line:
               args.incl_only_levels = {args.incl_only_levels}
               args.excl_levels = {args.excl_levels}
+            Please remove one or the other from the command line and rerun.  Stopping.''')
+        logging.error(err_msg, stack_info=True)
+        raise ValueError(err_msg)
+
+    # For simplicity, do not allow the "--incl_only_threshes" and "--excl_threshes"
+    # options to be specified simultaneously.
+    if args.incl_only_threshes and args.excl_threshes:
+        err_msg = dedent(f'''\n
+            For simplicity, the "--incl_only_threshes" and "--excl_threshes" options
+            cannot both be specified on the command line:
+              args.incl_only_threshes = {args.incl_only_threshes}
+              args.excl_threshes = {args.excl_threshes}
             Please remove one or the other from the command line and rerun.  Stopping.''')
         logging.error(err_msg, stack_info=True)
         raise ValueError(err_msg)
