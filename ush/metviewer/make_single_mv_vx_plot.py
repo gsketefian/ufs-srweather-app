@@ -572,13 +572,18 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     fcst_init_times = [fcst_init_time_first + i*fcst_init_intvl for i in fcst_init_times]
     fcst_init_times_YmDHMS = [i.strftime("%Y-%m-%d %H:%M:%S") for i in fcst_init_times]
     fcst_init_times_YmDH = [i.strftime("%Y-%m-%d %H") for i in fcst_init_times]
-    fcst_init_info_str = f'fcst_init_times = [{fcst_init_times_YmDH[0]}Z, {fcst_init_intvl_hrs} hr, {fcst_init_times_YmDH[-1]}Z] (num_fcst_inits = {num_fcst_inits})'
+    fcst_init_info_str = ''.join([f'fcst_init_times = ',
+                                  f'[{fcst_init_times_YmDH[0]}Z, ',
+                                  f'{fcst_init_intvl_hrs} hr, ',
+                                  f'{fcst_init_times_YmDH[-1]}Z] ',
+                                  f'(num_fcst_inits = {num_fcst_inits})'])
 
-    fcst_init_times_str = '\n          '.join(fcst_init_times_YmDHMS)
-    logging.info(dedent(f"""
-        Forecast initialization times (fcst_init_times_str):
-          {fcst_init_times_str}
-        """))
+    msg = dedent(f"""
+        Forecast initialization times:
+          fcst_init_times_YmDHMS = """)
+    indent_str = ' '*(5 + len('fcst_init_times_YmDHMS'))
+    msg = msg + get_pprint_str(fcst_init_times_YmDHMS, indent_str).lstrip() + '\n'
+    logging.info(msg)
 
     if ('incl_ens_means' not in cla):
         incl_ens_means = False
@@ -665,19 +670,24 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         no_thresh_stats_fmt_str = ",\n".join("              {!r}: {!r}".format(k, v)
                                              for k, v in stat_long_names.items() if k in no_thresh_stats).lstrip()
         logging.debug(dedent(f"""
-            A threshold is not needed when working with one of the following verification
-            stats:
+            A threshold is not needed for the following verification statistics:
               {no_thresh_stats_fmt_str}
-            Thus, the threshold specified in the argument list ("{cla.threshold}") will be reset to
-            an empty string.
+            Thus, the threshold passed via the "--threshold" option on the command
+            line, i.e.
+              cla.threshold = {cla.threshold}
+            will be reset to an empty string.
             """))
         cla.threshold = ''
 
     # Extract and set various pieces of threshold-related information from
     # the specified threshold.
     thresh_info = get_thresh_info(cla.threshold)
-    logging.info('\n'.join(['', 'Dictionary containing threshold information has been set as follows:',
-                             'thresh_info = ', get_pprint_str(thresh_info, '  '), '']))
+    msg = dedent(f"""
+        Dictionary containing threshold information has been set as follows:
+          thresh_info = """)
+    indent_str = ' '*(5 + len('thresh_info'))
+    msg = msg + get_pprint_str(thresh_info, indent_str).lstrip() + '\n'
+    logging.info(msg)
 
     # Get the list of valid units for the specified forecast field.
     valid_units = valid_units_by_fcst_field[cla.fcst_field]
@@ -901,10 +911,10 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     template_fp = os.path.join(templates_dir, template_fn)
 
     logging.info(dedent(f"""
-        Template file is:
+        Template file information:
+          template_fp = {template_fp}
           templates_dir = {templates_dir}
           template_fn = {template_fn}
-          template_fp = {template_fp}
         """))
 
     # Place xmls generated below in the same directory as the plots that
@@ -1023,8 +1033,12 @@ def make_single_mv_vx_plot(argv):
 
     # Print out logger details.
     logger = logging.getLogger()
-    logging.info('\n'.join(['', 'Logger details:',
-                            'logger = ', get_pprint_str(vars(logger), '  '), '']))
+    msg = dedent(f"""
+        Logger details:
+          logger = """)
+    indent_str = ' '*(5 + len('logger'))
+    msg = msg + get_pprint_str(vars(logger), indent_str).lstrip() + '\n'
+    logging.info(msg)
 
     # Get valid values for various verification plotting parameters.  Some
     # of these are needed below when parsing the command line arguments.

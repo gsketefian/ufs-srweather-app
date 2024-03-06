@@ -494,7 +494,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                 """)
             logging.warning(msg)
 
-    # Initialze (1) the counter that keeps track of the number of times the
+    # Initialize (1) the counter that keeps track of the number of times the
     # script that generates a METviewer xml and calls METviewer is called and
     # (2) the counter that keeps track of the number of images (png files)
     # that were successfully generated.  Each call to the script should
@@ -504,154 +504,150 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     num_images_generated = 0
     missing_image_fns = []
 
+    # Loop through the plot configuration dictionary and plot all statistic-
+    # field-level-threshold combinations it contains (with the threshold set
+    # to an empty string for those statistics that do not need a threshold).
+    # Note that this dictionary has been filtered to contain only those
+    # statistic-field-level-threshold combinations that are consistent with
+    # the 
+    #
+    #   --incl_only_[stats|fields|levels|threshes]
+    #
+    # and/or
+    #
+    #   --excl_[stats|fields|levels|threshes]
+    #
+    # options.  For each such combination, the loop below calls the script
+    # make_single_mv_vx_plot(), which for a single statistic-field-level-
+    # threshold (with the threshold being unnecessary for certain statistics)
+    # combination generates a METviewer xml and then calls the METviewer
+    # batch plotting script to create a plot (png image file). 
     for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.items():
-        # Don't procecess the current statistic if the plotting info dictionary
-        # corresponding to the statistic is empty.
-        if not fields_levels_threshes_dict:
-            logging.info(dedent(f"""\n
-                The plotting info dictionary for statistic "{stat}" is empty.  Thus, no
-                "{stat}" plots will be generated.
-                """))
-        # Dictionary corresponding to the statistic is not empty, so process.
+        logging.info(dedent(f"""
+            Plotting statistic "{stat}" for various forecast fields ...
+            """))
+        msg = dedent(f"""
+            Dictionary of fields, levels, and thresholds (if applicable) for this
+            statistic is:
+              fields_levels_threshes_dict = """)
+        indent_str = ' '*(5 + len('fields_levels_threshes_dict'))
+        msg = msg + get_pprint_str(fields_levels_threshes_dict, indent_str).lstrip()
+        logging.debug(msg)
+
+        # If args.make_stat_subdirs is set to True, place the output for each
+        # statistic in a separate subdirectory under the main output directory.
+        # Otherwise, place the output directly under the main output directory.
+        if args.make_stat_subdirs:
+            output_dir_crnt_stat = os.path.join(args.output_dir, stat)
         else:
+            output_dir_crnt_stat = args.output_dir
+
+        for field, levels_threshes_dict in fields_levels_threshes_dict.items():
             logging.info(dedent(f"""
-                Plotting statistic "{stat}" for various forecast fields ...
+                Plotting statistic "{stat}" for forecast field "{field}" at various levels ...
                 """))
             msg = dedent(f"""
-                Dictionary of fields, levels, and thresholds (if applicable) for this
-                statistic is:
-                  fields_levels_threshes_dict = """)
-            indent_str = ' '*(5 + len('fields_levels_threshes_dict'))
-            msg = msg + get_pprint_str(fields_levels_threshes_dict, indent_str).lstrip()
+                Dictionary of levels and thresholds (if applicable) for this field is:
+                  levels_threshes_dict = """)
+            indent_str = ' '*(5 + len('levels_threshes_dict'))
+            msg = msg + get_pprint_str(levels_threshes_dict, indent_str).lstrip()
             logging.debug(msg)
 
-            # If args.make_stat_subdirs is set to True, place the output for each
-            # statistic in a separate subdirectory under the main output directory.
-            # Otherwise, place the output directly under the main output directory.
-            if args.make_stat_subdirs:
-                output_dir_crnt_stat = os.path.join(args.output_dir, stat)
-            else:
-                output_dir_crnt_stat = args.output_dir
-
-            for field, levels_threshes_dict in fields_levels_threshes_dict.items():
-                # Don't procecess the current field if the plotting info dictionary
-                # corresponding to the field is empty.
-                if not levels_threshes_dict:
-                    logging.info(dedent(f"""\n
-                        The plotting info dictionary for field "{field}" is empty.  Thus, no
-                        "{field}" plots will be generated.
-                        """))
-                # Dictionary corresponding to the field is not empty, so process.
-                else:
-                    logging.info(dedent(f"""
-                        Plotting statistic "{stat}" for forecast field "{field}" at various levels ...
-                        """))
+            for level, threshes_list in levels_threshes_dict.items():
+                logging.info(dedent(f"""
+                    Plotting statistic "{stat}" for forecast field "{field}" at level "{level}" ...
+                    """))
+                if stat_needs_thresh[stat]:
                     msg = dedent(f"""
-                        Dictionary of levels and thresholds (if applicable) for this field is:
-                          levels_threshes_dict = """)
-                    indent_str = ' '*(5 + len('levels_threshes_dict'))
-                    msg = msg + get_pprint_str(levels_threshes_dict, indent_str).lstrip()
+                        Dictionary of thresholds (if applicable) for this level is:
+                          threshes_list = """)
+                    indent_str = ' '*(5 + len('threshes_list'))
+                    msg = msg + get_pprint_str(threshes_list, indent_str).lstrip()
+                    logging.debug(msg)
+                else:
+                    if threshes_list:
+                        msg = dedent(f"""
+                            The current statistic (stat) does not need a threshold, but it has been
+                            assigned a non-empty list of thresholds (threshes_list) in the plot
+                            configuration file:
+                              stat = {stat}
+                              stat_needs_thresh[stat] = {stat_needs_thresh[stat]}
+                              threshes_list = {threshes_list}
+                            Please correct this in the plot configuration file, which is:
+                              plot_config_fp = {plot_config_fp}
+                            Ignoring specified thresholds and resetting threshes_list to a list
+                            containing a single empty string.""")
+                        logging.warning(msg)
+                    threshes_list = ['']
+
+                for thresh in threshes_list:
+
+                    separator_str = '='*72 + '\n'
+                    separator_str = '\n' + separator_str*2
+                    logging.info(separator_str.rstrip() + dedent(f"""
+                        Plotting statistic "{stat}" for forecast field "{field}" at level "{level}"
+                        and threshold "{thresh}" (threshold may be empty for certain stats) ...
+                        """))
+
+                    args_list = ['--mv_host', mv_host, \
+                                 '--mv_database_name', mv_database_name, \
+                                 '--model_names', ] + model_names \
+                              + ['--vx_stat', stat,
+                                 '--fcst_init_info'] + fcst_init_info \
+                              + ['--fcst_len_hrs', fcst_len_hrs,
+                                 '--fcst_field', field,
+                                 '--level_or_accum', level,
+                                 '--threshold', thresh,
+                                 '--mv_output_dir', output_dir_crnt_stat]
+
+                    msg = dedent(f"""
+                        Argument list passed to plotting script is:
+                          args_list = """)
+                    indent_str = ' '*(5 + len('args_list'))
+                    msg = msg + get_pprint_str(args_list, indent_str).lstrip()
                     logging.debug(msg)
 
-                    for level, threshes_list in levels_threshes_dict.items():
-                        # Don't procecess the current level if the current statistic is one that
-                        # needs a threshold and the threshold list corresponding to the current
-                        # level is empty.
-                        if stat_needs_thresh[stat] and (not threshes_list):
-                            logging.info(dedent(f"""\n
-                                The list of thresholds for level "{level}" is empty.  Thus, no plots at
-                                level "{level}" will be generated.
-                                """))
-                        # Dictionary corresponding to the level is not empty, or it is empty but
-                        # the statistic doesn't need a threshold, so process.
-                        else:
-                            logging.info(dedent(f"""
-                                Plotting statistic "{stat}" for forecast field "{field}" at level "{level}" ...
-                                """))
-                            if stat_needs_thresh[stat]:
-                                msg = dedent(f"""
-                                    Dictionary of thresholds (if applicable) for this level is:
-                                      threshes_list = """)
-                                indent_str = ' '*(5 + len('threshes_list'))
-                                msg = msg + get_pprint_str(threshes_list, indent_str).lstrip()
-                                logging.debug(msg)
-                            else:
-                                if threshes_list:
-                                    msg = dedent(f"""
-                                        The current statistic (stat) does not need a threshold, but it has been
-                                        assigned a non-empty list of thresholds (threshes_list) in the plot
-                                        configuration file:
-                                          stat = {stat}
-                                          stat_needs_thresh[stat] = {stat_needs_thresh[stat]}
-                                          threshes_list = {threshes_list}
-                                        Please correct this in the plot configuration file, which is:
-                                          plot_config_fp = {plot_config_fp}
-                                        Ignoring specified thresholds and resetting threshes_list to a list
-                                        containing a single empty string.""")
-                                    logging.warning(msg)
-                                threshes_list = ['']
+                    num_mv_calls += 1
+                    logging.info(dedent(f"""
+                        Calling METviewer plotting script ...
+                          num_mv_calls = {num_mv_calls}
+                        """))
+                    output_xml_fp = make_single_mv_vx_plot(args_list)
 
-                            for thresh in threshes_list:
-                                logging.info(dedent(f"""
-                                    Plotting statistic "{stat}" for forecast field "{field}" at level "{level}"
-                                    and threshold "{thresh}" (threshold may be empty for certain stats) ...
-                                    """))
+                    # Keep track of the number of images that are successfully created.
+                    #
+                    # First, use the absolute path to the xml file created to generate the
+                    # path to and name of the image that should have been created.
+                    output_image_fp = os.path.splitext(output_xml_fp)[0] + '.' + 'png'
+                    output_image_fn = os.path.basename(output_image_fp)
+                    # If the image file exists, increment the count of successfully created
+                    # images.
+                    if os.path.isfile(output_image_fp):
+                        num_images_generated += 1
+                    else:
+                        missing_image_fns.append(output_image_fn)
 
-                                args_list = ['--mv_host', mv_host, \
-                                             '--mv_database_name', mv_database_name, \
-                                             '--model_names', ] + model_names \
-                                          + ['--vx_stat', stat,
-                                             '--fcst_init_info'] + fcst_init_info \
-                                          + ['--fcst_len_hrs', fcst_len_hrs,
-                                             '--fcst_field', field,
-                                             '--level_or_accum', level,
-                                             '--threshold', thresh,
-                                             '--mv_output_dir', output_dir_crnt_stat]
+                    logging.info(dedent(f"""
+                        Done calling METviewer plotting script.  Number of calls to METviewer
+                        and number of images successfully generated thus far are:
+                          num_mv_calls = {num_mv_calls}
+                          num_images_generated = {num_images_generated}
+                        """) + separator_str.lstrip())
 
-                                msg = dedent(f"""
-                                    Argument list passed to plotting script is:
-                                      args_list = """)
-                                indent_str = ' '*(5 + len('args_list'))
-                                msg = msg + get_pprint_str(args_list, indent_str).lstrip()
-                                logging.debug(msg)
-
-                                num_mv_calls += 1
-                                logging.debug(dedent(f"""
-                                    Calling METviewer plotting script ...
-                                      num_mv_calls = {num_mv_calls}
-                                    """))
-                                output_xml_fp = make_single_mv_vx_plot(args_list)
-                                logging.debug(dedent(f"""
-                                    Done calling METviewer plotting script.
-                                    """))
-
-                                # Keep track of the number of images that are successfully created.
-                                #
-                                # First, use the absolute path to the xml file created to generate the
-                                # path to and name of the image that should have been created.
-                                output_image_fp = os.path.splitext(output_xml_fp)[0] + '.' + 'png'
-                                output_image_fn = os.path.basename(output_image_fp)
-                                # If the image file exists, increment the count of successfully created
-                                # images.
-                                if os.path.isfile(output_image_fp):
-                                    num_images_generated += 1
-                                else:
-                                    missing_image_fns.append(output_image_fn)
-
-                                # If the image was successfully created and args.create_ordered_plots
-                                # is set True, make a copy of the image in a designated subdirectory
-                                # that will contain renamed versions of the images such that their
-                                # alphabetical order corresponds to the order in which they appear in
-                                # the plot configuration file.
-                                if os.path.isfile(output_image_fp) and args.create_ordered_plots:
-                                    # Generate the name of/path to a copy of the image file such that this
-                                    # name contains an index used for alphabetically ordering the files.
-                                    # This ordering is useful when creating a presentation, e.g. a pdf file,
-                                    # from the images.
-                                    output_image_fn_ordered = '_'.join([f'p{num_mv_calls:03}', output_image_fn])
-                                    output_image_fp_ordered = os.path.join(ordered_plots_dir, output_image_fn_ordered)
-                                    # Copy and rename the image.
-                                    shutil.copy(output_image_fp, output_image_fp_ordered)
+                    # If the image was successfully created and args.create_ordered_plots
+                    # is set True, make a copy of the image in a designated subdirectory
+                    # that will contain renamed versions of the images such that their
+                    # alphabetical order corresponds to the order in which they appear in
+                    # the plot configuration file.
+                    if os.path.isfile(output_image_fp) and args.create_ordered_plots:
+                        # Generate the name of/path to a copy of the image file such that this
+                        # name contains an index used for alphabetically ordering the files.
+                        # This ordering is useful when creating a presentation, e.g. a pdf file,
+                        # from the images.
+                        output_image_fn_ordered = '_'.join([f'p{num_mv_calls:03}', output_image_fn])
+                        output_image_fp_ordered = os.path.join(ordered_plots_dir, output_image_fn_ordered)
+                        # Copy and rename the image.
+                        shutil.copy(output_image_fp, output_image_fp_ordered)
 
     logging.info(dedent(f"""
         Total number of calls to METviewer plotting script:
@@ -930,7 +926,6 @@ def main():
                   'fcst_fields': valid_fcst_fields,
                   'fcst_levels': valid_fcst_levels}
     make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh)
-
 #
 # -----------------------------------------------------------------------
 #
