@@ -132,7 +132,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
               threshes_not_in_db = {threshes_not_in_db}
             If these thresholds are in fact in the database, then add them to the
             list of valid thresholds in the database configuration file and rerun.
-            The database configuration file is: 
+            The database configuration file is:
               mv_databases_config_fp = {mv_databases_config_fp}
             Thresholds that are currently specified in this file as valid for the
             database are:
@@ -142,7 +142,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
         raise ValueError(msg)
 
     # Some of the values in the fcst_init_info dictionary are strings while
-    # others are integers.  Also, we don't need the keys.  Thus, convert 
+    # others are integers.  Also, we don't need the keys.  Thus, convert
     # that variable into a list containing only string values since that's
     # what jinja2 templates expect.
     fcst_init_info = [str(elem) for elem in fcst_init_info.values()]
@@ -195,36 +195,36 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
 
     # If the --incl_only_stats option is specified on the command line (i.e.
     # if args.incl_only_stats is not empty), then remove from the plot
-    # configuration dictionary any verification statistic that is NOT in 
+    # configuration dictionary any verification statistic that is NOT in
     # the exclusive list of statistics to include.
     if args.incl_only_stats:
         [stats_fields_levels_threshes_dict.pop(stat, None)
          for stat in valid_vx_stats if stat not in args.incl_only_stats]
 
     # If after removing the necessary statistics from the plot configuration
-    # dictionary there are no statistic-field-level-threshold combinations 
+    # dictionary there are no statistic-field-level-threshold combinations
     # left in the dictionary to plot, print out an error message and exit.
     if not stats_fields_levels_threshes_dict:
         msg = dedent(f'''\n
             After removing verification statistics from the plot configuration
             dictionary according to the arguments passed to the
-            
+
               --incl_only_stats
-            
+
             or
-            
+
               --excl_stats
-            
+
             option, there are no remaining statistic-field-level-threshold combinations
             in the dictionary to plot, i.e. the plot configuration dictionary is empty:
-            
+
               stats_fields_levels_threshes_dict = {stats_fields_levels_threshes_dict}
-            
+
             Please modify the plot configuration file and/or the arguments to one of
             the options above and rerun.  The plot configuration file is:
-            
+
               plot_config_fp = {plot_config_fp}
-            
+
             Stopping.''')
         logging.error(msg, stack_info=True)
         raise Exception(msg)
@@ -265,19 +265,19 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
               --incl_only_[stats|fields]
 
             and/or
-            
+
               --excl_[stats|fields]
-            
+
             options, there are no remaining statistic-field-level-threshold combinations
             in the dictionary to plot, i.e. the plot configuration dictionary is empty:
-            
+
               stats_fields_levels_threshes_dict = {stats_fields_levels_threshes_dict}
-            
+
             Please modify the plot configuration file and/or the arguments to one or
             more of the options above and rerun.  The plot configuration file is:
-            
+
               plot_config_fp = {plot_config_fp}
-            
+
             Stopping.''')
         logging.error(msg, stack_info=True)
         raise Exception(msg)
@@ -324,19 +324,19 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
               --incl_only_[stats|fields|levels]
 
             and/or
-            
+
               --excl_[stats|fields|levels]
-            
+
             options, there are no remaining statistic-field-level-threshold combinations
             in the dictionary to plot, i.e. the plot configuration dictionary is empty:
-            
+
               stats_fields_levels_threshes_dict = {stats_fields_levels_threshes_dict}
-            
+
             Please modify the plot configuration file and/or the arguments to one or
             more of the options above and rerun.  The plot configuration file is:
-            
+
               plot_config_fp = {plot_config_fp}
-            
+
             Stopping.''')
         logging.error(msg, stack_info=True)
         raise Exception(msg)
@@ -399,13 +399,13 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
             After removing verification statistics, forecast fields, forecast levels,
             and/or thresholds from the plot configuration dictionary according to
             the arguments passed to the
-            
+
               --incl_only_[stats|fields|levels|threshes]
-            
+
             and/or
-            
+
               --excl_[stats|fields|levels|threshes]
-            
+
             options, there are no remaining statistic-field-level-threshold combinations
             in the dictionary to plot, i.e. the plot configuration dictionary is empty:
 

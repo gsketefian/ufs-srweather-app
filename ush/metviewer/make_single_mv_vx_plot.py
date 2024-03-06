@@ -90,7 +90,7 @@ def get_pprint_str(x, indent_str):
 
 
 def get_thresh_info(thresh_in_config):
-    """Extract and form various pieces of threshold-related information from 
+    """Extract and form various pieces of threshold-related information from
        the threshold specified on the command line.
 
     Arguments:
@@ -147,11 +147,11 @@ def get_thresh_info(thresh_in_config):
                 bad_thresh_fmt_msg])
             logging.error(msg, stack_info=True)
             raise ValueError(msg)
-    
+
         # Form the threshold in the way that it appears in the database (for
         # METviewer to find).
         thresh_in_db = ''.join([thresh_comp_oper_xml, thresh_value])
-    
+
         # For certain units, the character "p" represents "per", so in the plot
         # title, it should be replaced with a "/".  Make replacement here.
         thresh_in_plot_title = thresh_units.replace('mps', 'm/s')
@@ -217,7 +217,7 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     valid_fcst_levels_by_fcst_field = {}
     valid_units_by_fcst_field = {}
     for field in valid_fcst_fields:
-  
+
         # Get and save long name of current the forecast field.
         fcst_field_long_names[field] \
         = valid_vx_plot_params['valid_fcst_fields'][field]['long_name']
@@ -231,7 +231,7 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
         valid_fcst_levels_by_fcst_field[field] \
         = valid_vx_plot_params['valid_fcst_fields'][field]['valid_fcst_levels']
 
-        # Make sure all the levels/accumulations specified for the current 
+        # Make sure all the levels/accumulations specified for the current
         # forecast field are in the master list of valid levels and accumulations.
         for loa in valid_fcst_levels_by_fcst_field[field]:
             if loa not in valid_fcst_levels_all_fields:
@@ -257,7 +257,7 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     # thousands) which we allow the user to specify as a plot color for the
     # the models to be plotted.  In this dictionary, the keys are the color
     # names (e.g. 'red'), and the values are the corresponding codes in
-    # METviewer.  If more colors are needed, they should be added to the 
+    # METviewer.  If more colors are needed, they should be added to the
     # list in the valid verification plot parameters configuration file.
     avail_mv_colors_codes = valid_vx_plot_params['avail_mv_colors_codes']
 
@@ -271,14 +271,14 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
 
     # Create dictionary containing return values and return it.
     valid_vx_plot_params = {}
-    valid_vx_plot_params['valid_vx_plot_params_config_fp'] = valid_vx_plot_params_config_fp 
+    valid_vx_plot_params['valid_vx_plot_params_config_fp'] = valid_vx_plot_params_config_fp
     valid_vx_plot_params['valid_fcst_levels_to_levels_in_db'] = valid_fcst_levels_to_levels_in_db
     valid_vx_plot_params['fcst_field_long_names'] = fcst_field_long_names
     valid_vx_plot_params['valid_fcst_levels_by_fcst_field'] = valid_fcst_levels_by_fcst_field
     valid_vx_plot_params['valid_units_by_fcst_field'] = valid_units_by_fcst_field
     valid_vx_plot_params['stat_long_names'] = stat_long_names
     valid_vx_plot_params['stat_needs_thresh'] = stat_needs_thresh
-    valid_vx_plot_params['avail_mv_colors_codes'] = avail_mv_colors_codes 
+    valid_vx_plot_params['avail_mv_colors_codes'] = avail_mv_colors_codes
     valid_vx_plot_params['choices'] = choices
 
     return valid_vx_plot_params
@@ -304,7 +304,7 @@ def parse_args(argv, valid_vx_plot_params):
     choices = valid_vx_plot_params['choices']
 
     parser = argparse.ArgumentParser(description=dedent(f'''
-        Function to generate an xml file that METviewer can read in order 
+        Function to generate an xml file that METviewer can read in order
         to create a verification plot.
         '''))
 
@@ -315,7 +315,7 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--mv_machine_config_fp',
                         type=str,
-                        required=False, default='mv_machines.yaml', 
+                        required=False, default='mv_machines.yaml',
                         help='METviewer machine (host) configuration file')
 
     parser.add_argument('--mv_databases_config_fp',
@@ -362,7 +362,7 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--fcst_init_info', nargs=3,
                         type=str,
-                        required=True, 
+                        required=True,
                         help=dedent(f'''
                             Initialization time of first forecast (in YYYYMMDDHH), number of forecasts,
                             and forecast initialization interval (in HH)'''))
@@ -374,7 +374,7 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--fcst_field',
                         type=str.lower,
-                        required=True, 
+                        required=True,
                         choices=choices['fcst_field'],
                         help='Name of forecast field to verify')
 
@@ -470,7 +470,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         if model_name_short not in model_names_short_avail_in_db:
             msg = dedent(f"""
                 A model specified on the command line (model_name_short) is not included
-                in the entry for the specified database (cla.mv_database_name) in the 
+                in the entry for the specified database (cla.mv_database_name) in the
                 METviewer database configuration file (cla.mv_databases_config_fp)
                   cla.mv_databases_config_fp = {cla.mv_databases_config_fp}
                   cla.mv_database_name = {cla.mv_database_name}
@@ -499,7 +499,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         msg = msg + get_pprint_str(valid_threshes_in_db, indent_str).lstrip()
         msg = msg + dedent(f"""
             Make sure the specified threshold is one of the valid ones, or, if it
-            exists in the database, add it to the 'valid_threshes' list in the 
+            exists in the database, add it to the 'valid_threshes' list in the
             METviewer database configuration file given by:
               cla.mv_databases_config_fp = {cla.mv_databases_config_fp})""")
         logging.error(msg, stack_info=True)
@@ -525,7 +525,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             logging.error(msg, stack_info=True)
             raise ValueError(msg)
 
-    # Make sure no model names are duplicated because METviewer will throw an 
+    # Make sure no model names are duplicated because METviewer will throw an
     # error in this case.  Create a set (using curly braces) to store duplicate
     # values.  Note that a set must be used here so that duplicate values are
     # not duplicated!
@@ -549,14 +549,14 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             or equal to the number of available colors:
               num_models_to_plot = {num_models_to_plot}
               num_avail_colors = {num_avail_colors}
-            Either reduce the number of models to plot specified on the command 
+            Either reduce the number of models to plot specified on the command
             line or add new colors in the following configuration file:
               valid_vx_plot_params_config_fp = {valid_vx_plot_params_config_fp}
             """)
         logging.error(msg, stack_info=True)
         raise ValueError(msg)
 
-    # Pick out the plot color associated with each model from the list of 
+    # Pick out the plot color associated with each model from the list of
     # available colors.  The following lists will contain the hex RGB color
     # codes of the colors to use for each model as well as the codes for
     # the light versions of those colors (needed for some types of stat plots).
@@ -603,10 +603,10 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         logging.error(msg, stack_info=True)
         raise ValueError(msg)
 
-    # Parse the level/accumulation specified on the command line (cla.level_or_accum) 
+    # Parse the level/accumulation specified on the command line (cla.level_or_accum)
     # to obtain its value and units.  The returned value is a list.  If the regular
     # expression doesn't match anything in cla.level_or_accum (e.g. if the latter is
-    # set to 'L0'), an empty list will be returned.  In that case, the else portion 
+    # set to 'L0'), an empty list will be returned.  In that case, the else portion
     # of the if-else construct below will set loa_value and loa_units to empty strings.
     loa = re.findall(r'(\d*\.*\d+)([A-Za-z]+)', cla.level_or_accum)
 
@@ -741,7 +741,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # handle things.
     if cla.vx_stat in ['rely', 'rhist']:
         xtick_label_freq = 0
-    # The remaining plot (vx stat) types have forecast hour on the x-axis.  
+    # The remaining plot (vx stat) types have forecast hour on the x-axis.
     # For these, there are several aspects of the plotting to consider for
     # setting xtick_label_freq.
     elif cla.vx_stat in ['auc', 'bias', 'brier', 'fbias', 'ss']:
@@ -759,7 +759,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         # interval to the accumulation interval.
         if (cla.level_or_accum in ['01h', '03h', '06h', '24h']):
             stat_avail_intvl_hrs = int(loa_value)
-        # If the level is an upper air location, we consider values only at 12Z 
+        # If the level is an upper air location, we consider values only at 12Z
         # because the number of observations at other hours of the day is very
         # low (so statistics are unreliable).  Thus, we set stat_avail_intvl_hrs
         # to 12.
@@ -774,10 +774,10 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         # In order to not have crowded x-axis labels, limit the number of such
         # labels to some maximum value (num_xtick_labels_max).  If num_stat_fcst_hrs
         # is less than this maximum, then xtick_label_freq will be set to 0 or
-        # 1, which will cause METviewer to place a label at each tick mark.  
+        # 1, which will cause METviewer to place a label at each tick mark.
         # If num_stat_fcst_hr is (sufficiently) larger than num_xtick_labels_max,
-        # then xtick_label_freq will be set to a value greater than 1, which 
-        # will cause some number of tick marks to not have labels to avoid 
+        # then xtick_label_freq will be set to a value greater than 1, which
+        # will cause some number of tick marks to not have labels to avoid
         # overcrowding.
         num_xtick_labels_max = 16
         xtick_label_freq = round(num_stat_fcst_hrs/num_xtick_labels_max)
@@ -790,19 +790,19 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     fcst_field_name_in_db = fcst_field_uc
     if fcst_field_uc == 'APCP': fcst_field_name_in_db = '_'.join([fcst_field_name_in_db, cla.level_or_accum[0:2]])
     if cla.vx_stat in ['auc', 'brier', 'rely']:
-        fcst_field_name_in_db = '_'.join(filter(None,[fcst_field_name_in_db, 'ENS_FREQ', 
+        fcst_field_name_in_db = '_'.join(filter(None,[fcst_field_name_in_db, 'ENS_FREQ',
                                                       ''.join([thresh_info['comp_oper'], thresh_info['value']])]))
         #
         # For APCP thresholds of >= 6.35mm, >= 12.7mm, and >= 25.4mm, the SRW App's
         # verification tasks pad the names of variables in the stat files with zeros
-        # such that there are three digits after the decimal.  Thus, for example, 
+        # such that there are three digits after the decimal.  Thus, for example,
         # variable names in the database are
         #
         #   APCP_06_ENS_FREQ_ge6.350
         #   APCP_06_ENS_FREQ_ge12.700
         #   APCP_24_ENS_FREQ_ge25.400
         #
-        # instead of 
+        # instead of
         #
         #   APCP_06_ENS_FREQ_ge6.35
         #   APCP_06_ENS_FREQ_ge12.7
@@ -907,7 +907,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
           template_fp = {template_fp}
         """))
 
-    # Place xmls generated below in the same directory as the plots that 
+    # Place xmls generated below in the same directory as the plots that
     # METviewer will generate from the xmls.
     output_xml_dir = Path(os.path.join(cla.mv_output_dir, 'plots')).resolve()
     if not os.path.exists(output_xml_dir):
@@ -1006,7 +1006,7 @@ def make_single_mv_vx_plot(argv):
         # module's documentation):
         #
         # * Does basic configuration for the logging system by creating a StreamHandler
-        #   with a default Formatter and adding it to the root logger. 
+        #   with a default Formatter and adding it to the root logger.
         # * Does nothing if the root logger already has handlers configured, unless
         #   the keyword argument "force" is set to True.
         #
