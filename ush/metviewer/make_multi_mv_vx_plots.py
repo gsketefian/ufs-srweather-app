@@ -821,38 +821,36 @@ def main():
 
     parser.add_argument('--incl_only_threshes', nargs='+',
                         required=False, default=[],
-                        #choices=valid_fcst_threshes,
                         help=dedent(f'''
-Forecast thresholds to exclusively include in verification plot generation.
-This is a convenience option that provides a way to override the settings
-in the plot configuration file.  This option has no effect on the plotting
-of vx statistics that do not require a threshold.  For statistics that
-require a threshold, the behavior is as follows.  If this option is not
-used, then all thresholds listed under a given vx statistic, field, and
-level combination in the configuration file are plotted (as long as that
-statistic, field, and threshold combination is to be plotted, i.e. it is
-not excluded via the "--excl_stats", "--excl_fields", and/or "--excl_levels"
-options).  If it is used, then plots for that statistic-field-level
-combination will be generated only for the thresholds passed to this
-option.  For a statistic-field-level combination that is to be plotted,
-if a threshold specified here is not listed in the configuration file
-under that statistic, field, and level, then no plots are generated for
-that statistic-field-level-threshold combination.  For simplicity, this
-option cannot be used together with the "--excl_threshes" option.'''))
+                            Forecast thresholds to exclusively include in verification plot generation.
+                            This is a convenience option that provides a way to override the settings
+                            in the plot configuration file.  This option has no effect on the plotting
+                            of vx statistics that do not require a threshold.  For statistics that
+                            require a threshold, the behavior is as follows.  If this option is not
+                            used, then all thresholds listed under a given vx statistic, field, and
+                            level combination in the configuration file are plotted (as long as that
+                            statistic, field, and threshold combination is to be plotted, i.e. it is
+                            not excluded via the "--excl_stats", "--excl_fields", and/or "--excl_levels"
+                            options).  If it is used, then plots for that statistic-field-level
+                            combination will be generated only for the thresholds passed to this
+                            option.  For a statistic-field-level combination that is to be plotted,
+                            if a threshold specified here is not listed in the configuration file
+                            under that statistic, field, and level, then no plots are generated for
+                            that statistic-field-level-threshold combination.  For simplicity, this
+                            option cannot be used together with the "--excl_threshes" option.'''))
 
     parser.add_argument('--excl_threshes', nargs='+',
                         required=False, default=[],
-                        #choices=valid_fcst_threshes,
                         help=dedent(f'''
-Forecast thresholds to exclude from verification plot generation.  This
-is a convenience option that provides a way to override the settings in
-the plot configuration file.  This option has no effect on the plotting
-of vx statistics that do not require a threshold.  For statistics that
-require a threshold, the behavior is as follows.  If this option is not
-used, then all thresholds in the configuration file are plotted.  If it
-is used, then plots will be generated only for those thresholds in the
-configuration file that are not listed here.  For simplicity, this option
-cannot be used together with the "--incl_only_threshes" option.'''))
+                            Forecast thresholds to exclude from verification plot generation.  This
+                            is a convenience option that provides a way to override the settings in
+                            the plot configuration file.  This option has no effect on the plotting
+                            of vx statistics that do not require a threshold.  For statistics that
+                            require a threshold, the behavior is as follows.  If this option is not
+                            used, then all thresholds in the configuration file are plotted.  If it
+                            is used, then plots will be generated only for those thresholds in the
+                            configuration file that are not listed here.  For simplicity, this option
+                            cannot be used together with the "--incl_only_threshes" option.'''))
 
     parser.add_argument('--preexisting_dir_method',
                         type=str.lower,
