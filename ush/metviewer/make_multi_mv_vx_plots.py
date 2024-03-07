@@ -97,7 +97,7 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
 
 def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     """
-    Function to make multiple verification plots using METviewer.
+    Function to make multiple verification (vx) plots using METviewer.
 
     Arguments:
     ---------
@@ -108,7 +108,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
       Dictionary of valid values of various parameters.
 
     stat_needs_thresh:
-      Dictionary that specifies whether or not each valid statistic requires a
+      Dictionary that specifies whether or not each valid vx metric requires a
       threshold.
 
     Returns:

@@ -200,13 +200,13 @@ def get_thresh_info(thresh_in_config):
 
 def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     """
-    Function to read in valid values of verification plotting parameters.
+    Function to read in valid values of verification (vx) plotting parameters.
 
     Arguments:
     ---------
     valid_vx_plot_params_config_fp:
-      Path to yaml configuration file containing valid values of verification
-      plotting parameters.
+      Path to yaml configuration file containing valid values of vx plotting
+      parameters.
 
     Returns:
     -------
@@ -315,7 +315,7 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
 def get_database_info(mv_databases_config_fp):
     """
     Function to read in information about the METviewer database from which
-    verification statistics will be plotted.
+    verification (vx) metrics will be plotted.
 
     Arguments:
     ---------
@@ -407,7 +407,7 @@ def parse_args(argv, valid_vx_plot_params):
                         type=str.lower,
                         required=True,
                         choices=choices['vx_stat'],
-                        help='Name of verification statistic/metric')
+                        help='Name of verification (vx) metric')
 
     parser.add_argument('--incl_ens_means',
                         required=False, action=argparse.BooleanOptionalAction, default=argparse.SUPPRESS,
