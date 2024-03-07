@@ -69,48 +69,62 @@ from templater import (
 # wind          10m, 700mb        ge5mps (AUC,BRIER,RELY), ge10mps (AUC,BRIER,RELY)
 #
 
-def get_pprint_str(x, indent_str):
-    """Format a python variable as a pretty-printed string and add indentation.
+def get_pprint_str(var, indent_str=''):
+    """
+    Function to format a python variable as a pretty-printed string and add
+    indentation.
 
     Arguments:
-      x:           A variable.
-      indent_str:  String to be added to the beginning of each line of the
-                   pretty-printed form of x.
+    ---------
+    var:
+      A variable.
 
-    Return:
-      x_str:       Formatted string containing contents of variable.
+    indent_str:
+      String to be added to the beginning of each line of the pretty-printed
+      form of var.
+
+    Returns:
+    -------
+    var_str:
+      Formatted string containing contents of variable.
     """
 
-    x_str = pprint.pformat(x, compact=True)
-    x_str = x_str.splitlines(True)
-    x_str = [indent_str + s for s in x_str]
-    x_str = ''.join(x_str)
+    var_str = pprint.pformat(var, compact=True)
+    var_str = var_str.splitlines(True)
+    var_str = [indent_str + s for s in var_str]
+    var_str = ''.join(var_str)
 
-    return x_str
+    return var_str
 
 
 def get_thresh_info(thresh_in_config):
-    """Extract and form various pieces of threshold-related information from
-       the threshold specified on the command line.
+    """
+    Function to extract and form various pieces of threshold-related
+    information from the threshold specified on the command line.
 
     Arguments:
-      thresh_in_config:  Threshold setting specified on the command line.
+    ---------
+    thresh_in_config:
+      Threshold setting specified on the command line.
 
-    Return:
-      thresh_info:       Dictionary containing varous threshold-related variables.
+    Returns:
+    -------
+    thresh_info:
+      Dictionary containing varous threshold-related variables.
     """
 
-    bad_thresh_fmt_msg = dedent('''
+    msg_invalid_thresh_fmt = dedent(f"""
         The input threshold must be either an empty string or a string of the
         form
           <comp_oper><value><units>
         where <comp_oper> is a string of one or more characters representing a
-        comparison operator (e.g. "ge" for "greater than or equal to"), <value>
+        comparison operator (e.g. 'ge' for 'greater than or equal to'), <value>
         is a stirng of one or more digits and possibly a decimal representing
         the threshold value, and <units> is a string of zero or more characters
         representing the value's units (zero characters allowed to account for
         the case of a unitless value).  Check the specified threshold to ensure
-        it has a valid format and rerun.  Stopping.''')
+        it has a valid format and rerun.  Stopping.
+        """)
 
     # Initialize to empty strings.
     thresh_comp_oper = ''
@@ -137,15 +151,15 @@ def get_thresh_info(thresh_in_config):
         if thresh_comp_oper in valid_vals_thresh_comp_oper:
             thresh_comp_oper_xml = thresh_comp_oper_to_xml[thresh_comp_oper]
         else:
-            msg = ''.join([dedent(f'''\n
+            msg = dedent(f"""
                 Invalid value for threshold comparison operator:
-                  thresh_comp_oper = {thresh_comp_oper}
+                  thresh_comp_oper = {get_pprint_str(thresh_comp_oper)}
                 Valid values for the comparison operator are:
-                  valid_vals_thresh_comp_oper = {valid_vals_thresh_comp_oper}
+                  valid_vals_thresh_comp_oper = {get_pprint_str(valid_vals_thresh_comp_oper)}
                 Specified threshold is:
-                  thresh_in_config = {thresh_in_config}'''),
-                bad_thresh_fmt_msg])
-            logging.error(msg, stack_info=True)
+                  thresh_in_config = {get_pprint_str(thresh_in_config)}""") + \
+                msg_invalid_thresh_fmt
+            logging.error(msg)
             raise ValueError(msg)
 
         # Form the threshold in the way that it appears in the database (for
@@ -167,11 +181,11 @@ def get_thresh_info(thresh_in_config):
     # must have been wrong with thresh_in_config that caused thresh_parts
     # to be empty.
     elif thresh_in_config:
-        msg = ''.join([dedent(f'''\n
+        msg = dedent(f"""
             Specified input threshold does not have a valid format:
-              thresh_in_config = {thresh_in_config}'''),
-            bad_thresh_fmt_msg])
-        logging.error(msg, stack_info=True)
+              thresh_in_config = {get_pprint_str(thresh_in_config)}""") + \
+            msg_invalid_thresh_fmt
+        logging.error(msg)
         raise ValueError(msg)
 
     # Create a dictionary containing the values to return and return it.
@@ -185,9 +199,20 @@ def get_thresh_info(thresh_in_config):
 
 
 def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
-    '''
+    """
     Function to read in valid values of verification plotting parameters.
-    '''
+
+    Arguments:
+    ---------
+    valid_vx_plot_params_config_fp:
+      Path to yaml configuration file containing valid values of verification
+      plotting parameters.
+
+    Returns:
+    -------
+    valid_vx_plot_params:
+      Dictionary containing processed set of valid values of plotting parameters.
+    """
 
     # Load the yaml file that specifies valid values for various verification
     # plotting parameters.
@@ -240,16 +265,19 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
                     levels and accumulations for the current forecast field (field) is not
                     in the master list of valid forecast levels and accumulations
                     (valid_fcst_levels_all_fields):
-                      field = {field}
-                      loa = {loa}
-                      valid_fcst_levels_all_fields = {valid_fcst_levels_all_fields}
+                      field = {get_pprint_str(field)}
+                      loa = {get_pprint_str(loa)}
+                      valid_fcst_levels_all_fields = """) + \
+                    get_pprint_str(valid_fcst_levels_all_fields,
+                                   ' '*(5 + len('valid_fcst_levels_all_fields'))).lstrip() + \
+                    dedent(f"""
                     The master list of valid levels and accumulations as well as the list of
                     valid levels and accumulations for the current forecast field can be
                     found in the following configuration file:
-                      valid_vx_plot_params_config_fp = {valid_vx_plot_params_config_fp}
-                    Please modify this file and rerun.
+                      valid_vx_plot_params_config_fp = {get_pprint_str(valid_vx_plot_params_config_fp)}
+                    Please modify this file and rerun.  Stopping.
                     """)
-                logging.error(msg, stack_info=True)
+                logging.error(msg)
                 raise ValueError(msg)
 
     # Get dictionary containing the available METviewer color codes.  This
@@ -285,10 +313,20 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
 
 
 def get_database_info(mv_databases_config_fp):
-    '''
+    """
     Function to read in information about the METviewer database from which
     verification statistics will be plotted.
-    '''
+
+    Arguments:
+    ---------
+    mv_databases_config_fp:
+      Path to yaml METviewer database configuration file.
+
+    Returns:
+    -------
+    mv_databases_dict:
+      Dictionary containing information about METviewer databases.
+    """
 
     # Load the yaml file containing database information.
     mv_databases_dict = load_config_file(mv_databases_config_fp)
@@ -297,16 +335,31 @@ def get_database_info(mv_databases_config_fp):
 
 
 def parse_args(argv, valid_vx_plot_params):
-    '''
-    Function to parse arguments for this script.
-    '''
+    """
+    Function to parse arguments passed to the make_single_mv_vx_plot()
+    function.
+
+    Arguments:
+    ---------
+    argv:
+      Arguments passed to make_single_mv_vx_plot().
+
+    valid_vx_plot_params:
+      Dictionary of valid values for various verification plotting parameters.
+
+    Returns:
+    -------
+    cla:
+      Namespace object containing parsed command line arguments and related
+      information.
+    """
 
     choices = valid_vx_plot_params['choices']
 
-    parser = argparse.ArgumentParser(description=dedent(f'''
+    parser = argparse.ArgumentParser(description=dedent(f"""
         Function to generate an xml file that METviewer can read in order
         to create a verification plot.
-        '''))
+        """))
 
     parser.add_argument('--mv_host',
                         type=str,
@@ -363,9 +416,10 @@ def parse_args(argv, valid_vx_plot_params):
     parser.add_argument('--fcst_init_info', nargs=3,
                         type=str,
                         required=True,
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Initialization time of first forecast (in YYYYMMDDHH), number of forecasts,
-                            and forecast initialization interval (in HH)'''))
+                            and forecast initialization interval (in HH)
+                            """))
 
     parser.add_argument('--fcst_len_hrs',
                         type=int,
@@ -394,8 +448,11 @@ def parse_args(argv, valid_vx_plot_params):
 
     # Empty strings are included in this concatenation to force insertion
     # of delimiter.
-    logging.debug('\n'.join(['', 'List of arguments passed to script:',
-                             'cla = ', get_pprint_str(vars(cla), '  '), '']))
+    msg = dedent(f"""
+        List of arguments passed to script:
+          cla = """) + \
+        get_pprint_str(vars(cla), ' '*(5 + len('cla'))).lstrip()
+    logging.debug(msg)
 
     return cla
 
@@ -405,11 +462,24 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     Function that generates an xml file that METviewer can read (to be used
     elsewhere to create a verification plot).
 
-    Args:
-        argv:  Command-line arguments
+    Arguments:
+    ---------
+    cla:
+      Command-line arguments
+
+    valid_vx_plot_params:
+      Dictionary of valid values for various verification plotting parameters.
+
+    mv_databases_dict:
+      Dictionary containing information about METviewer databases.
 
     Returns:
-        None
+    -------
+    [unnamed]:
+      Path to yaml METviewer machine configuration file.
+
+    output_xml_fp:
+      Path to xml generated by this function.
     """
 
     # Get valid values for various verification plotting parameters.
@@ -430,15 +500,19 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     all_hosts = sorted(list(mv_machine_config.keys()))
     if cla.mv_host not in all_hosts:
         msg = dedent(f"""
-            The machine/host specified on the command line (cla.mv_host) does not have a
-            corresponding entry in the METviewer host configuration file (mv_machine_config_fp):
-              cla.mv_host = {cla.mv_host}
-              mv_machine_config_fp = {mv_machine_config_fp}
+            The machine/host specified on the command line (cla.mv_host) does not
+            have a corresponding entry in the METviewer host configuration file
+            (mv_machine_config_fp):
+              cla.mv_host = {get_pprint_str(cla.mv_host)}
+              mv_machine_config_fp = {get_pprint_str(mv_machine_config_fp)}
             Machines that do have an entry in the host configuration file are:
-              {all_hosts}
-            Either run on one of these hosts, or add an entry in the configuration file for "{cla.mv_host}".
+              all_hosts = """) + \
+            get_pprint_str(all_hosts, ' '*(5 + len('all_hosts'))).lstrip() + \
+            dedent(f"""
+            Either run on one of these hosts, or add an entry in the configuration
+            file for '{cla.mv_host}'.  Stopping.
             """)
-        logging.error(msg, stack_info=True)
+        logging.error(msg)
         raise ValueError(msg)
 
     mv_machine_config_dict = mv_machine_config[cla.mv_host]
@@ -450,10 +524,11 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             The database specified on the command line (cla.mv_database_name) is not
             in the set of METviewer databases specified in the database configuration
             file (cla.mv_databases_config_fp):
-              cla.mv_database_name = {cla.mv_database_name}
-              cla.mv_databases_config_fp = {cla.mv_databases_config_fp}
+              cla.mv_database_name = {get_pprint_str(cla.mv_database_name)}
+              cla.mv_databases_config_fp = {get_pprint_str(cla.mv_databases_config_fp)}
+            Stopping.
             """)
-        logging.error(msg, stack_info=True)
+        logging.error(msg)
         raise ValueError(msg)
 
     # Extract the METviewer database information.
@@ -472,16 +547,20 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                 A model specified on the command line (model_name_short) is not included
                 in the entry for the specified database (cla.mv_database_name) in the
                 METviewer database configuration file (cla.mv_databases_config_fp)
-                  cla.mv_databases_config_fp = {cla.mv_databases_config_fp}
-                  cla.mv_database_name = {cla.mv_database_name}
-                  model_name_short = {model_name_short}
+                  cla.mv_databases_config_fp = {get_pprint_str(cla.mv_databases_config_fp)}
+                  cla.mv_database_name = {get_pprint_str(cla.mv_database_name)}
+                  model_name_short = {get_pprint_str(model_name_short)}
                 Models that are included in the database configuration file are:
-                  {model_names_short_avail_in_db}
+                  model_names_short_avail_in_db = """) + \
+                get_pprint_str(model_names_short_avail_in_db,
+                               ' '*(5 + len('model_names_short_avail_in_db'))).lstrip() + \
+                dedent(f"""
                 Either change the command line to specify only one of these models, or
                 add the new model to the database configuration file (the latter approach
                 will work only if the new model actually exists in the METviewer database).
+                Stopping.
                 """)
-            logging.error(msg, stack_info=True)
+            logging.error(msg)
             raise ValueError(msg)
 
     # If the threshold specified on the command line is not an empty string,
@@ -490,19 +569,21 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         msg = dedent(f"""
             The specified threshold is not in the list of valid thresholds for the
             specified database.  Database is:
-              cla.mv_database_name = {cla.mv_database_name}
+              cla.mv_database_name = {get_pprint_str(cla.mv_database_name)}
             Threshold is:
-              cla.threshold = {cla.threshold}
+              cla.threshold = {get_pprint_str(cla.threshold)}
             The list of valid thresholds for this database is:
-              valid_threshes_in_db = """)
-        indent_str = ' '*(5 + len('valid_threshes_in_db'))
-        msg = msg + get_pprint_str(valid_threshes_in_db, indent_str).lstrip()
-        msg = msg + dedent(f"""
+              valid_threshes_in_db = """) + \
+            get_pprint_str(valid_threshes_in_db,
+                           ' '*(5 + len('valid_threshes_in_db'))).lstrip() + \
+            dedent(f"""
             Make sure the specified threshold is one of the valid ones, or, if it
             exists in the database, add it to the 'valid_threshes' list in the
             METviewer database configuration file given by:
-              cla.mv_databases_config_fp = {cla.mv_databases_config_fp})""")
-        logging.error(msg, stack_info=True)
+              cla.mv_databases_config_fp = {get_pprint_str(cla.mv_databases_config_fp)}
+            Stopping.
+            """)
+        logging.error(msg)
         raise ValueError(msg)
 
     # Get the names in the database of those models that are to be plotted.
@@ -519,10 +600,11 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             msg = dedent(f"""
                 The number of ensemble members for the current model must be greater
                 than or equal to 0:
-                  model = {model}
-                  n_ens = {n_ens}
+                  model = {get_pprint_str(model)}
+                  n_ens = {get_pprint_str(n_ens)}
+                Stopping.
                 """)
-            logging.error(msg, stack_info=True)
+            logging.error(msg)
             raise ValueError(msg)
 
     # Make sure no model names are duplicated because METviewer will throw an
@@ -534,10 +616,11 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         msg = dedent(f"""
             A model can appear only once in the set of models to plot specified on
             the command line.  However, the following models are duplicated:
-              duplicates = {duplicates}
+              duplicates = {get_pprint_str(duplicates)}
             Please remove duplicated models from the command line and rerun.
+            Stopping.
             """)
-        logging.error(msg, stack_info=True)
+        logging.error(msg)
         raise ValueError(msg)
 
     # Make sure that there are at least as many available colors as models to
@@ -547,13 +630,14 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         msg = dedent(f"""
             The number of models to plot (num_models_to_plot) must be less than
             or equal to the number of available colors:
-              num_models_to_plot = {num_models_to_plot}
-              num_avail_colors = {num_avail_colors}
+              num_models_to_plot = {get_pprint_str(num_models_to_plot)}
+              num_avail_colors = {get_pprint_str(num_avail_colors)}
             Either reduce the number of models to plot specified on the command
             line or add new colors in the following configuration file:
-              valid_vx_plot_params_config_fp = {valid_vx_plot_params_config_fp}
+              valid_vx_plot_params_config_fp = {get_pprint_str(valid_vx_plot_params_config_fp)}
+            Stopping.
             """)
-        logging.error(msg, stack_info=True)
+        logging.error(msg)
         raise ValueError(msg)
 
     # Pick out the plot color associated with each model from the list of
@@ -580,10 +664,11 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     msg = dedent(f"""
         Forecast initialization times:
-          fcst_init_times_YmDHMS = """)
-    indent_str = ' '*(5 + len('fcst_init_times_YmDHMS'))
-    msg = msg + get_pprint_str(fcst_init_times_YmDHMS, indent_str).lstrip() + '\n'
-    logging.info(msg)
+          fcst_init_times_YmDHMS = """) + \
+        get_pprint_str(fcst_init_times_YmDHMS,
+                       ' '*(5 + len('fcst_init_times_YmDHMS'))).lstrip() + \
+        '\n'
+    logging.debug(msg)
 
     if ('incl_ens_means' not in cla):
         incl_ens_means = False
@@ -599,13 +684,17 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         msg = dedent(f"""
             The specified forecast level or accumulation is not compatible with the
             specified forecast field:
-              cla.fcst_field = {cla.fcst_field}
-              cla.level_or_accum = {cla.level_or_accum}
+              cla.fcst_field = {get_pprint_str(cla.fcst_field)}
+              cla.level_or_accum = {get_pprint_str(cla.level_or_accum)}
             Valid options for forecast level or accumulation for this forecast field
             are:
-              {valid_fcst_levels_or_accums}
+              valid_fcst_levels_or_accums = """) + \
+            get_pprint_str(valid_fcst_levels_or_accums,
+                           ' '*(5 + len('valid_fcst_levels_or_accums'))).lstrip() + \
+            dedent(f"""
+            Stopping.
             """)
-        logging.error(msg, stack_info=True)
+        logging.error(msg)
         raise ValueError(msg)
 
     # Parse the level/accumulation specified on the command line (cla.level_or_accum)
@@ -626,15 +715,16 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     if loa_units not in valid_loa_units:
         msg = dedent(f"""
             Unknown units (loa_units) for level or accumulation:
-              loa_units = {loa_units}
+              loa_units = {get_pprint_str(loa_units)}
             Valid units are:
-              valid_loa_units = {valid_loa_units}
+              valid_loa_units = {get_pprint_str(valid_loa_units)}
             Related variables:
-              cla.level_or_accum = {cla.level_or_accum}
-              loa_value = {loa_value}
-              loa_value_no0pad = {loa_value_no0pad}
+              cla.level_or_accum = {get_pprint_str(cla.level_or_accum)}
+              loa_value = {get_pprint_str(loa_value)}
+              loa_value_no0pad = {get_pprint_str(loa_value_no0pad)}
+            Stopping.
             """)
-        logging.error(msg, stack_info=True)
+        logging.error(msg)
         raise ValueError(msg)
 
     loa_value_no0pad = loa_value.lstrip('0')
@@ -646,37 +736,41 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     elif loa_units == 'mb':
         width_0pad = 3
     elif (loa_units == '' and cla.level_or_accum == 'L0'):
-        logging.debug(dedent(f"""
-            Since the specified level/accumulation is "{cla.level_or_accum}", we set loa_units to an empty
+        msg = dedent(f"""
+            Since the specified level/accumulation is '{cla.level_or_accum}', we set loa_units to an empty
             string:
-              cla.level_or_accum = {cla.level_or_accum}
-              loa_units = {loa_units}
+              cla.level_or_accum = {get_pprint_str(cla.level_or_accum)}
+              loa_units = {get_pprint_str(loa_units)}
             Related variables:
-              loa_value = {loa_value}
-              loa_value_no0pad = {loa_value_no0pad}
-            """))
+              loa_value = {get_pprint_str(loa_value)}
+              loa_value_no0pad = {get_pprint_str(loa_value_no0pad)}
+            """)
+        logging.debug(msg)
 
     loa_value_0pad = loa_value_no0pad.zfill(width_0pad)
-    logging.info(dedent(f"""
+    msg = dedent(f"""
         Level/accumulation parameters have been set as follows:
-          loa_value = {loa_value}
-          loa_value_no0pad = {loa_value_no0pad}
-          loa_value_0pad = {loa_value_0pad}
-          loa_units = {loa_units}
-        """))
+          loa_value = {get_pprint_str(loa_value)}
+          loa_value_no0pad = {get_pprint_str(loa_value_no0pad)}
+          loa_value_0pad = {get_pprint_str(loa_value_0pad)}
+          loa_units = {get_pprint_str(loa_units)}
+        """)
+    logging.debug(msg)
 
     if (not stat_needs_thresh[cla.vx_stat]) and (cla.threshold):
         no_thresh_stats = [key for key,val in stat_needs_thresh.items() if val]
-        no_thresh_stats_fmt_str = ",\n".join("              {!r}: {!r}".format(k, v)
-                                             for k, v in stat_long_names.items() if k in no_thresh_stats).lstrip()
-        logging.debug(dedent(f"""
+        msg = dedent(f"""
             A threshold is not needed for the following verification statistics:
-              {no_thresh_stats_fmt_str}
-            Thus, the threshold passed via the "--threshold" option on the command
+              no_thresh_stats = """) + \
+            get_pprint_str(no_thresh_statsg,
+                           ' '*(5 + len('no_thresh_statsg'))).lstrip() + \
+            dedent(f"""
+            Thus, the threshold passed via the '--threshold' option on the command
             line, i.e.
-              cla.threshold = {cla.threshold}
+              cla.threshold = {get_pprint_str(cla.threshold)}
             will be reset to an empty string.
-            """))
+            """)
+        logging.debug(msg)
         cla.threshold = ''
 
     # Extract and set various pieces of threshold-related information from
@@ -684,10 +778,10 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     thresh_info = get_thresh_info(cla.threshold)
     msg = dedent(f"""
         Dictionary containing threshold information has been set as follows:
-          thresh_info = """)
-    indent_str = ' '*(5 + len('thresh_info'))
-    msg = msg + get_pprint_str(thresh_info, indent_str).lstrip() + '\n'
-    logging.info(msg)
+          thresh_info = """) + \
+        get_pprint_str(thresh_info, ' '*(5 + len('thresh_info'))).lstrip() + \
+        '\n'
+    logging.debug(msg)
 
     # Get the list of valid units for the specified forecast field.
     valid_units = valid_units_by_fcst_field[cla.fcst_field]
@@ -697,14 +791,15 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         msg = dedent(f"""
             The units specified in the threshold are not compatible with the list
             of valid units for this field.  The specified field and threshold are:
-              cla.fcst_field = {cla.fcst_field}
-              cla.threshold = {cla.threshold}
+              cla.fcst_field = {get_pprint_str(cla.fcst_field)}
+              cla.threshold = {get_pprint_str(cla.threshold)}
             The units extracted from the threshold are:
-              thresh_info[units] = {thresh_info['units']}
+              thresh_info[units] = {get_pprint_str(thresh_info['units'])}
             Valid units for this forecast field are:
-              {valid_units}
+              valid_units = {get_pprint_str(valid_units)}
+            Stopping.
             """)
-        logging.error(msg, stack_info=True)
+        logging.error(msg)
         raise ValueError(msg)
 
     # Form the plot title.
@@ -721,15 +816,16 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     models_str = '_'.join(cla.model_names_short)
     job_title = '_'.join([cla.vx_stat, var_lvl_thresh_str, models_str])
 
-    logging.debug(dedent(f"""
+    msg = dedent(f"""
         Various auxiliary string values:
-          plot_title = {plot_title}
-          var_lvl_str = {var_lvl_str}
-          thresh_str = {thresh_str}
-          var_lvl_thresh_str = {var_lvl_thresh_str}
-          job_title = {job_title}
-          models_str = {models_str}
-        """))
+          plot_title = {get_pprint_str(plot_title)}
+          var_lvl_str = {get_pprint_str(var_lvl_str)}
+          thresh_str = {get_pprint_str(thresh_str)}
+          var_lvl_thresh_str = {get_pprint_str(var_lvl_thresh_str)}
+          job_title = {get_pprint_str(job_title)}
+          models_str = {get_pprint_str(models_str)}
+        """)
+    logging.debug(msg)
 
     # Get names of level/accumulation, threshold, and models as they are set
     # in the database.
@@ -853,13 +949,14 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     elif cla.level_or_accum in ['500mb','700mb','850mb']:
         obs_type = 'ADPUPA'
 
-    logging.debug(dedent(f"""
+    msg = dedent(f"""
         Subset of strings passed to jinja2 template:
-          fcst_field_uc = {fcst_field_uc}
-          fcst_field_name_in_db = {fcst_field_name_in_db}
-          vx_stat_mv = {vx_stat_mv}
-          obs_type = {obs_type}
-        """))
+          fcst_field_uc = {get_pprint_str(fcst_field_uc)}
+          fcst_field_name_in_db = {get_pprint_str(fcst_field_name_in_db)}
+          vx_stat_mv = {get_pprint_str(vx_stat_mv)}
+          obs_type = {get_pprint_str(obs_type)}
+        """)
+    logging.debug(msg)
 
     # Create dictionary containing values for the variables appearing in the
     # jinja2 template.
@@ -897,11 +994,14 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Empty strings are included in this concatenation to force insertion
     # of delimiter.
-    logging.debug('\n'.join(['', 'Jinja variables passed to template file:',
-                             'jinja2_vars = ', get_pprint_str(jinja2_vars, '  '), '']))
+    msg = dedent(f"""
+        Jinja variables passed to template file:
+          jinja2_vars = """) + \
+        get_pprint_str(jinja2_vars, ' '*(5 + len('jinja2_vars'))).lstrip()
+    logging.debug(msg)
 
     templates_dir = os.path.join(home_dir, 'parm', 'metviewer')
-    template_fn = "".join([cla.vx_stat, '.xml'])
+    template_fn = ''.join([cla.vx_stat, '.xml'])
     if (cla.vx_stat in ['auc', 'brier']):
         template_fn = 'auc_brier.xml'
     elif (cla.vx_stat in ['bias', 'fbias']):
@@ -910,12 +1010,13 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         template_fn = 'rely_rhist.xml'
     template_fp = os.path.join(templates_dir, template_fn)
 
-    logging.info(dedent(f"""
+    msg = dedent(f"""
         Template file information:
-          template_fp = {template_fp}
-          templates_dir = {templates_dir}
-          template_fn = {template_fn}
-        """))
+          template_fp = {get_pprint_str(template_fp)}
+          templates_dir = {get_pprint_str(templates_dir)}
+          template_fn = {get_pprint_str(template_fn)}
+        """)
+    logging.debug(msg)
 
     # Place xmls generated below in the same directory as the plots that
     # METviewer will generate from the xmls.
@@ -927,12 +1028,13 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                      cla.threshold, models_str]))
     output_xml_fn = ''.join([output_xml_fn, '.xml'])
     output_xml_fp = os.path.join(output_xml_dir, output_xml_fn)
-    logging.info(dedent(f"""
+    msg = dedent(f"""
         Output xml file information:
-          output_xml_fn = {output_xml_fn}
-          output_xml_dir = {output_xml_dir}
-          output_xml_fp = {output_xml_fp}
-        """))
+          output_xml_fn = {get_pprint_str(output_xml_fn)}
+          output_xml_dir = {get_pprint_str(output_xml_dir)}
+          output_xml_fp = {get_pprint_str(output_xml_fp)}
+        """)
+    logging.debug(msg)
 
     # Convert the dictionary of jinja2 variable settings above to yaml format
     # and write it to a temporary yaml file for reading by the set_template
@@ -945,25 +1047,35 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                  '--config_file', tmp_fn,
                  '--input_template', template_fp,
                  '--outfile', output_xml_fp]
-    logging.info(dedent(f"""
+
+    msg = dedent(f"""
         Generating xml from jinja2 template ...
-        """))
+        """)
+    logging.info(msg)
     set_template(args_list)
     os.remove(tmp_fn)
 
-    return(mv_machine_config_dict['mv_batch'], output_xml_fp)
+    return(mv_machine_config_dict['mv_batch_fp'], output_xml_fp)
 
 
-def run_mv_batch(mv_batch, output_xml_fp):
-    """Function that generates a verification plot using METviewer.
+def run_mv_batch_script(mv_batch_fp, output_xml_fp):
+    """
+    Function that runs the METviewer batch script with the specified xml to
+    generate a verification plot.
 
-    Args:
-        mv_batch:       Path to METviewer batch plotting script.
-        output_xml_fp:  Full path to the xml to pass to the batch script.
+    Arguments:
+    ---------
+    mv_batch_fp:
+      Path to METviewer batch plotting script.
+
+    output_xml_fp:
+      Path to the xml to pass to the batch script.
 
     Returns:
-        result:         Instance of subprocess.CompletedProcess class containing
-                        result of call to METviewer batch script.
+    -------
+    result:
+      Instance of subprocess.CompletedProcess class containing result of call
+      to METviewer batch script.
     """
 
     # Generate full path to log file that will contain output from calling the
@@ -972,17 +1084,38 @@ def run_mv_batch(mv_batch, output_xml_fp):
     mv_batch_log_fp = ''.join([os.path.join(p.parent, p.stem), '.log'])
 
     # Run METviewer in batch mode on the xml.
-    logging.info(dedent(f"""
+    msg = dedent(f"""
         Log file for call to METviewer batch script is:
-          mv_batch_log_fp = {mv_batch_log_fp}
-        """))
+          mv_batch_log_fp = {get_pprint_str(mv_batch_log_fp)}
+        """)
+    logging.debug(msg)
     with open(mv_batch_log_fp, "w") as outfile:
-        result = subprocess.run([mv_batch, output_xml_fp], stdout=outfile, stderr=outfile)
-        logging.debug('\n'.join(['', 'Result of call to METviewer batch script:',
-                                 'result = ', get_pprint_str(vars(result), '  '), '']))
+        result = subprocess.run([mv_batch_fp, output_xml_fp], stdout=outfile, stderr=outfile)
+        msg = dedent(f"""
+            Result of call to METviewer batch script:
+              result = """) + \
+            get_pprint_str(vars(result), ' '*(5 + len('result'))).lstrip()
+        logging.debug(msg)
+
+    return result
 
 
 def make_single_mv_vx_plot(argv):
+    """
+    Driver function to generate a METviewer xml and generate an image file
+    of the corresponding verification plot.
+
+    Arguments:
+    ---------
+    argv:
+      Arguments passed on the command line to this script.
+
+    Returns:
+    -------
+    output_xml_fp:
+      Path to xml generated by this function.
+    """
+
     #
     # Create a logger if necessary.
     #
@@ -1023,54 +1156,61 @@ def make_single_mv_vx_plot(argv):
         log_level = 'INFO'
         FORMAT = "[%(levelname)s:%(name)s:  %(filename)s, line %(lineno)s: %(funcName)s()] %(message)s"
         logging.basicConfig(level=log_level, format=FORMAT)
-        logging.info(dedent(f"""
-            Root logger has been set up with logging level {log_level}.
-            """))
+        msg = dedent(f"""
+            Root logger has been set up with logging level {get_pprint_str(log_level)}.
+            """)
+        logging.debug(msg)
     else:
-        logging.info(dedent(f"""
+        msg = dedent(f"""
             Using existing logger.
-            """))
+            """)
+        logging.debug(msg)
 
     # Print out logger details.
     logger = logging.getLogger()
     msg = dedent(f"""
         Logger details:
-          logger = """)
-    indent_str = ' '*(5 + len('logger'))
-    msg = msg + get_pprint_str(vars(logger), indent_str).lstrip() + '\n'
-    logging.info(msg)
+          logger = """) + \
+        get_pprint_str(vars(logger), ' '*(5 + len('logger'))).lstrip() + \
+        '\n'
+    logging.debug(msg)
 
     # Get valid values for various verification plotting parameters.  Some
     # of these are needed below when parsing the command line arguments.
     valid_vx_plot_params_config_fp = 'valid_vx_plot_params.yaml'
-    logging.info(dedent(f"""
-        Obtaining valid values of verification parameters from file {valid_vx_plot_params_config_fp} ...
-        """))
+    msg = dedent(f"""
+        Obtaining valid values of verification parameters from file {get_pprint_str(valid_vx_plot_params_config_fp)} ...
+        """)
+    logging.info(msg)
     valid_vx_plot_params = get_valid_vx_plot_params(valid_vx_plot_params_config_fp)
 
     # Parse arguments.
-    logging.info(dedent(f"""
+    msg = dedent(f"""
         Processing command line arguments ...
-        """))
+        """)
+    logging.info(msg)
     cla = parse_args(argv, valid_vx_plot_params)
 
     # Get METviewer database information.
-    logging.info(dedent(f"""
-        Obtaining METviewer database info from file {cla.mv_databases_config_fp} ...
-        """))
+    msg = dedent(f"""
+        Obtaining METviewer database info from file {get_pprint_str(cla.mv_databases_config_fp)} ...
+        """)
+    logging.info(msg)
     mv_databases_dict = get_database_info(cla.mv_databases_config_fp)
 
     # Generate a METviewer xml.
-    logging.info(dedent(f"""
+    msg = dedent(f"""
         Generating a METviewer xml ...
-        """))
-    mv_batch, output_xml_fp = generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict)
+        """)
+    logging.info(msg)
+    mv_batch_fp, output_xml_fp = generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict)
 
     # Run METviewer on the xml to create a verification plot.
-    logging.info(dedent(f"""
-        Running METviewer on xml file: {output_xml_fp}
-        """))
-    run_mv_batch(mv_batch, output_xml_fp)
+    msg = dedent(f"""
+        Running METviewer on xml file {get_pprint_str(output_xml_fp)} ...
+        """)
+    logging.info(msg)
+    run_mv_batch_script(mv_batch_fp, output_xml_fp)
 
     return(output_xml_fp)
 #

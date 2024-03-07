@@ -29,63 +29,91 @@ from python_utils import (
 )
 
 def check_for_preexisting_dir_file(dir_or_file, preexist_method):
-    """Check and handle preexisting directory or file.
+    """
+    Function to check and handle preexisting directory or file.
 
     Arguments:
-      dir_or_file:      Name of directory or file.
-      preexist_method:  Method to use to deal with a preexisting version of dir_or_file.
-                        This has 3 valid values:
-                          'rename':  Causes the existing dir_or_file to be renamed.
-                          'delete':  Causes the existing dir_or_file to be deleted.
-                          'quit':    Causes the script to quit if dir_or_file already exists.
+    ---------
+    dir_or_file:
+      Name of directory or file.
 
-    Return:
-      None
+    preexist_method:
+      Method to use to deal with a preexisting version of dir_or_file.  This
+      has 3 valid values:
+        'rename':  Causes the existing dir_or_file to be renamed.
+        'delete':  Causes the existing dir_or_file to be deleted.
+        'quit':    Causes the script to quit if dir_or_file already exists.
+
+    Returns:
+    -------
+    None
     """
 
     valid_vals_preexist_method = ['rename', 'delete', 'quit']
+    msg_invalid_preexist_method = dedent(f"""
+        Invalid value for preexist_method:
+          {get_pprint_str(preexist_method)}
+        Valid values are:
+          {get_pprint_str(valid_vals_preexist_method)}
+        Stopping.
+        """)
+
+    if preexist_method not in valid_vals_preexist_method:
+        logging.error(msg_invalid_preexist_method)
+        raise ValueError(msg_invalid_preexist_method)
 
     if os.path.exists(dir_or_file):
         if preexist_method == 'rename':
             now = datetime.now()
             renamed_dir_or_file = dir_or_file + now.strftime('.old_%Y%m%d_%H%M%S')
-            logging.info(dedent(f'''\n
+            msg = dedent(f"""
                 Output directory already exists:
-                  {dir_or_file}
+                  {get_pprint_str(dir_or_file)}
                 Moving (renaming) preexisting directory to:
-                  {renamed_dir_or_file}'''))
+                  {get_pprint_str(renamed_dir_or_file)}
+                """)
+            logging.debug(msg)
             os.rename(dir_or_file, renamed_dir_or_file)
         elif preexist_method == 'delete':
-            logging.info(dedent(f'''\n
+            msg = dedent(f"""
                 Output directory already exists:
-                  {dir_or_file}
-                Removing existing directory...'''))
+                  {get_pprint_str(dir_or_file)}
+                Removing existing directory...
+                """)
+            logging.info(msg)
             shutil.rmtree(dir_or_file)
         elif preexist_method == 'quit':
-            msg = dedent(f'''\n
+            msg = dedent(f"""
                 Output directory already exists:
-                  {dir_or_file}
-                Stopping.''')
-            logging.error(msg, stack_info=True)
+                  {get_pprint_str(dir_or_file)}
+                Stopping.
+                """)
+            logging.error(msg)
             raise FileExistsError(msg)
         else:
-            msg = dedent(f'''\n
-                Invalid value for preexist_method:
-                  {preexist_method}
-                Valid values are:
-                  {valid_vals_preexist_method}
-                Stopping.''')
-            logging.error(msg, stack_info=True)
-            raise ValueError(msg)
+            logging.error(msg_invalid_preexist_method)
+            raise ValueError(msg_invalid_preexist_method)
 
 
 def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
-    """Make multiple verification plots using METviewer and the settings
-    file specified as part of args.
+    """
+    Function to make multiple verification plots using METviewer.
 
     Arguments:
-      args:        Dictionary of arguments.
-      valid_vals:  Dictionary of valid values of various parameters.
+    ---------
+    args:
+      Dictionary of arguments.
+
+    valid_vals:
+      Dictionary of valid values of various parameters.
+
+    stat_needs_thresh:
+      Dictionary that specifies whether or not each valid statistic requires a
+      threshold.
+
+    Returns:
+    -------
+    None
     """
 
     # Set up logging.
@@ -102,9 +130,10 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     # Read in the plot configuration file.
     plot_config_fp = args.plot_config_fp
     plot_config_dict = load_config_file(plot_config_fp)
-    logging.info(dedent(f"""
-        Reading in plot configuration file: {plot_config_fp}
-        """))
+    msg = dedent(f"""
+        Reading in plot configuration file: {get_pprint_str(plot_config_fp)}
+        """)
+    logging.debug(msg)
     mv_host = plot_config_dict['mv_host']
     mv_database_name = plot_config_dict['mv_database_name']
     model_names = plot_config_dict['model_names']
@@ -119,26 +148,30 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     mv_databases_dict = load_config_file(mv_databases_config_fp)
     valid_threshes_for_db = list(mv_databases_dict[mv_database_name]['valid_threshes'])
 
-    # Ensure that any thresholds passed to the "--incl_only_threshes" option
+    # Ensure that any thresholds passed to the --incl_only_threshes option
     # are valid ones for the METviewer database specified in the plot
     # configuration file.
     threshes_not_in_db = list(set(args.incl_only_threshes).difference(valid_threshes_for_db))
     if threshes_not_in_db:
-        msg = dedent(f'''\n
-            One or more thresholds passed to the "--incl_only_threshes" option are
-            not valid for the specified database.  The specified database is:
-              mv_database_name = {mv_database_name}
+        msg = dedent(f"""
+            One or more thresholds passed to the '--incl_only_threshes' option are
+            not valid for the specified database.  The name of this database is:
+              mv_database_name = {get_pprint_str(mv_database_name)}
             The specified thresholds that are not valid for this database are:
-              threshes_not_in_db = {threshes_not_in_db}
+              threshes_not_in_db = {get_pprint_str(threshes_not_in_db)}
             If these thresholds are in fact in the database, then add them to the
             list of valid thresholds in the database configuration file and rerun.
             The database configuration file is:
-              mv_databases_config_fp = {mv_databases_config_fp}
+              mv_databases_config_fp = {get_pprint_str(mv_databases_config_fp)}
             Thresholds that are currently specified in this file as valid for the
             database are:
-              {valid_threshes_for_db}
-            Stopping.''')
-        logging.error(msg, stack_info=True)
+              valid_threshes_for_db = """) + \
+            get_pprint_str(valid_threshes_for_db,
+                           ' '*(5 + len('valid_threshes_for_db'))).lstrip() + \
+            dedent(f"""
+            Stopping.
+            """)
+        logging.error(msg)
         raise ValueError(msg)
 
     # Some of the values in the fcst_init_info dictionary are strings while
@@ -171,22 +204,27 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     valid_fcst_fields = valid_vals['fcst_fields']
     valid_fcst_levels = valid_vals['fcst_levels']
 
-    # Ensure that any statistic passed to the "--incl_only_stats" option also
+    # Ensure that any statistic passed to the --incl_only_stats option also
     # appears in the plot configuration file.
     vx_stats_in_config = list(stats_fields_levels_threshes_dict.keys())
     stats_not_in_config = list(set(args.incl_only_stats).difference(vx_stats_in_config))
     if stats_not_in_config:
-        msg = dedent(f'''\n
-            One or more statistics passed to the "--incl_only_stats" option are not
+        msg = dedent(f"""
+            One or more statistics passed to the '--incl_only_stats' option are not
             included in the plot configuration file.  These are:
-              stats_not_in_config = {stats_not_in_config}
-            Please include these in the plot configuration file and rerun.  The plot
-            configuration file is:
-              plot_config_fp = {plot_config_fp}
+              stats_not_in_config = {get_pprint_str(stats_not_in_config)}
+            Please include these in the plot configuration file or exclude them as
+            arguments to '--incl_only_stats', then rerun.  The plot configuration
+            file is:
+              plot_config_fp = {get_pprint_str(plot_config_fp)}
             Statistics currently included in the plot configuration file are:
-              {vx_stats_in_config}
-            Stopping.''')
-        logging.error(msg, stack_info=True)
+              vx_stats_in_config = """) + \
+            get_pprint_str(vx_stats_in_config,
+                           ' '*(5 + len('vx_stats_in_config'))).lstrip() + \
+            dedent(f"""
+            Stopping.
+            """)
+        logging.error(msg)
         raise ValueError(msg)
 
     # Remove from the plot configuration dictionary any statistic in the
@@ -205,28 +243,19 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     # dictionary there are no statistic-field-level-threshold combinations
     # left in the dictionary to plot, print out an error message and exit.
     if not stats_fields_levels_threshes_dict:
-        msg = dedent(f'''\n
+        msg = dedent(f"""
             After removing verification statistics from the plot configuration
-            dictionary according to the arguments passed to the
-
-              --incl_only_stats
-
-            or
-
-              --excl_stats
-
-            option, there are no remaining statistic-field-level-threshold combinations
-            in the dictionary to plot, i.e. the plot configuration dictionary is empty:
-
-              stats_fields_levels_threshes_dict = {stats_fields_levels_threshes_dict}
-
+            dictionary according to the arguments passed to the '--incl_only_stats'
+            or '--excl_stats' option, there are no remaining statistic-field-level-
+            threshold combinations in the dictionary to plot, i.e. the plot
+            configuration dictionary is empty:
+              stats_fields_levels_threshes_dict = {get_pprint_str(stats_fields_levels_threshes_dict)}
             Please modify the plot configuration file and/or the arguments to one of
             the options above and rerun.  The plot configuration file is:
-
-              plot_config_fp = {plot_config_fp}
-
-            Stopping.''')
-        logging.error(msg, stack_info=True)
+              plot_config_fp = {get_pprint_str(plot_config_fp)}
+            Stopping.
+            """)
+        logging.error(msg)
         raise Exception(msg)
 
     # For each statistic to be plotted, remove from its sub-dictionary in
@@ -258,28 +287,19 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     # combinations left in the dictionary to plot, print out an error message
     # and exit.
     if not stats_fields_levels_threshes_dict:
-        msg = dedent(f'''\n
+        msg = dedent(f"""
             After removing verification statistics and/or forecast fields from the
             plot configuration dictionary according to the arguments passed to the
-
-              --incl_only_[stats|fields]
-
-            and/or
-
-              --excl_[stats|fields]
-
-            options, there are no remaining statistic-field-level-threshold combinations
-            in the dictionary to plot, i.e. the plot configuration dictionary is empty:
-
-              stats_fields_levels_threshes_dict = {stats_fields_levels_threshes_dict}
-
+            '--incl_only_[stats|fields]' and/or '--excl_[stats|fields]' options,
+            there are no remaining statistic-field-level-threshold combinations in
+            the dictionary to plot, i.e. the plot configuration dictionary is empty:
+              stats_fields_levels_threshes_dict = {get_pprint_str(stats_fields_levels_threshes_dict)}
             Please modify the plot configuration file and/or the arguments to one or
             more of the options above and rerun.  The plot configuration file is:
-
-              plot_config_fp = {plot_config_fp}
-
-            Stopping.''')
-        logging.error(msg, stack_info=True)
+              plot_config_fp = {get_pprint_str(plot_config_fp)}
+            Stopping.
+            """)
+        logging.error(msg)
         raise Exception(msg)
 
     # For each statistic-field combination to be plotted, remove from the
@@ -316,29 +336,20 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     # threshold combinations left in the dictionary to plot, print out an
     # error message and exit.
     if not stats_fields_levels_threshes_dict:
-        msg = dedent(f'''\n
+        msg = dedent(f"""
             After removing verification statistics, forecast fields, and/or forecast
             levels from the plot configuration dictionary according to the arguments
-            passed to the
-
-              --incl_only_[stats|fields|levels]
-
-            and/or
-
-              --excl_[stats|fields|levels]
-
-            options, there are no remaining statistic-field-level-threshold combinations
-            in the dictionary to plot, i.e. the plot configuration dictionary is empty:
-
-              stats_fields_levels_threshes_dict = {stats_fields_levels_threshes_dict}
-
+            passed to the '--incl_only_[stats|fields|levels]' and/or '--excl_[stats|
+            fields|levels] options, there are no remaining statistic-field-level-
+            threshold combinations in the dictionary to plot, i.e. the plot
+            configuration dictionary is empty:
+              stats_fields_levels_threshes_dict = {get_pprint_str(stats_fields_levels_threshes_dict)}
             Please modify the plot configuration file and/or the arguments to one or
             more of the options above and rerun.  The plot configuration file is:
-
-              plot_config_fp = {plot_config_fp}
-
-            Stopping.''')
-        logging.error(msg, stack_info=True)
+              plot_config_fp = {get_pprint_str(plot_config_fp)}
+            Stopping.
+            """)
+        logging.error(msg)
         raise Exception(msg)
 
     # For each statistic-field-level combination to be plotted, remove from
@@ -395,32 +406,23 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     # statistic-field-level-threshold combinations left in the dictionary
     # to plot, print out an error message and exit.
     if not stats_fields_levels_threshes_dict:
-        msg = dedent(f'''\n
+        msg = dedent(f"""
             After removing verification statistics, forecast fields, forecast levels,
             and/or thresholds from the plot configuration dictionary according to
-            the arguments passed to the
-
-              --incl_only_[stats|fields|levels|threshes]
-
-            and/or
-
-              --excl_[stats|fields|levels|threshes]
-
-            options, there are no remaining statistic-field-level-threshold combinations
-            in the dictionary to plot, i.e. the plot configuration dictionary is empty:
-
-              stats_fields_levels_threshes_dict = {stats_fields_levels_threshes_dict}
-
+            the arguments passed to the '--incl_only_[stats|fields|levels|threshes]'
+            and/or '--excl_[stats|fields|levels|threshes]' options, there are no
+            remaining statistic-field-level-threshold combinations in the dictionary
+            to plot, i.e. the plot configuration dictionary is empty:
+              stats_fields_levels_threshes_dict = {get_pprint_str(stats_fields_levels_threshes_dict)}
             Please modify the plot configuration file and/or the arguments to one or
             more of the options above and rerun.  The plot configuration file is:
-
-              plot_config_fp = {plot_config_fp}
-
-            Stopping.''')
-        logging.error(msg, stack_info=True)
+              plot_config_fp = {get_pprint_str(plot_config_fp)}
+            Stopping.
+            """)
+        logging.error(msg)
         raise Exception(msg)
 
-    # Check that all the fields passed to the "--incl_only_fields" option
+    # Check that all the fields passed to the --incl_only_fields option
     # appear in at least one statistic sub-dictionary in the "processed"
     # (i.e. after removing necssary statistics, fields, levels, and possibly
     # thresholds) plot configuration dictionary.  If not, issue a warning.
@@ -429,21 +431,20 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
         for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.items():
             if field in fields_levels_threshes_dict: field_count += 1
         if field_count == 0:
-            msg = dedent(f"""\n
-                The field "{field}" passed to the "--incl_only_fields" option does not
+            msg = dedent(f"""
+                The field '{field}' passed to the '--incl_only_fields' option does not
                 appear as a key in any of the (sub-)dictionaries in the processed plot
                 configuration dictionary.  The processed plot configuration dictionary
                 is:
-
-                  stats_fields_levels_threshes_dict = """)
-            indent_str = ' '*(5 + len('stats_fields_levels_threshes_dict'))
-            msg = msg + get_pprint_str(stats_fields_levels_threshes_dict, indent_str).lstrip()
-            msg = msg + dedent(f"""\n
-                Thus, no vx plots involving the field "{field}" will be generated.
+                  stats_fields_levels_threshes_dict
+                  = """) + \
+                get_pprint_str(stats_fields_levels_threshes_dict, ' '*4).lstrip() + \
+                dedent(f"""
+                Thus, no vx plots involving the field '{field}' will be generated.
                 """)
             logging.warning(msg)
 
-    # Check that all the levels passed to the "--incl_only_levels" option
+    # Check that all the levels passed to the --incl_only_levels option
     # appear in at least one statistic-field sub-sub-dictionary in the
     # "processed" (i.e. after removing necssary statistics, fields, levels,
     # and possibly thresholds) plot configuration dictionary.  If not, issue
@@ -454,21 +455,20 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
             for field, levels_threshes_dict in fields_levels_threshes_dict.items():
                 if level in levels_threshes_dict: level_count += 1
         if level_count == 0:
-            msg = dedent(f"""\n
-                The level "{level}" passed to the "--incl_only_levels" option does not
+            msg = dedent(f"""
+                The level '{level}' passed to the '--incl_only_levels' option does not
                 appear as a key in any of the statistic-field (sub-sub-)dictionaries in
                 the processed plot configuration dictionary.  The processed plot
                 configuration dictionary is:
-
-                  stats_fields_levels_threshes_dict = """)
-            indent_str = ' '*(5 + len('stats_fields_levels_threshes_dict'))
-            msg = msg + get_pprint_str(stats_fields_levels_threshes_dict, indent_str).lstrip()
-            msg = msg + dedent(f"""\n
-                Thus, no vx plots at level "{level}" will be generated.
+                  stats_fields_levels_threshes_dict
+                  = """) + \
+                get_pprint_str(stats_fields_levels_threshes_dict, ' '*4).lstrip() + \
+                dedent(f"""
+                Thus, no vx plots at level '{level}' will be generated.
                 """)
             logging.warning(msg)
 
-    # Check that all the thresholds passed to the "--incl_only_threshes"
+    # Check that all the thresholds passed to the --incl_only_threshes
     # option appear in at least one statistic-field-level threshold list in
     # the "processed" (i.e. after removing necssary statistics, fields,
     # levels, and possibly thresholds) plot configuration dictionary.  If
@@ -480,17 +480,17 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                 for level, threshes_list in levels_threshes_dict.copy().items():
                     if thresh in threshes_list: thresh_count += 1
         if thresh_count == 0:
-            msg = dedent(f"""\n
-                The threshold "{thresh}" passed to the "--incl_only_threshes" option does
+            msg = dedent(f"""
+                The threshold '{thresh}' passed to the '--incl_only_threshes' option does
                 not appear in any of the statistic-field-level threshold lists in the
                 processed plot configuration dictionary.  The processed plot configuration
                 dictionary is:
-
-                  stats_fields_levels_threshes_dict = """)
-            indent_str = ' '*(5 + len('stats_fields_levels_threshes_dict'))
-            msg = msg + get_pprint_str(stats_fields_levels_threshes_dict, indent_str).lstrip()
-            msg = msg + dedent(f"""\n
-                Thus, no vx plots for threshold "{thresh}" will be generated.
+                configuration dictionary is:
+                  stats_fields_levels_threshes_dict
+                  = """) + \
+                get_pprint_str(stats_fields_levels_threshes_dict, ' '*4).lstrip() + \
+                dedent(f"""
+                Thus, no vx plots for threshold '{thresh}' will be generated.
                 """)
             logging.warning(msg)
 
@@ -504,12 +504,28 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     num_images_generated = 0
     missing_image_fns = []
 
+    # Print out the final (processed) plot configuration dictionary.
+    msg = dedent(f"""
+        After removing (if necessary) verification statistics, forecast fields,
+        forecast levels, and/or thresholds from the plot configuration dictionary
+        according to the arguments passed to the '--incl_only_[stats|fields|
+        levels|threshes]' and/or '--excl_[stats|fields|levels|threshes]' options,
+        the dictionary is:
+          stats_fields_levels_threshes_dict
+          = """) + \
+        get_pprint_str(stats_fields_levels_threshes_dict, ' '*4).lstrip() + \
+        dedent(f"""
+        A verification plot will be generated for each statistic-field-level-
+        threshold combination in this dictionary.
+        """)
+    logging.info(msg)
+
     # Loop through the plot configuration dictionary and plot all statistic-
     # field-level-threshold combinations it contains (with the threshold set
     # to an empty string for those statistics that do not need a threshold).
     # Note that this dictionary has been filtered to contain only those
     # statistic-field-level-threshold combinations that are consistent with
-    # the 
+    # the
     #
     #   --incl_only_[stats|fields|levels|threshes]
     #
@@ -521,17 +537,23 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     # make_single_mv_vx_plot(), which for a single statistic-field-level-
     # threshold (with the threshold being unnecessary for certain statistics)
     # combination generates a METviewer xml and then calls the METviewer
-    # batch plotting script to create a plot (png image file). 
+    # batch plotting script to create a plot (png image file).
+
+    separator_str = '='*72 + '\n'
+    separator_str = '\n' + separator_str*2
+
     for stat, fields_levels_threshes_dict in stats_fields_levels_threshes_dict.items():
-        logging.info(dedent(f"""
-            Plotting statistic "{stat}" for various forecast fields ...
-            """))
+        msg = dedent(f"""
+            Plotting statistic '{stat}' for various forecast fields ...
+            """)
+        logging.debug(msg)
+
         msg = dedent(f"""
             Dictionary of fields, levels, and thresholds (if applicable) for this
             statistic is:
-              fields_levels_threshes_dict = """)
-        indent_str = ' '*(5 + len('fields_levels_threshes_dict'))
-        msg = msg + get_pprint_str(fields_levels_threshes_dict, indent_str).lstrip()
+              fields_levels_threshes_dict = """) + \
+            get_pprint_str(fields_levels_threshes_dict,
+                           ' '*(5 + len('fields_levels_threshes_dict'))).lstrip()
         logging.debug(msg)
 
         # If args.make_stat_subdirs is set to True, place the output for each
@@ -543,26 +565,30 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
             output_dir_crnt_stat = args.output_dir
 
         for field, levels_threshes_dict in fields_levels_threshes_dict.items():
-            logging.info(dedent(f"""
-                Plotting statistic "{stat}" for forecast field "{field}" at various levels ...
-                """))
+            msg = dedent(f"""
+                Plotting statistic '{stat}' for forecast field '{field}' at various levels ...
+                """)
+            logging.debug(msg)
+
             msg = dedent(f"""
                 Dictionary of levels and thresholds (if applicable) for this field is:
-                  levels_threshes_dict = """)
-            indent_str = ' '*(5 + len('levels_threshes_dict'))
-            msg = msg + get_pprint_str(levels_threshes_dict, indent_str).lstrip()
+                  levels_threshes_dict = """) + \
+                get_pprint_str(levels_threshes_dict,
+                               ' '*(5 + len('levels_threshes_dict'))).lstrip()
             logging.debug(msg)
 
             for level, threshes_list in levels_threshes_dict.items():
-                logging.info(dedent(f"""
-                    Plotting statistic "{stat}" for forecast field "{field}" at level "{level}" ...
-                    """))
+                msg = dedent(f"""
+                    Plotting statistic '{stat}' for forecast field '{field}' at level '{level}' ...
+                    """)
+                logging.debug(msg)
+
                 if stat_needs_thresh[stat]:
                     msg = dedent(f"""
                         Dictionary of thresholds (if applicable) for this level is:
-                          threshes_list = """)
-                    indent_str = ' '*(5 + len('threshes_list'))
-                    msg = msg + get_pprint_str(threshes_list, indent_str).lstrip()
+                          threshes_list = """) + \
+                        get_pprint_str(threshes_list,
+                                       ' '*(5 + len('threshes_list'))).lstrip()
                     logging.debug(msg)
                 else:
                     if threshes_list:
@@ -570,24 +596,24 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                             The current statistic (stat) does not need a threshold, but it has been
                             assigned a non-empty list of thresholds (threshes_list) in the plot
                             configuration file:
-                              stat = {stat}
-                              stat_needs_thresh[stat] = {stat_needs_thresh[stat]}
-                              threshes_list = {threshes_list}
+                              stat = {get_pprint_str(stat)}
+                              stat_needs_thresh[stat] = {get_pprint_str(stat_needs_thresh[stat])}
+                              threshes_list = {get_pprint_str(threshes_list)}
                             Please correct this in the plot configuration file, which is:
-                              plot_config_fp = {plot_config_fp}
+                              plot_config_fp = {get_pprint_str(plot_config_fp)}
                             Ignoring specified thresholds and resetting threshes_list to a list
-                            containing a single empty string.""")
+                            containing a single empty string.
+                            """)
                         logging.warning(msg)
                     threshes_list = ['']
 
                 for thresh in threshes_list:
 
-                    separator_str = '='*72 + '\n'
-                    separator_str = '\n' + separator_str*2
-                    logging.info(separator_str.rstrip() + dedent(f"""
-                        Plotting statistic "{stat}" for forecast field "{field}" at level "{level}"
-                        and threshold "{thresh}" (threshold may be empty for certain stats) ...
-                        """))
+                    msg = separator_str.rstrip() + dedent(f"""
+                        Plotting statistic '{stat}' for forecast field '{field}' at level '{level}'
+                        and threshold '{thresh}' (threshold may be empty for certain stats) ...
+                        """)
+                    logging.info(msg)
 
                     args_list = ['--mv_host', mv_host, \
                                  '--mv_database_name', mv_database_name, \
@@ -602,16 +628,16 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
 
                     msg = dedent(f"""
                         Argument list passed to plotting script is:
-                          args_list = """)
-                    indent_str = ' '*(5 + len('args_list'))
-                    msg = msg + get_pprint_str(args_list, indent_str).lstrip()
+                          args_list = """) + \
+                        get_pprint_str(args_list, ' '*(5 + len('args_list'))).lstrip()
                     logging.debug(msg)
 
                     num_mv_calls += 1
-                    logging.info(dedent(f"""
+                    msg = dedent(f"""
                         Calling METviewer plotting script ...
-                          num_mv_calls = {num_mv_calls}
-                        """))
+                          num_mv_calls = {get_pprint_str(num_mv_calls)}
+                        """)
+                    logging.info(msg)
                     output_xml_fp = make_single_mv_vx_plot(args_list)
 
                     # Keep track of the number of images that are successfully created.
@@ -627,12 +653,13 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                     else:
                         missing_image_fns.append(output_image_fn)
 
-                    logging.info(dedent(f"""
+                    msg = dedent(f"""
                         Done calling METviewer plotting script.  Number of calls to METviewer
                         and number of images successfully generated thus far are:
-                          num_mv_calls = {num_mv_calls}
-                          num_images_generated = {num_images_generated}
-                        """) + separator_str.lstrip())
+                          num_mv_calls = {get_pprint_str(num_mv_calls)}
+                          num_images_generated = {get_pprint_str(num_images_generated)}
+                        """) + separator_str.lstrip()
+                    logging.info(msg)
 
                     # If the image was successfully created and args.create_ordered_plots
                     # is set True, make a copy of the image in a designated subdirectory
@@ -649,25 +676,37 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                         # Copy and rename the image.
                         shutil.copy(output_image_fp, output_image_fp_ordered)
 
-    logging.info(dedent(f"""
+    msg = dedent(f"""
         Total number of calls to METviewer plotting script:
-          num_mv_calls = {num_mv_calls}
+          num_mv_calls = {get_pprint_str(num_mv_calls)}
         Total number of image files generated:
-          num_images_generated = {num_images_generated}
-        """))
+          num_images_generated = {get_pprint_str(num_images_generated)}
+        """)
+    logging.info(msg)
 
     # If any images were not generated, print out their names.
     num_missing_images = len(missing_image_fns)
     if num_missing_images > 0:
         msg = dedent(f"""
             The following images failed to generate:
-              missing_image_fns = """)
-        indent_str = ' '*(5 + len('missing_image_fns'))
-        msg = msg + get_pprint_str(missing_image_fns, indent_str).lstrip()
+              missing_image_fns = """) + \
+            get_pprint_str(missing_image_fns, ' '*(5 + len('missing_image_fns'))).lstrip()
         logging.info(msg)
 
 
 def main():
+    """
+    Function to set up arguments list and call make_multi_mv_vx_plots() to
+    generate multiple METviewer plots.
+
+    Arguments:
+    ---------
+    None
+
+    Returns:
+    -------
+    None
+    """
 
     parser = argparse.ArgumentParser(
         description='Call METviewer to create vx plots.'
@@ -682,24 +721,27 @@ def main():
     parser.add_argument('--output_dir',
                         type=str,
                         required=False, default=os.path.join(expts_dir, 'mv_output'),
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Base directory in which to place output files (generated xmls, METviewer
                             generated plots, log files, etc).  These will usually be placed in
-                            subdirectories under this output directory.'''))
+                            subdirectories under this output directory.
+                            """))
 
     parser.add_argument('--plot_config_fp',
                         type=str,
                         required=False, default='plot_config.default.yaml',
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Name of or path (absolute or relative) to yaml user plot configuration
-                            file for METviewer plot generation.'''))
+                            file for METviewer plot generation.
+                            """))
 
     parser.add_argument('--log_fp',
                         type=str,
                         required=False, default='',
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Name of or path (absolute or relative) to log file.  If not specified,
-                            the output goes to screen.'''))
+                            the output goes to screen.
+                            """))
 
     choices_log_level = [pair for lvl in list(logging._nameToLevel.keys())
                               for pair in (str.lower(lvl), str.upper(lvl))]
@@ -707,7 +749,9 @@ def main():
                         type=str,
                         required=False, default='info',
                         choices=choices_log_level,
-                        help=dedent(f'''Logging level to use with the "logging" module.'''))
+                        help=dedent(f"""
+                            Logging level to use with the 'logging' module.
+                            """))
 
     # Load the yaml file containing valid values of verification plotting
     # parameters and get valid values.
@@ -727,7 +771,7 @@ def main():
                         type=str.lower,
                         required=False, default=[],
                         choices=valid_vx_stats,
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Verification statistics to exclusively include in verification plot
                             generation.  This is a convenience option that provides a way to override
                             the settings in the plot configuration file.  If this option is not used,
@@ -736,14 +780,15 @@ def main():
                             Note that any statistic specified here must also appear in the plot
                             configuration file (because METviewer needs to know the fields, levels,
                             and possibly thresholds for which to generate plots for that statistic).
-                            For simplicity, this option cannot be used together with the "--excl_stats"
-                            option.'''))
+                            For simplicity, this option cannot be used together with the '--excl_stats'
+                            option.
+                            """))
 
     parser.add_argument('--excl_stats', nargs='+',
                         type=str.lower,
                         required=False, default=[],
                         choices=valid_vx_stats,
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Verification statistics to exclude from verification plot generation.
                             This is a convenience option that provides a way to override the settings
                             in the plot configuration file.  If this option is not used, then all
@@ -752,72 +797,77 @@ def main():
                             file that are not also listed here.  If a statistic listed here does not
                             appear in the configuration file, an informational message is issued and
                             no plot is generated for the statistic.  For simplicity, this option
-                            cannot be used together with the "--incl_only_stats" option.'''))
+                            cannot be used together with the '--incl_only_stats' option.
+                            """))
 
     parser.add_argument('--incl_only_fields', nargs='+',
                         type=str.lower,
                         required=False, default=[],
                         choices=valid_fcst_fields,
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Forecast fields to exclusively include in verification plot generation.
                             This is a convenience option that provides a way to override the settings
                             in the plot configuration file.  If this option is not used, then all
                             fields listed under a given vx statistic in the configuration file are
                             plotted (as long as that statistic is to be plotted, i.e. it is not
-                            excluded via the "--excl_stats" option).  If it is used, then plots for
+                            excluded via the '--excl_stats' option).  If it is used, then plots for
                             that statistic will be generated only for the fields passed to this
                             option.  For a statistic that is to be plotted, if a field specified
                             here is not listed in the configuration file under that statistic, then
                             no plots are generated for that statistic-field combination.  For
-                            simplicity, this option cannot be used together with the "--excl_fields"
-                            option.'''))
+                            simplicity, this option cannot be used together with the '--excl_fields'
+                            option.
+                            """))
 
     parser.add_argument('--excl_fields', nargs='+',
                         type=str.lower,
                         required=False, default=[],
                         choices=valid_fcst_fields,
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Forecast fields to exclude from verification plot generation.  This is a
                             convenience option that provides a way to override the settings in the
                             plot configuration file.  If this option is not used, then all fields in
                             the configuration file are plotted.  If it is used, then plots will be
                             generated only for those fields in the configuration file that are not
                             listed here.  For simplicity, this option cannot be used together with
-                            the "--incl_only_fields" option.'''))
+                            the '--incl_only_fields' option.
+                            """))
 
     parser.add_argument('--incl_only_levels', nargs='+',
                         required=False, default=[],
                         choices=valid_fcst_levels,
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Forecast levels to exclusively include in verification plot generation.
                             This is a convenience option that provides a way to override the settings
                             in the plot configuration file.  If this option is not used, then all
                             levels listed under a given vx statistic and field combination in the
                             configuration file are plotted (as long as that statistic and field
-                            combination is to be plotted, i.e. it is not excluded via the "--excl_stats"
-                            and/or "--excl_fields" options).  If it is used, then plots for that
+                            combination is to be plotted, i.e. it is not excluded via the '--excl_stats'
+                            and/or '--excl_fields' options).  If it is used, then plots for that
                             statistic-field combination will be generated only for the levels passed
                             to this option.  For a statistic-field combination that is to be plotted,
                             if a level specified here is not listed in the configuration file under
                             that statistic and field, then no plots are generated for that statistic-
                             field-level combination.  For simplicity, this option cannot be used
-                            together with the "--excl_levels" option.'''))
+                            together with the '--excl_levels' option.
+                            """))
 
     parser.add_argument('--excl_levels', nargs='+',
                         required=False, default=[],
                         choices=valid_fcst_levels,
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Forecast levels to exclude from verification plot generation.  This is a
                             convenience option that provides a way to override the settings in the
                             plot configuration file.  If this option is not used, then all levels in
                             the configuration file are plotted.  If it is used, then plots will be
                             generated only for those levels in the configuration file that are not
                             listed here.  For simplicity, this option cannot be used together with
-                            the "--incl_only_levels" option.'''))
+                            the '--incl_only_levels' option.
+                            """))
 
     parser.add_argument('--incl_only_threshes', nargs='+',
                         required=False, default=[],
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Forecast thresholds to exclusively include in verification plot generation.
                             This is a convenience option that provides a way to override the settings
                             in the plot configuration file.  This option has no effect on the plotting
@@ -826,18 +876,20 @@ def main():
                             used, then all thresholds listed under a given vx statistic, field, and
                             level combination in the configuration file are plotted (as long as that
                             statistic, field, and threshold combination is to be plotted, i.e. it is
-                            not excluded via the "--excl_stats", "--excl_fields", and/or "--excl_levels"
+                            not excluded via the '--excl_stats', '--excl_fields', and/or '--excl_levels'
                             options).  If it is used, then plots for that statistic-field-level
                             combination will be generated only for the thresholds passed to this
                             option.  For a statistic-field-level combination that is to be plotted,
                             if a threshold specified here is not listed in the configuration file
                             under that statistic, field, and level, then no plots are generated for
                             that statistic-field-level-threshold combination.  For simplicity, this
-                            option cannot be used together with the "--excl_threshes" option.'''))
+                            option cannot be used together with the '--excl_threshes'
+                            option.
+                            """))
 
     parser.add_argument('--excl_threshes', nargs='+',
                         required=False, default=[],
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Forecast thresholds to exclude from verification plot generation.  This
                             is a convenience option that provides a way to override the settings in
                             the plot configuration file.  This option has no effect on the plotting
@@ -846,78 +898,87 @@ def main():
                             used, then all thresholds in the configuration file are plotted.  If it
                             is used, then plots will be generated only for those thresholds in the
                             configuration file that are not listed here.  For simplicity, this option
-                            cannot be used together with the "--incl_only_threshes" option.'''))
+                            cannot be used together with the '--incl_only_threshes' option.
+                            """))
 
     parser.add_argument('--preexisting_dir_method',
                         type=str.lower,
                         required=False, default='rename',
                         choices=['rename', 'delete', 'quit'],
-                        help=dedent(f'''Method for dealing with pre-existing output directories.'''))
+                        help=dedent(f"""
+                            Method for dealing with pre-existing output directories.
+                            """))
 
     parser.add_argument('--make_stat_subdirs',
                         required=False, action=argparse.BooleanOptionalAction,
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Flag for placing output for each statistic to be plotted in a separate
-                            subdirectory under the output directory.'''))
+                            subdirectory under the output directory.
+                            """))
 
     parser.add_argument('--create_ordered_plots',
                         required=False, action=argparse.BooleanOptionalAction,
-                        help=dedent(f'''
+                        help=dedent(f"""
                             Flag for creating a directory that contains copies of all the generated
                             images (png files) and renamed such that they are alphabetically in the
                             same order as the user has specified in the plot configuration file (the
-                            one passed to the optional "--plot_config_fp" argument).  This is useful
+                            one passed to the optional '--plot_config_fp' argument).  This is useful
                             for creating a pdf of the plots from the images that includes the plots
-                            in the same order as in the plot configuration file.'''))
+                            in the same order as in the plot configuration file.
+                            """))
 
     args = parser.parse_args()
 
-    # For simplicity, do not allow the "--incl_only_stats" and "--excl_stats"
+    # For simplicity, do not allow the --incl_only_stats and --excl_stats
     # options to be specified simultaneously.
     if args.incl_only_stats and args.excl_stats:
-        msg = dedent(f'''\n
-            For simplicity, the "--incl_only_stats" and "--excl_stats" options
-            cannot both be specified on the command line:
-              args.incl_only_stats = {args.incl_only_stats}
-              args.excl_stats = {args.excl_stats}
-            Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(msg, stack_info=True)
+        msg = dedent(f"""
+            For simplicity, the '--incl_only_stats' and '--excl_stats' options
+            cannot simultaneously be specified on the command line:
+              args.incl_only_stats = {get_pprint_str(args.incl_only_stats)}
+              args.excl_stats = {get_pprint_str(args.excl_stats)}
+            Please remove one or the other from the command line and rerun.  Stopping.
+            """)
+        logging.error(msg)
         raise ValueError(msg)
 
-    # For simplicity, do not allow the "--incl_only_fields" and "--excl_fields"
+    # For simplicity, do not allow the --incl_only_fields and --excl_fields
     # options to be specified simultaneously.
     if args.incl_only_fields and args.excl_fields:
-        msg = dedent(f'''\n
-            For simplicity, the "--incl_only_fields" and "--excl_fields" options
-            cannot both be specified on the command line:
-              args.incl_only_fields = {args.incl_only_fields}
-              args.excl_fields = {args.excl_fields}
-            Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(msg, stack_info=True)
+        msg = dedent(f"""
+            For simplicity, the '--incl_only_fields' and '--excl_fields' options
+            cannot simultaneously be specified on the command line:
+              args.incl_only_fields = {get_pprint_str(args.incl_only_fields)}
+              args.excl_fields = {get_pprint_str(args.excl_fields)}
+            Please remove one or the other from the command line and rerun.  Stopping.
+            """)
+        logging.error(msg)
         raise ValueError(msg)
 
-    # For simplicity, do not allow the "--incl_only_levels" and "--excl_levels"
+    # For simplicity, do not allow the --incl_only_levels and --excl_levels
     # options to be specified simultaneously.
     if args.incl_only_levels and args.excl_levels:
-        msg = dedent(f'''\n
-            For simplicity, the "--incl_only_levels" and "--excl_levels" options
-            cannot both be specified on the command line:
-              args.incl_only_levels = {args.incl_only_levels}
-              args.excl_levels = {args.excl_levels}
-            Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(msg, stack_info=True)
+        msg = dedent(f"""
+            For simplicity, the '--incl_only_levels' and '--excl_levels' options
+            cannot simultaneously be specified on the command line:
+              args.incl_only_levels = {get_pprint_str(args.incl_only_levels)}
+              args.excl_levels = {get_pprint_str(args.excl_levels)}
+            Please remove one or the other from the command line and rerun.  Stopping.
+            """)
+        logging.error(msg)
         raise ValueError(msg)
 
-    # For simplicity, do not allow the "--incl_only_threshes" and "--excl_threshes"
+    # For simplicity, do not allow the --incl_only_threshes and --excl_threshes
     # options to be specified simultaneously.
     if args.incl_only_threshes and args.excl_threshes:
-        msg = dedent(f'''\n
-            For simplicity, the "--incl_only_threshes" and "--excl_threshes" options
-            cannot both be specified on the command line:
-              args.incl_only_threshes = {args.incl_only_threshes}
-              args.excl_threshes = {args.excl_threshes}
-            Please remove one or the other from the command line and rerun.  Stopping.''')
-        logging.error(msg, stack_info=True)
+        msg = dedent(f"""
+            For simplicity, the '--incl_only_threshes' and '--excl_threshes' options
+            cannot simultaneously be specified on the command line:
+              args.incl_only_threshes = {get_pprint_str(args.incl_only_threshes)}
+              args.excl_threshes = {get_pprint_str(args.excl_threshes)}
+            Please remove one or the other from the command line and rerun.  Stopping.
+            """)
+        logging.error(msg)
         raise ValueError(msg)
 
     # Call the driver function to read and parse the plot configuration
