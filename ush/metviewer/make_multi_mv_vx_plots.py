@@ -200,14 +200,14 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
         Path(ordered_plots_dir).mkdir(parents=True, exist_ok=True)
 
     # Get valid values for statistics, forecast fields, and forecast levels.
-    valid_vx_stats = valid_vals['vx_stats']
+    valid_vx_metrics = valid_vals['vx_metrics']
     valid_fcst_fields = valid_vals['fcst_fields']
     valid_fcst_levels = valid_vals['fcst_levels']
 
     # Ensure that any statistic passed to the --incl_only_stats option also
     # appears in the plot configuration file.
-    vx_stats_in_config = list(stats_fields_levels_threshes_dict.keys())
-    stats_not_in_config = list(set(args.incl_only_stats).difference(vx_stats_in_config))
+    vx_metrics_in_config = list(stats_fields_levels_threshes_dict.keys())
+    stats_not_in_config = list(set(args.incl_only_stats).difference(vx_metrics_in_config))
     if stats_not_in_config:
         msg = dedent(f"""
             One or more statistics passed to the '--incl_only_stats' option are not
@@ -218,9 +218,9 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
             file is:
               plot_config_fp = {get_pprint_str(plot_config_fp)}
             Statistics currently included in the plot configuration file are:
-              vx_stats_in_config = """) + \
-            get_pprint_str(vx_stats_in_config,
-                           ' '*(5 + len('vx_stats_in_config'))).lstrip() + \
+              vx_metrics_in_config = """) + \
+            get_pprint_str(vx_metrics_in_config,
+                           ' '*(5 + len('vx_metrics_in_config'))).lstrip() + \
             dedent(f"""
             Stopping.
             """)
@@ -237,7 +237,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     # the exclusive list of statistics to include.
     if args.incl_only_stats:
         [stats_fields_levels_threshes_dict.pop(stat, None)
-         for stat in valid_vx_stats if stat not in args.incl_only_stats]
+         for stat in valid_vx_metrics if stat not in args.incl_only_stats]
 
     # If after removing the necessary statistics from the plot configuration
     # dictionary there are no statistic-field-level-threshold combinations
@@ -618,7 +618,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                     args_list = ['--mv_host', mv_host, \
                                  '--mv_database_name', mv_database_name, \
                                  '--model_names', ] + model_names \
-                              + ['--vx_stat', stat,
+                              + ['--vx_metric', stat,
                                  '--fcst_init_info'] + fcst_init_info \
                               + ['--fcst_len_hrs', fcst_len_hrs,
                                  '--fcst_field', field,
@@ -757,20 +757,20 @@ def main():
     # parameters and get valid values.
     valid_vx_plot_params_config_fp = 'valid_vx_plot_params.yaml'
     valid_vx_plot_params = load_config_file(valid_vx_plot_params_config_fp)
-    valid_vx_stats = list(valid_vx_plot_params['valid_vx_stats'].keys())
+    valid_vx_metrics = list(valid_vx_plot_params['valid_vx_metrics'].keys())
     valid_fcst_fields = list(valid_vx_plot_params['valid_fcst_fields'].keys())
     valid_fcst_levels = list(valid_vx_plot_params['valid_fcst_levels_to_levels_in_db'].keys())
 
     # Create dictionary that specifies whether each vx statistic (the keys)
     # needs a threshold.
     stat_needs_thresh = {}
-    for stat in valid_vx_stats:
-        stat_needs_thresh[stat] = valid_vx_plot_params['valid_vx_stats'][stat]['needs_thresh']
+    for stat in valid_vx_metrics:
+        stat_needs_thresh[stat] = valid_vx_plot_params['valid_vx_metrics'][stat]['needs_thresh']
 
     parser.add_argument('--incl_only_stats', nargs='+',
                         type=str.lower,
                         required=False, default=[],
-                        choices=valid_vx_stats,
+                        choices=valid_vx_metrics,
                         help=dedent(f"""
                             Verification statistics to exclusively include in verification plot
                             generation.  This is a convenience option that provides a way to override
@@ -787,7 +787,7 @@ def main():
     parser.add_argument('--excl_stats', nargs='+',
                         type=str.lower,
                         required=False, default=[],
-                        choices=valid_vx_stats,
+                        choices=valid_vx_metrics,
                         help=dedent(f"""
                             Verification statistics to exclude from verification plot generation.
                             This is a convenience option that provides a way to override the settings
@@ -983,7 +983,7 @@ def main():
 
     # Call the driver function to read and parse the plot configuration
     # dictionary and call the METviewer batch script to generate plots.
-    valid_vals = {'vx_stats': valid_vx_stats,
+    valid_vals = {'vx_metrics': valid_vx_metrics,
                   'fcst_fields': valid_fcst_fields,
                   'fcst_levels': valid_fcst_levels}
     make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh)
