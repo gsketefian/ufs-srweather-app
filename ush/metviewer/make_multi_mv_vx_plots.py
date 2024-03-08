@@ -204,17 +204,17 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     valid_fcst_fields = valid_vals['fcst_fields']
     valid_fcst_levels = valid_vals['fcst_levels']
 
-    # Ensure that any statistic passed to the --incl_only_stats option also
-    # appears in the plot configuration file.
+    # Ensure that any statistic passed to the --incl_only_metrics option
+    # also appears in the plot configuration file.
     vx_metrics_in_config = list(stats_fields_levels_threshes_dict.keys())
-    stats_not_in_config = list(set(args.incl_only_stats).difference(vx_metrics_in_config))
+    stats_not_in_config = list(set(args.incl_only_metrics).difference(vx_metrics_in_config))
     if stats_not_in_config:
         msg = dedent(f"""
-            One or more statistics passed to the '--incl_only_stats' option are not
-            included in the plot configuration file.  These are:
+            One or more statistics passed to the '--incl_only_metrics' option are
+            not included in the plot configuration file.  These are:
               stats_not_in_config = {get_pprint_str(stats_not_in_config)}
             Please include these in the plot configuration file or exclude them as
-            arguments to '--incl_only_stats', then rerun.  The plot configuration
+            arguments to '--incl_only_metrics', then rerun.  The plot configuration
             file is:
               plot_config_fp = {get_pprint_str(plot_config_fp)}
             Statistics currently included in the plot configuration file are:
@@ -229,15 +229,15 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
 
     # Remove from the plot configuration dictionary any statistic in the
     # list of statistics to exclude.
-    [stats_fields_levels_threshes_dict.pop(stat, None) for stat in args.excl_stats]
+    [stats_fields_levels_threshes_dict.pop(stat, None) for stat in args.excl_metrics]
 
-    # If the --incl_only_stats option is specified on the command line (i.e.
-    # if args.incl_only_stats is not empty), then remove from the plot
-    # configuration dictionary any verification statistic that is NOT in
-    # the exclusive list of statistics to include.
-    if args.incl_only_stats:
+    # If the --incl_only_metrics option is specified on the command line
+    # (i.e. if args.incl_only_metrics is not empty), then remove from the
+    # plot configuration dictionary any verification statistic that is NOT
+    # in the exclusive list of statistics to include.
+    if args.incl_only_metrics:
         [stats_fields_levels_threshes_dict.pop(stat, None)
-         for stat in valid_vx_metrics if stat not in args.incl_only_stats]
+         for stat in valid_vx_metrics if stat not in args.incl_only_metrics]
 
     # If after removing the necessary statistics from the plot configuration
     # dictionary there are no statistic-field-level-threshold combinations
@@ -245,8 +245,8 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     if not stats_fields_levels_threshes_dict:
         msg = dedent(f"""
             After removing verification statistics from the plot configuration
-            dictionary according to the arguments passed to the '--incl_only_stats'
-            or '--excl_stats' option, there are no remaining statistic-field-level-
+            dictionary according to the arguments passed to the '--incl_only_metrics'
+            or '--excl_metrics' option, there are no remaining statistic-field-level-
             threshold combinations in the dictionary to plot, i.e. the plot
             configuration dictionary is empty:
               stats_fields_levels_threshes_dict = {get_pprint_str(stats_fields_levels_threshes_dict)}
@@ -767,7 +767,7 @@ def main():
     for stat in valid_vx_metrics:
         stat_needs_thresh[stat] = valid_vx_plot_params['valid_vx_metrics'][stat]['needs_thresh']
 
-    parser.add_argument('--incl_only_stats', nargs='+',
+    parser.add_argument('--incl_only_metrics', nargs='+',
                         type=str.lower,
                         required=False, default=[],
                         choices=valid_vx_metrics,
@@ -780,11 +780,11 @@ def main():
                             Note that any statistic specified here must also appear in the plot
                             configuration file (because METviewer needs to know the fields, levels,
                             and possibly thresholds for which to generate plots for that statistic).
-                            For simplicity, this option cannot be used together with the '--excl_stats'
+                            For simplicity, this option cannot be used together with the '--excl_metrics'
                             option.
                             """))
 
-    parser.add_argument('--excl_stats', nargs='+',
+    parser.add_argument('--excl_metrics', nargs='+',
                         type=str.lower,
                         required=False, default=[],
                         choices=valid_vx_metrics,
@@ -797,7 +797,7 @@ def main():
                             file that are not also listed here.  If a statistic listed here does not
                             appear in the configuration file, an informational message is issued and
                             no plot is generated for the statistic.  For simplicity, this option
-                            cannot be used together with the '--incl_only_stats' option.
+                            cannot be used together with the '--incl_only_metrics' option.
                             """))
 
     parser.add_argument('--incl_only_fields', nargs='+',
@@ -810,7 +810,7 @@ def main():
                             in the plot configuration file.  If this option is not used, then all
                             fields listed under a given vx statistic in the configuration file are
                             plotted (as long as that statistic is to be plotted, i.e. it is not
-                            excluded via the '--excl_stats' option).  If it is used, then plots for
+                            excluded via the '--excl_metrics' option).  If it is used, then plots for
                             that statistic will be generated only for the fields passed to this
                             option.  For a statistic that is to be plotted, if a field specified
                             here is not listed in the configuration file under that statistic, then
@@ -842,7 +842,7 @@ def main():
                             in the plot configuration file.  If this option is not used, then all
                             levels listed under a given vx statistic and field combination in the
                             configuration file are plotted (as long as that statistic and field
-                            combination is to be plotted, i.e. it is not excluded via the '--excl_stats'
+                            combination is to be plotted, i.e. it is not excluded via the '--excl_metrics'
                             and/or '--excl_fields' options).  If it is used, then plots for that
                             statistic-field combination will be generated only for the levels passed
                             to this option.  For a statistic-field combination that is to be plotted,
@@ -876,7 +876,7 @@ def main():
                             used, then all thresholds listed under a given vx statistic, field, and
                             level combination in the configuration file are plotted (as long as that
                             statistic, field, and threshold combination is to be plotted, i.e. it is
-                            not excluded via the '--excl_stats', '--excl_fields', and/or '--excl_levels'
+                            not excluded via the '--excl_metrics', '--excl_fields', and/or '--excl_levels'
                             options).  If it is used, then plots for that statistic-field-level
                             combination will be generated only for the thresholds passed to this
                             option.  For a statistic-field-level combination that is to be plotted,
@@ -929,14 +929,14 @@ def main():
 
     args = parser.parse_args()
 
-    # For simplicity, do not allow the --incl_only_stats and --excl_stats
+    # For simplicity, do not allow the --incl_only_metrics and --excl_metrics
     # options to be specified simultaneously.
-    if args.incl_only_stats and args.excl_stats:
+    if args.incl_only_metrics and args.excl_metrics:
         msg = dedent(f"""
-            For simplicity, the '--incl_only_stats' and '--excl_stats' options
+            For simplicity, the '--incl_only_metrics' and '--excl_metrics' options
             cannot simultaneously be specified on the command line:
-              args.incl_only_stats = {get_pprint_str(args.incl_only_stats)}
-              args.excl_stats = {get_pprint_str(args.excl_stats)}
+              args.incl_only_metrics = {get_pprint_str(args.incl_only_metrics)}
+              args.excl_metrics = {get_pprint_str(args.excl_metrics)}
             Please remove one or the other from the command line and rerun.  Stopping.
             """)
         logging.error(msg)
