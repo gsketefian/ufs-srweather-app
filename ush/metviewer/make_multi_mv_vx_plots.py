@@ -95,7 +95,7 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
             raise ValueError(msg_invalid_preexist_method)
 
 
-def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
+def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     """
     Function to make multiple verification (vx) plots using METviewer.
 
@@ -107,7 +107,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
     valid_vals:
       Dictionary of valid values of various parameters.
 
-    stat_needs_thresh:
+    vx_metric_needs_thresh:
       Dictionary that specifies whether or not each valid vx metric requires a
       threshold.
 
@@ -390,7 +390,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                 # dictionary.  If the statistic doesn't need a threshold, it is acceptable
                 # for the current level to have an empty threhold list, so don't remove
                 # the level key in this case.
-                if stat_needs_thresh[stat] and (not threshes_list):
+                if vx_metric_needs_thresh[stat] and (not threshes_list):
                     stats_fields_levels_threshes_dict[stat][field].pop(level, None)
             # If levels_threshes_dict is empty, remove the key (field) from the
             # dictionary.
@@ -584,7 +584,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                     """)
                 logging.debug(msg)
 
-                if stat_needs_thresh[stat]:
+                if vx_metric_needs_thresh[stat]:
                     msg = dedent(f"""
                         Dictionary of thresholds (if applicable) for this level is:
                           threshes_list = """) + \
@@ -598,7 +598,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                             assigned a non-empty list of thresholds (threshes_list) in the plot
                             configuration file:
                               stat = {get_pprint_str(stat)}
-                              stat_needs_thresh[stat] = {get_pprint_str(stat_needs_thresh[stat])}
+                              vx_metric_needs_thresh[stat] = {get_pprint_str(vx_metric_needs_thresh[stat])}
                               threshes_list = {get_pprint_str(threshes_list)}
                             Please correct this in the plot configuration file, which is:
                               plot_config_fp = {get_pprint_str(plot_config_fp)}
@@ -764,9 +764,9 @@ def main():
 
     # Create dictionary that specifies whether each vx statistic (the keys)
     # needs a threshold.
-    stat_needs_thresh = {}
+    vx_metric_needs_thresh = {}
     for stat in valid_vx_metrics:
-        stat_needs_thresh[stat] = valid_vx_plot_params['valid_vx_metrics'][stat]['needs_thresh']
+        vx_metric_needs_thresh[stat] = valid_vx_plot_params['valid_vx_metrics'][stat]['needs_thresh']
 
     parser.add_argument('--incl_only_metrics', nargs='+',
                         type=str.lower,
@@ -987,7 +987,7 @@ def main():
     valid_vals = {'vx_metrics': valid_vx_metrics,
                   'fcst_fields': valid_fcst_fields,
                   'fcst_levels': valid_fcst_levels}
-    make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh)
+    make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh)
 #
 # -----------------------------------------------------------------------
 #
