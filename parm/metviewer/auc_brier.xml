@@ -20,7 +20,7 @@
         <dep>
             <dep1>
                 <fcst_var name="{{fcst_field_name_in_db}}">
-                    <stat>{{vx_stat_mv}}</stat>
+                    <stat>{{vx_metric_mv}}</stat>
                 </fcst_var>
             </dep1>
             <dep2/>
@@ -75,7 +75,7 @@
   {%- endif -%}
 {%- endfor %}
         </indep>
-{%- if (vx_stat_uc in ["AUC", "BRIER"]) %}
+{%- if (vx_metric_uc in ["AUC", "BRIER"]) %}
         <agg_stat>
             <agg_pct>true</agg_pct>
             <boot_repl>10</boot_repl>
@@ -94,9 +94,9 @@
             <r_file>plot_{{job_title}}.R</r_file>
             <title>{{plot_title}}</title>
             <x_label>Forecast Hour</x_label>
-{%- if (vx_stat_uc == "AUC") %}
+{%- if (vx_metric_uc == "AUC") %}
             <y1_label>Area Under the Curve</y1_label>
-{%- elif (vx_stat_uc == "BRIER") %}
+{%- elif (vx_metric_uc == "BRIER") %}
             <y1_label>Brier Score</y1_label>
 {%- endif %}
             <y2_label/>

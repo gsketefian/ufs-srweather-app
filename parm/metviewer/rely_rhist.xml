@@ -16,11 +16,11 @@
         <scripts>{{mv_output_dir}}/scripts</scripts>
     </folders>
     <plot>
-        <template>{{vx_stat_lc}}.R_tmpl</template>
+        <template>{{vx_metric_lc}}.R_tmpl</template>
         <series1>
             <field name="model">
 {%- set prob_or_null = "" -%}
-{%- if (vx_stat_uc == "RELY") -%}
+{%- if (vx_metric_uc == "RELY") -%}
   {%- set prob_or_null = "_prob" -%}
 {%- endif -%}
 {%- set indent = "\n                " -%}
@@ -65,7 +65,7 @@
                     <val>{{level_in_db}}</val>
                 </set>
             </field>
-{%- if (vx_stat_uc == "RELY") -%}
+{%- if (vx_metric_uc == "RELY") -%}
   {%- if (fcst_field_uc in ["APCP", "REFC", "RETOP"]) %}
             <field equalize="true" name="interp_mthd">
     {%- set ipf = ipf+1 %}
@@ -77,7 +77,7 @@
 {%- endif %}
 {#- #}
         </plot_fix>
-{%- if (vx_stat_uc == "RELY") %}
+{%- if (vx_metric_uc == "RELY") %}
         <rely_event_hist>true</rely_event_hist>
         <summary_curve/>
         <add_skill_line>true</add_skill_line>
@@ -92,7 +92,7 @@
             <eveq_dis>false</eveq_dis>
             <cl_step/>
         </agg_stat>
-{%- elif (vx_stat_uc == "RHIST") %}
+{%- elif (vx_metric_uc == "RHIST") %}
         <normalized_histogram>true</normalized_histogram>
 {%- endif %}
         <tmpl>
@@ -100,10 +100,10 @@
             <plot_file>plot_{{job_title}}.png</plot_file>
             <r_file>plot_{{job_title}}.R</r_file>
             <title>{{plot_title}}</title>
-{%- if (vx_stat_uc == "RELY") %}
+{%- if (vx_metric_uc == "RELY") %}
             <x_label>Forecast Probability</x_label>
             <y1_label>Observed Probability</y1_label>
-{%- elif (vx_stat_uc == "RHIST") %}
+{%- elif (vx_metric_uc == "RHIST") %}
             <x_label>Bins</x_label>
             <y1_label>Fraction</y1_label>
 {%- endif %}
@@ -118,11 +118,11 @@
 {%- set ylab_offset = "" %}
 {%- set legend_inset_x = "0" %}
 {%- set legend_inset_y = "" %}
-{%- if (vx_stat_uc == "RELY") %}
+{%- if (vx_metric_uc == "RELY") %}
   {%- set xlab_offset = "2" %}
   {%- set ylab_offset = "-2" %}
   {%- set legend_inset_y = "-.25" %}
-{%- elif (vx_stat_uc == "RHIST") %}
+{%- elif (vx_metric_uc == "RHIST") %}
   {%- set xlab_offset = "6" %}
   {%- set ylab_offset = "-12" %}
   {%- set legend_inset_y = "-.24" %}
@@ -285,9 +285,9 @@ it doesn't seem to make a difference in the final plot.
              They control the widths of the lines that join the data points. -->
         <lwd>c(
 {%- set lwd = "" -%}
-{%- if (vx_stat_uc == "RELY") -%}
+{%- if (vx_metric_uc == "RELY") -%}
   {%- set lwd = "2" -%}
-{%- elif (vx_stat_uc == "RHIST") -%}
+{%- elif (vx_metric_uc == "RHIST") -%}
   {%- set lwd = "1" -%}
 {%- endif -%}
 {{lwd}}
