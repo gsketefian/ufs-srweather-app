@@ -1,9 +1,9 @@
 #
-# List of valid verification statistic/metric short names, the long name
-# of each, and whether each requires a threshold value for a given forecast
+# List of valid verification (vx) metric short names, the long name of
+# each, and whether each requires a threshold value for a given forecast
 # field.
 #
-valid_vx_stats:
+valid_vx_metrics:
     auc:
         long_name: 'Area Under the Curve'
         needs_thresh: True
