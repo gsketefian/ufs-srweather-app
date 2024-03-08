@@ -48,8 +48,8 @@ from templater import (
 #
 # For BIAS, RHST, and SS:
 # ======================
-# fcst_field    level_or_accum             threshold    stat types
-# ----------    --------------             ---------    ----------
+# fcst_field    level_or_accum             threshold    metric types
+# ----------    --------------             ---------    ------------
 # apcp          03hr, 06hr                 none         RHST, SS
 # cape          L0                         none         RHST
 # dpt           2m                         none         BIAS, RHST, SS
@@ -220,12 +220,12 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
 
     # Get the list of valid vx metrics.  Then define local dictionaries
     # containing values that depend on the metric.
-    valid_vx_stats = valid_vx_plot_params['valid_vx_stats'].keys()
-    stat_long_names = {}
-    stat_needs_thresh = {}
-    for stat in valid_vx_stats:
-        stat_long_names[stat] = valid_vx_plot_params['valid_vx_stats'][stat]['long_name']
-        stat_needs_thresh[stat] = valid_vx_plot_params['valid_vx_stats'][stat]['needs_thresh']
+    valid_vx_metrics = valid_vx_plot_params['valid_vx_metrics'].keys()
+    vx_metric_long_names = {}
+    vx_metric_needs_thresh = {}
+    for metric in valid_vx_metrics:
+        vx_metric_long_names[metric] = valid_vx_plot_params['valid_vx_metrics'][metric]['long_name']
+        vx_metric_needs_thresh[metric] = valid_vx_plot_params['valid_vx_metrics'][metric]['needs_thresh']
 
     # Get list of valid forecast fields.
     valid_fcst_fields = valid_vx_plot_params['valid_fcst_fields'].keys()
@@ -293,7 +293,7 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     choices = {}
     choices['fcst_field'] = sorted(valid_fcst_fields)
     choices['fcst_level'] = valid_fcst_levels_all_fields
-    choices['vx_stat'] = sorted(valid_vx_stats)
+    choices['vx_metric'] = sorted(valid_vx_metrics)
     choices['color'] = list(avail_mv_colors_codes.keys())
 
     # Create dictionary containing return values and return it.
@@ -303,8 +303,8 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     valid_vx_plot_params['fcst_field_long_names'] = fcst_field_long_names
     valid_vx_plot_params['valid_fcst_levels_by_fcst_field'] = valid_fcst_levels_by_fcst_field
     valid_vx_plot_params['valid_units_by_fcst_field'] = valid_units_by_fcst_field
-    valid_vx_plot_params['stat_long_names'] = stat_long_names
-    valid_vx_plot_params['stat_needs_thresh'] = stat_needs_thresh
+    valid_vx_plot_params['vx_metric_long_names'] = vx_metric_long_names
+    valid_vx_plot_params['vx_metric_needs_thresh'] = vx_metric_needs_thresh
     valid_vx_plot_params['avail_mv_colors_codes'] = avail_mv_colors_codes
     valid_vx_plot_params['choices'] = choices
 
@@ -381,9 +381,9 @@ def parse_args(argv, valid_vx_plot_params):
                         required=True,
                         help='Name of METviewer database')
 
-    # Find the path to the directory containing the clone of the SRW App.  The index of
-    # .parents will have to be changed if this script is moved elsewhere in the SRW App's
-    # directory structure.
+    # Find the path to the directory containing the clone of the SRW App.
+    # The index of .parents will have to be changed if this script is moved
+    # elsewhere in the SRW App's directory structure.
     crnt_script_fp = Path(__file__).resolve()
     home_dir = crnt_script_fp.parents[2]
     expts_dir = Path(os.path.join(home_dir, '../expts_dir')).resolve()
@@ -403,11 +403,11 @@ def parse_args(argv, valid_vx_plot_params):
                         choices=choices['color'],
                         help='Color of each model used in verification (vx) metrics plots')
 
-    parser.add_argument('--vx_stat',
+    parser.add_argument('--vx_metric',
                         type=str.lower,
                         required=True,
-                        choices=choices['vx_stat'],
-                        help='Name of vx metric')
+                        choices=choices['vx_metric'],
+                        help='Name of vx metric to plot')
 
     parser.add_argument('--incl_ens_means',
                         required=False, action=argparse.BooleanOptionalAction, default=argparse.SUPPRESS,
@@ -488,8 +488,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     fcst_field_long_names = valid_vx_plot_params['fcst_field_long_names']
     valid_fcst_levels_by_fcst_field = valid_vx_plot_params['valid_fcst_levels_by_fcst_field']
     valid_units_by_fcst_field = valid_vx_plot_params['valid_units_by_fcst_field']
-    stat_long_names = valid_vx_plot_params['stat_long_names']
-    stat_needs_thresh = valid_vx_plot_params['stat_needs_thresh']
+    vx_metric_long_names = valid_vx_plot_params['vx_metric_long_names']
+    vx_metric_needs_thresh = valid_vx_plot_params['vx_metric_needs_thresh']
     avail_mv_colors_codes = valid_vx_plot_params['avail_mv_colors_codes']
 
     # Load the machine configuration file into a dictionary and find in it the
@@ -643,7 +643,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # Pick out the plot color associated with each model from the list of
     # available colors.  The following lists will contain the hex RGB color
     # codes of the colors to use for each model as well as the codes for
-    # the light versions of those colors (needed for some types of stat plots).
+    # the light versions of those colors (needed for some types of metric
+    # plots).
     model_color_codes = [avail_mv_colors_codes[m]['hex_code'] for m in cla.colors]
     model_color_codes_light = [avail_mv_colors_codes[m]['hex_code_light'] for m in cla.colors]
 
@@ -672,7 +673,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     if ('incl_ens_means' not in cla):
         incl_ens_means = False
-        if (cla.vx_stat == 'bias'): incl_ens_means = True
+        if (cla.vx_metric == 'bias'): incl_ens_means = True
     else:
         incl_ens_means = cla.incl_ens_means
     # Apparently we can just reset or create incl_ens_means within the cla Namespace
@@ -757,13 +758,13 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         """)
     logging.debug(msg)
 
-    if (not stat_needs_thresh[cla.vx_stat]) and (cla.threshold):
-        no_thresh_stats = [key for key,val in stat_needs_thresh.items() if val]
+    if (not vx_metric_needs_thresh[cla.vx_metric]) and (cla.threshold):
+        no_thresh_metrics = [key for key,val in vx_metric_needs_thresh.items() if val]
         msg = dedent(f"""
             A threshold is not needed for the following verification (vx) metrics:
-              no_thresh_stats = """) + \
-            get_pprint_str(no_thresh_statsg,
-                           ' '*(5 + len('no_thresh_statsg'))).lstrip() + \
+              no_thresh_metrics = """) + \
+            get_pprint_str(no_thresh_metricsg,
+                           ' '*(5 + len('no_thresh_metricsg'))).lstrip() + \
             dedent(f"""
             Thus, the threshold passed via the '--threshold' option on the command
             line, i.e.
@@ -804,7 +805,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Form the plot title.
     plot_title = ' '.join(filter(None,
-                          [stat_long_names[cla.vx_stat], 'for',
+                          [vx_metric_long_names[cla.vx_metric], 'for',
                            ''.join([loa_value, loa_units]), fcst_field_long_names[cla.fcst_field],
                            thresh_info['in_plot_title']]))
 
@@ -814,7 +815,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     thresh_str = ''.join(filter(None, [thresh_info['comp_oper'], thresh_info['value'], thresh_info['units']]))
     var_lvl_thresh_str = '_'.join(filter(None, [var_lvl_str, thresh_str]))
     models_str = '_'.join(cla.model_names_short)
-    job_title = '_'.join([cla.vx_stat, var_lvl_thresh_str, models_str])
+    job_title = '_'.join([cla.vx_metric, var_lvl_thresh_str, models_str])
 
     msg = dedent(f"""
         Various auxiliary string values:
@@ -845,48 +846,48 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # 0 to 1, while rank histogram has bin number, which can vary).  For
     # these, we set xtick_label_freq to 0 to let METviewer decide how to
     # handle things.
-    if cla.vx_stat in ['rely', 'rhist']:
+    if cla.vx_metric in ['rely', 'rhist']:
         xtick_label_freq = 0
     # The remaining plot (i.e. vx metric) types have forecast hour on the
     # x-axis.  For these, there are several aspects of the plotting to
     # consider for setting xtick_label_freq.
-    elif cla.vx_stat in ['auc', 'bias', 'brier', 'fbias', 'ss']:
+    elif cla.vx_metric in ['auc', 'bias', 'brier', 'fbias', 'ss']:
 
-        # Get the list of forecast hours at which the metric is available
-        # (stat_fcst_hrs).  This requires first determining the time interval
-        # (in hours) with which the metric is calculated (stat_avail_intvl_hrs).
-        # This in turn depends on the frequency with which both the observations
+        # Create a list of the forecast hours at which the metric is available
+        # (vx_metric_fcst_hrs).  This requires first determining the metric's
+        # availability/recurrence interval (in hours), i.e. the time interval
+        # with which the metric is calculated (vx_metric_avail_intvl_hrs).  This
+        # in turn depends on the availability interval of both the observations
         # and the forecast fields are available.
         #
         # The default is to assume that the observations and forecasts are
         # available every hour.  Thus, the metric is available every hour.
-        stat_avail_intvl_hrs = 1
+        vx_metric_avail_intvl_hrs = 1
         # If the level is actually an accumulation, reset the metric availability
         # interval to the accumulation interval.
         if (cla.level_or_accum in ['01h', '03h', '06h', '24h']):
-            stat_avail_intvl_hrs = int(loa_value)
+            vx_metric_avail_intvl_hrs = int(loa_value)
         # If the level is an upper air location, we consider values only at 12Z
         # because the number of observations at other hours of the day is very
-        # low (so metrics are unreliable).  Thus, we set stat_avail_intvl_hrs to
-        # 12.
+        # low (so metrics are unreliable).  Thus, we set vx_metric_avail_intvl_hrs
+        # to 12.
         elif (cla.level_or_accum in ['500mb', '700mb', '850mb']):
-            stat_avail_intvl_hrs = 12
+            vx_metric_avail_intvl_hrs = 12
 
         # Use the metric availability interval to set the forecast hours at
         # which the metric is available.  Then find the number of such hours.
-        stat_fcst_hrs = list(range(0, cla.fcst_len_hrs+1, stat_avail_intvl_hrs))
-        num_stat_fcst_hrs = len(stat_fcst_hrs)
+        vx_metric_fcst_hrs = list(range(0, cla.fcst_len_hrs+1, vx_metric_avail_intvl_hrs))
+        num_vx_metric_fcst_hrs = len(vx_metric_fcst_hrs)
 
-        # In order to not have crowded x-axis labels, limit the number of such
-        # labels to some maximum value (num_xtick_labels_max).  If num_stat_fcst_hrs
+        # In order to not have crowded x-axis labels, limit the number of labels
+        # to a maximum value (num_xtick_labels_max).  If num_vx_metric_fcst_hrs
         # is less than this maximum, then xtick_label_freq will be set to 0 or
-        # 1, which will cause METviewer to place a label at each tick mark.
-        # If num_stat_fcst_hr is (sufficiently) larger than num_xtick_labels_max,
+        # 1, which will cause METviewer to place a label at each tick mark.  If
+        # num_vx_metric_fcst_hr is (sufficiently) larger than num_xtick_labels_max,
         # then xtick_label_freq will be set to a value greater than 1, which
-        # will cause some number of tick marks to not have labels to avoid
-        # overcrowding.
+        # will cause some tick marks to not have labels to avoid overcrowding.
         num_xtick_labels_max = 16
-        xtick_label_freq = round(num_stat_fcst_hrs/num_xtick_labels_max)
+        xtick_label_freq = round(num_vx_metric_fcst_hrs/num_xtick_labels_max)
 
     num_series = sum(num_ens_mems_by_model[0:num_models_to_plot])
     if incl_ens_means: num_series = num_series + num_models_to_plot
@@ -894,13 +895,14 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Generate name of forecast field as it appears in the METviewer database.
     fcst_field_name_in_db = fcst_field_uc
-    if fcst_field_uc == 'APCP': fcst_field_name_in_db = '_'.join([fcst_field_name_in_db, cla.level_or_accum[0:2]])
-    if cla.vx_stat in ['auc', 'brier', 'rely']:
+    if fcst_field_uc == 'APCP':
+        fcst_field_name_in_db = '_'.join([fcst_field_name_in_db, cla.level_or_accum[0:2]])
+    if cla.vx_metric in ['auc', 'brier', 'rely']:
         fcst_field_name_in_db = '_'.join(filter(None,[fcst_field_name_in_db, 'ENS_FREQ',
                                                       ''.join([thresh_info['comp_oper'], thresh_info['value']])]))
         #
         # For APCP thresholds of >= 6.35mm, >= 12.7mm, and >= 25.4mm, the SRW
-        # App's vx tasks pad the names of variables in the stat files with zeros
+        # App's vx tasks pad the names of variables in the .stat files with zeros
         # such that there are three digits after the decimal.  Thus, for example,
         # variable names in the database are
         #
@@ -927,10 +929,10 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '00'])
 
     # Generate a name for the metric that METviewer understands.
-    vx_stat_mv = cla.vx_stat.upper()
-    if vx_stat_mv == 'BIAS': vx_stat_mv = 'ME'
-    elif vx_stat_mv == 'AUC': vx_stat_mv = 'PSTD_ROC_AUC'
-    elif vx_stat_mv == 'BRIER': vx_stat_mv = 'PSTD_BRIER'
+    vx_metric_mv = cla.vx_metric.upper()
+    if vx_metric_mv == 'BIAS': vx_metric_mv = 'ME'
+    elif vx_metric_mv == 'AUC': vx_metric_mv = 'PSTD_ROC_AUC'
+    elif vx_metric_mv == 'BRIER': vx_metric_mv = 'PSTD_BRIER'
 
     # For the given forecast field, generate a name for the corresponding
     # observation type in the METviewer database.
@@ -954,7 +956,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         Subset of strings passed to jinja2 template:
           fcst_field_uc = {get_pprint_str(fcst_field_uc)}
           fcst_field_name_in_db = {get_pprint_str(fcst_field_name_in_db)}
-          vx_stat_mv = {get_pprint_str(vx_stat_mv)}
+          vx_metric_mv = {get_pprint_str(vx_metric_mv)}
           obs_type = {get_pprint_str(obs_type)}
         """)
     logging.debug(msg)
@@ -977,9 +979,9 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "level_or_accum_no0pad": loa_value_no0pad,
                    "thresh_in_db": thresh_info['in_db'],
                    "obs_type": obs_type,
-                   "vx_stat_uc": cla.vx_stat.upper(),
-                   "vx_stat_lc": cla.vx_stat.lower(),
-                   "vx_stat_mv": vx_stat_mv,
+                   "vx_metric_uc": cla.vx_metric.upper(),
+                   "vx_metric_lc": cla.vx_metric.lower(),
+                   "vx_metric_mv": vx_metric_mv,
                    "num_fcst_inits": num_fcst_inits,
                    "fcst_init_times": fcst_init_times_YmDHMS,
                    "fcst_len_hrs": cla.fcst_len_hrs,
@@ -1002,12 +1004,12 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     logging.debug(msg)
 
     templates_dir = os.path.join(home_dir, 'parm', 'metviewer')
-    template_fn = ''.join([cla.vx_stat, '.xml'])
-    if (cla.vx_stat in ['auc', 'brier']):
+    template_fn = ''.join([cla.vx_metric, '.xml'])
+    if (cla.vx_metric in ['auc', 'brier']):
         template_fn = 'auc_brier.xml'
-    elif (cla.vx_stat in ['bias', 'fbias']):
+    elif (cla.vx_metric in ['bias', 'fbias']):
         template_fn = 'bias_fbias.xml'
-    elif (cla.vx_stat in ['rely', 'rhist']):
+    elif (cla.vx_metric in ['rely', 'rhist']):
         template_fn = 'rely_rhist.xml'
     template_fp = os.path.join(templates_dir, template_fn)
 
@@ -1025,7 +1027,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     if not os.path.exists(output_xml_dir):
         os.makedirs(output_xml_dir)
     output_xml_fn = '_'.join(filter(None,
-                    ['plot', cla.vx_stat, var_lvl_str,
+                    ['plot', cla.vx_metric, var_lvl_str,
                      cla.threshold, models_str]))
     output_xml_fn = ''.join([output_xml_fn, '.xml'])
     output_xml_fp = os.path.join(output_xml_dir, output_xml_fn)
