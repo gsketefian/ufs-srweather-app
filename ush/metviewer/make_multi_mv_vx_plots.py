@@ -556,13 +556,14 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                            ' '*(5 + len('fields_levels_threshes_dict'))).lstrip()
         logging.debug(msg)
 
-        # If args.make_stat_subdirs is set to True, place the output for each
-        # statistic in a separate subdirectory under the main output directory.
-        # Otherwise, place the output directly under the main output directory.
-        if args.make_stat_subdirs:
-            output_dir_crnt_stat = os.path.join(args.output_dir, stat)
+        # If args.make_vx_metric_subdirs is set to True, place the output for
+        # each statistic in a separate subdirectory under the main output
+        # directory.  Otherwise, place the output directly under the main output
+        # directory.
+        if args.make_vx_metric_subdirs:
+            output_dir_crnt_vx_metric = os.path.join(args.output_dir, stat)
         else:
-            output_dir_crnt_stat = args.output_dir
+            output_dir_crnt_vx_metric = args.output_dir
 
         for field, levels_threshes_dict in fields_levels_threshes_dict.items():
             msg = dedent(f"""
@@ -624,7 +625,7 @@ def make_multi_mv_vx_plots(args, valid_vals, stat_needs_thresh):
                                  '--fcst_field', field,
                                  '--level_or_accum', level,
                                  '--threshold', thresh,
-                                 '--mv_output_dir', output_dir_crnt_stat]
+                                 '--mv_output_dir', output_dir_crnt_vx_metric]
 
                     msg = dedent(f"""
                         Argument list passed to plotting script is:
@@ -909,7 +910,7 @@ def main():
                             Method for dealing with pre-existing output directories.
                             """))
 
-    parser.add_argument('--make_stat_subdirs',
+    parser.add_argument('--make_vx_metric_subdirs',
                         required=False, action=argparse.BooleanOptionalAction,
                         help=dedent(f"""
                             Flag for placing output for each statistic to be plotted in a separate
