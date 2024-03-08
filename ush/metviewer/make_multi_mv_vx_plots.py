@@ -408,9 +408,9 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     # error message and exit.
     if not metrics_fields_levels_threshes_dict:
         msg = dedent(f"""
-            After removing verification metrics, forecast fields, forecast levels,
-            and/or thresholds from the plot configuration dictionary according to
-            the arguments passed to the '--incl_only_[metrics|fields|levels|threshes]'
+            After removing verification (vx) metrics, forecast fields, forecast levels,
+            and/or thresholds from the plot configuration dictionary according to the
+            arguments passed to the '--incl_only_[metrics|fields|levels|threshes]'
             and/or '--excl_[metrics|fields|levels|threshes]' options, there are no
             remaining metric-field-level-threshold combinations in the dictionary to
             plot, i.e. the plot configuration dictionary is empty:
@@ -441,7 +441,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                   = """) + \
                 get_pprint_str(metrics_fields_levels_threshes_dict, ' '*4).lstrip() + \
                 dedent(f"""
-                Thus, no vx plots involving the field '{field}' will be generated.
+                Thus, no plots involving the field '{field}' will be generated.
                 """)
             logging.warning(msg)
 
@@ -464,7 +464,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                   = """) + \
                 get_pprint_str(metrics_fields_levels_threshes_dict, ' '*4).lstrip() + \
                 dedent(f"""
-                Thus, no vx plots at level '{level}' will be generated.
+                Thus, no plots at level '{level}' will be generated.
                 """)
             logging.warning(msg)
 
@@ -489,7 +489,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                   = """) + \
                 get_pprint_str(metrics_fields_levels_threshes_dict, ' '*4).lstrip() + \
                 dedent(f"""
-                Thus, no vx plots for threshold '{thresh}' will be generated.
+                Thus, no plots for threshold '{thresh}' will be generated.
                 """)
             logging.warning(msg)
 
@@ -514,8 +514,8 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
           = """) + \
         get_pprint_str(metrics_fields_levels_threshes_dict, ' '*4).lstrip() + \
         dedent(f"""
-        A verification plot will be generated for each metric-field-level-
-        threshold combination in this dictionary.
+        A plot will be generated for each metric-field-level-threshold combination
+        in this dictionary.
         """)
     logging.info(msg)
 
@@ -698,7 +698,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
 def main():
     """
     Function to set up arguments list and call make_multi_mv_vx_plots() to
-    generate multiple METviewer plots.
+    generate multiple METviewer verification (vx) plots.
 
     Arguments:
     ---------
@@ -754,7 +754,7 @@ def main():
                             Logging level to use with the 'logging' module.
                             """))
 
-    # Load the yaml file containing valid values of verification plotting
+    # Load the yaml file containing valid values of verification (vx) plotting
     # parameters and get valid values.
     valid_vx_plot_params_config_fp = 'valid_vx_plot_params.yaml'
     valid_vx_plot_params = load_config_file(valid_vx_plot_params_config_fp)
@@ -773,14 +773,14 @@ def main():
                         required=False, default=[],
                         choices=valid_vx_metrics,
                         help=dedent(f"""
-                            Verification statistics to exclusively include in verification plot
+                            Verification metrics to exclusively include in verification plot
                             generation.  This is a convenience option that provides a way to override
                             the settings in the plot configuration file.  If this option is not used,
-                            then all statistics in the configuration file are plotted.  If it is used,
-                            then plots will be generated only for the statistics passed to this option.
-                            Note that any statistic specified here must also appear in the plot
+                            then all metrics in the configuration file are plotted.  If it is used,
+                            then plots will be generated only for the metrics passed to this option.
+                            Note that any metric specified here must also appear in the plot
                             configuration file (because METviewer needs to know the fields, levels,
-                            and possibly thresholds for which to generate plots for that statistic).
+                            and possibly thresholds for which to generate plots for that metric).
                             For simplicity, this option cannot be used together with the '--excl_metrics'
                             option.
                             """))
@@ -790,14 +790,14 @@ def main():
                         required=False, default=[],
                         choices=valid_vx_metrics,
                         help=dedent(f"""
-                            Verification statistics to exclude from verification plot generation.
+                            Verification metrics to exclude from verification plot generation.
                             This is a convenience option that provides a way to override the settings
                             in the plot configuration file.  If this option is not used, then all
-                            statistics in the configuration file are plotted.  If it is used, then
-                            plots will be generated only for those statistics in the configuration
-                            file that are not also listed here.  If a statistic listed here does not
+                            metrics in the configuration file are plotted.  If it is used, then
+                            plots will be generated only for those metrics in the configuration
+                            file that are not also listed here.  If a metric listed here does not
                             appear in the configuration file, an informational message is issued and
-                            no plot is generated for the statistic.  For simplicity, this option
+                            no plot is generated for the metric.  For simplicity, this option
                             cannot be used together with the '--incl_only_metrics' option.
                             """))
 
@@ -809,13 +809,13 @@ def main():
                             Forecast fields to exclusively include in verification plot generation.
                             This is a convenience option that provides a way to override the settings
                             in the plot configuration file.  If this option is not used, then all
-                            fields listed under a given vx statistic in the configuration file are
-                            plotted (as long as that statistic is to be plotted, i.e. it is not
+                            fields listed under a given vx metric in the configuration file are
+                            plotted (as long as that metric is to be plotted, i.e. it is not
                             excluded via the '--excl_metrics' option).  If it is used, then plots for
-                            that statistic will be generated only for the fields passed to this
-                            option.  For a statistic that is to be plotted, if a field specified
-                            here is not listed in the configuration file under that statistic, then
-                            no plots are generated for that statistic-field combination.  For
+                            that metric will be generated only for the fields passed to this
+                            option.  For a metric that is to be plotted, if a field specified
+                            here is not listed in the configuration file under that metric, then
+                            no plots are generated for that metric-field combination.  For
                             simplicity, this option cannot be used together with the '--excl_fields'
                             option.
                             """))
@@ -841,14 +841,14 @@ def main():
                             Forecast levels to exclusively include in verification plot generation.
                             This is a convenience option that provides a way to override the settings
                             in the plot configuration file.  If this option is not used, then all
-                            levels listed under a given vx statistic and field combination in the
-                            configuration file are plotted (as long as that statistic and field
+                            levels listed under a given vx metric and field combination in the
+                            configuration file are plotted (as long as that metric and field
                             combination is to be plotted, i.e. it is not excluded via the '--excl_metrics'
                             and/or '--excl_fields' options).  If it is used, then plots for that
-                            statistic-field combination will be generated only for the levels passed
-                            to this option.  For a statistic-field combination that is to be plotted,
+                            metric-field combination will be generated only for the levels passed
+                            to this option.  For a metric-field combination that is to be plotted,
                             if a level specified here is not listed in the configuration file under
-                            that statistic and field, then no plots are generated for that statistic-
+                            that metric and field, then no plots are generated for that metric-
                             field-level combination.  For simplicity, this option cannot be used
                             together with the '--excl_levels' option.
                             """))
@@ -872,18 +872,18 @@ def main():
                             Forecast thresholds to exclusively include in verification plot generation.
                             This is a convenience option that provides a way to override the settings
                             in the plot configuration file.  This option has no effect on the plotting
-                            of vx statistics that do not require a threshold.  For statistics that
+                            of vx metrics that do not require a threshold.  For metrics that
                             require a threshold, the behavior is as follows.  If this option is not
-                            used, then all thresholds listed under a given vx statistic, field, and
+                            used, then all thresholds listed under a given vx metric, field, and
                             level combination in the configuration file are plotted (as long as that
-                            statistic, field, and threshold combination is to be plotted, i.e. it is
+                            metric, field, and threshold combination is to be plotted, i.e. it is
                             not excluded via the '--excl_metrics', '--excl_fields', and/or '--excl_levels'
-                            options).  If it is used, then plots for that statistic-field-level
+                            options).  If it is used, then plots for that metric-field-level
                             combination will be generated only for the thresholds passed to this
-                            option.  For a statistic-field-level combination that is to be plotted,
+                            option.  For a metric-field-level combination that is to be plotted,
                             if a threshold specified here is not listed in the configuration file
-                            under that statistic, field, and level, then no plots are generated for
-                            that statistic-field-level-threshold combination.  For simplicity, this
+                            under that metric, field, and level, then no plots are generated for
+                            that metric-field-level-threshold combination.  For simplicity, this
                             option cannot be used together with the '--excl_threshes'
                             option.
                             """))
@@ -894,7 +894,7 @@ def main():
                             Forecast thresholds to exclude from verification plot generation.  This
                             is a convenience option that provides a way to override the settings in
                             the plot configuration file.  This option has no effect on the plotting
-                            of vx statistics that do not require a threshold.  For statistics that
+                            of vx metrics that do not require a threshold.  For metrics that
                             require a threshold, the behavior is as follows.  If this option is not
                             used, then all thresholds in the configuration file are plotted.  If it
                             is used, then plots will be generated only for those thresholds in the
@@ -913,7 +913,7 @@ def main():
     parser.add_argument('--make_vx_metric_subdirs',
                         required=False, action=argparse.BooleanOptionalAction,
                         help=dedent(f"""
-                            Flag for placing output for each statistic to be plotted in a separate
+                            Flag for placing output for each metric to be plotted in a separate
                             subdirectory under the output directory.
                             """))
 
