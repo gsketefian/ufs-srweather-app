@@ -898,8 +898,9 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     if fcst_field_uc == 'APCP':
         fcst_field_name_in_db = '_'.join([fcst_field_name_in_db, cla.level_or_accum[0:2]])
     if cla.vx_metric in ['auc', 'brier', 'rely']:
-        fcst_field_name_in_db = '_'.join(filter(None,[fcst_field_name_in_db, 'ENS_FREQ',
-                                                      ''.join([thresh_info['comp_oper'], thresh_info['value']])]))
+        fcst_field_name_in_db \
+        = '_'.join(filter(None,[fcst_field_name_in_db, 'ENS_FREQ',
+                                ''.join([thresh_info['comp_oper'], thresh_info['value']])]))
         #
         # For APCP thresholds of >= 6.35mm, >= 12.7mm, and >= 25.4mm, the SRW
         # App's vx tasks pad the names of variables in the .stat files with zeros
