@@ -199,19 +199,20 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
         ordered_plots_dir = os.path.join(args.output_dir, 'ordered_plots')
         Path(ordered_plots_dir).mkdir(parents=True, exist_ok=True)
 
-    # Get valid values for statistics, forecast fields, and forecast levels.
+    # Get valid values for verification (vx) metrics, forecast fields, and
+    # forecast levels.
     valid_vx_metrics = valid_vals['vx_metrics']
     valid_fcst_fields = valid_vals['fcst_fields']
     valid_fcst_levels = valid_vals['fcst_levels']
 
-    # Ensure that any statistic passed to the --incl_only_metrics option
-    # also appears in the plot configuration file.
+    # Ensure that any metric passed to the --incl_only_metrics option also
+    # appears in the plot configuration file.
     vx_metrics_in_config = list(metrics_fields_levels_threshes_dict.keys())
     vx_metrics_not_in_config = list(set(args.incl_only_metrics).difference(vx_metrics_in_config))
     if vx_metrics_not_in_config:
         msg = dedent(f"""
-            One or more statistics passed to the '--incl_only_metrics' option are
-            not included in the plot configuration file.  These are:
+            One or more verification (vx) metrics passed to the '--incl_only_metrics'
+            option are not included in the plot configuration file.  These are:
               vx_metrics_not_in_config = {get_pprint_str(vx_metrics_not_in_config)}
             Please include these in the plot configuration file or exclude them as
             arguments to '--incl_only_metrics', then rerun.  The plot configuration
@@ -227,26 +228,26 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
         logging.error(msg)
         raise ValueError(msg)
 
-    # Remove from the plot configuration dictionary any statistic in the
-    # list of statistics to exclude.
+    # Remove from the plot configuration dictionary any metric in the list
+    # of metrics to exclude.
     [metrics_fields_levels_threshes_dict.pop(metric, None) for metric in args.excl_metrics]
 
     # If the --incl_only_metrics option is specified on the command line
     # (i.e. if args.incl_only_metrics is not empty), then remove from the
-    # plot configuration dictionary any verification statistic that is NOT
-    # in the exclusive list of statistics to include.
+    # plot configuration dictionary any metric that is NOT in the exclusive
+    # list of metrics to include.
     if args.incl_only_metrics:
         [metrics_fields_levels_threshes_dict.pop(metric, None)
          for metric in valid_vx_metrics if metric not in args.incl_only_metrics]
 
-    # If after removing the necessary statistics from the plot configuration
-    # dictionary there are no statistic-field-level-threshold combinations
+    # If after removing the necessary metrics from the plot configuration
+    # dictionary there are no metric-field-level-threshold combinations
     # left in the dictionary to plot, print out an error message and exit.
     if not metrics_fields_levels_threshes_dict:
         msg = dedent(f"""
-            After removing verification statistics from the plot configuration
+            After removing verification (vx) metrics from the plot configuration
             dictionary according to the arguments passed to the '--incl_only_metrics'
-            or '--excl_metrics' option, there are no remaining statistic-field-level-
+            or '--excl_metrics' option, there are no remaining metric-field-level-
             threshold combinations in the dictionary to plot, i.e. the plot
             configuration dictionary is empty:
               metrics_fields_levels_threshes_dict = {get_pprint_str(metrics_fields_levels_threshes_dict)}
@@ -258,15 +259,15 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
         logging.error(msg)
         raise Exception(msg)
 
-    # For each statistic to be plotted, remove from its sub-dictionary in
-    # the plot configuration dictionary any forecast field in the list of
-    # fields to exclude from plotting.
+    # For each metric to be plotted, remove from its sub-dictionary in the
+    # plot configuration dictionary any forecast field in the list of fields
+    # to exclude from plotting.
     for metric in metrics_fields_levels_threshes_dict.copy().keys():
         [metrics_fields_levels_threshes_dict[metric].pop(field, None)
          for field in args.excl_fields]
 
     # If the --incl_only_fields option is specified on the command line (i.e.
-    # if args.incl_only_fields is not empty), then for each statistic to be
+    # if args.incl_only_fields is not empty), then for each metric to be
     # plotted, remove from the corresponding sub-dictionary in the plot
     # configuration dictionary any forecast field that is NOT in the
     # exclusive list of fields to include in the plotting.
@@ -275,24 +276,24 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
             [metrics_fields_levels_threshes_dict[metric].pop(field, None)
              for field in valid_fcst_fields if field not in args.incl_only_fields]
 
-    # If, after removing the necessary fields, the values of any statistic
-    # keys in the plot configuration dictionary have become empty, remove
-    # those keys.
+    # If, after removing the necessary fields, the values of any metric keys
+    # in the plot configuration dictionary have become empty, remove those
+    # keys.
     for metric, fields_levels_threshes_dict in metrics_fields_levels_threshes_dict.copy().items():
         if not fields_levels_threshes_dict:
             metrics_fields_levels_threshes_dict.pop(metric, None)
 
-    # If after removing the necessary statistics and fields from the plot
-    # configuration dictionary there are no statistic-field-level-threshold
+    # If after removing the necessary metrics and fields from the plot
+    # configuration dictionary there are no metric-field-level-threshold
     # combinations left in the dictionary to plot, print out an error message
     # and exit.
     if not metrics_fields_levels_threshes_dict:
         msg = dedent(f"""
-            After removing verification statistics and/or forecast fields from the
+            After removing verification (vx) metrics and/or forecast fields from the
             plot configuration dictionary according to the arguments passed to the
-            '--incl_only_[stats|fields]' and/or '--excl_[stats|fields]' options,
-            there are no remaining statistic-field-level-threshold combinations in
-            the dictionary to plot, i.e. the plot configuration dictionary is empty:
+            '--incl_only_[metrics|fields]' and/or '--excl_[metrics|fields]' options,
+            there are no remaining metric-field-level-threshold combinations in the
+            dictionary to plot, i.e. the plot configuration dictionary is empty:
               metrics_fields_levels_threshes_dict = {get_pprint_str(metrics_fields_levels_threshes_dict)}
             Please modify the plot configuration file and/or the arguments to one or
             more of the options above and rerun.  The plot configuration file is:
@@ -302,7 +303,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
         logging.error(msg)
         raise Exception(msg)
 
-    # For each statistic-field combination to be plotted, remove from the
+    # For each metric-field combination to be plotted, remove from the
     # corresponding sub-sub-dictionary in the plotting dictionary any level
     # in the list of levels to exclude from plotting.
     for metric, fields_levels_threshes_dict in metrics_fields_levels_threshes_dict.copy().items():
@@ -311,7 +312,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
              for level in args.excl_levels]
 
     # If the --incl_only_levels option is specified on the command line (i.e.
-    # if args.incl_only_levels is not empty), then for each statistic-field
+    # if args.incl_only_levels is not empty), then for each metric-field
     # combinatiion to be plotted, remove from the corresponding sub-sub-
     # dictionary in the plotting dictionary any level that is NOT in the
     # exclusive list of levels to include in the plotting.
@@ -321,8 +322,8 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                 [metrics_fields_levels_threshes_dict[metric][field].pop(level, None)
                  for level in valid_fcst_levels if level not in args.incl_only_levels]
 
-    # If, after removing the necessary levels, the values of any statistic
-    # or field keys in the plot configuration dictionary have become empty,
+    # If, after removing the necessary levels, the values of any metric or
+    # field keys in the plot configuration dictionary have become empty,
     # remove those keys.
     for metric, fields_levels_threshes_dict in metrics_fields_levels_threshes_dict.copy().items():
         for field, levels_threshes_dict in fields_levels_threshes_dict.copy().items():
@@ -331,18 +332,18 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
         if not fields_levels_threshes_dict:
             metrics_fields_levels_threshes_dict.pop(metric, None)
 
-    # If after removing the necessary statistics, fields, and levels from
-    # the plot configuration dictionary there are no statistic-field-level-
-    # threshold combinations left in the dictionary to plot, print out an
-    # error message and exit.
+    # If after removing the necessary metrics, fields, and levels from the
+    # plot configuration dictionary there are no metric-field-level-threshold
+    # combinations left in the dictionary to plot, print out an error message
+    # and exit.
     if not metrics_fields_levels_threshes_dict:
         msg = dedent(f"""
-            After removing verification statistics, forecast fields, and/or forecast
+            After removing verification (vx) metrics, forecast fields, and/or forecast
             levels from the plot configuration dictionary according to the arguments
-            passed to the '--incl_only_[stats|fields|levels]' and/or '--excl_[stats|
-            fields|levels] options, there are no remaining statistic-field-level-
-            threshold combinations in the dictionary to plot, i.e. the plot
-            configuration dictionary is empty:
+            passed to the '--incl_only_[metrics|fields|levels]' and/or '--excl_[metrics|
+            fields|levels] options, there are no remaining metric-field-level-threshold
+            combinations in the dictionary to plot, i.e. the plot configuration
+            dictionary is empty:
               metrics_fields_levels_threshes_dict = {get_pprint_str(metrics_fields_levels_threshes_dict)}
             Please modify the plot configuration file and/or the arguments to one or
             more of the options above and rerun.  The plot configuration file is:
@@ -352,8 +353,8 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
         logging.error(msg)
         raise Exception(msg)
 
-    # For each statistic-field-level combination to be plotted, remove from
-    # the corresponding list of thresholds in the plotting dictionary any
+    # For each metric-field-level combination to be plotted, remove from the
+    # corresponding list of thresholds in the plotting dictionary any
     # threshold that appears in the list of thresholds to exclude from
     # plotting.
     for metric, fields_levels_threshes_dict in metrics_fields_levels_threshes_dict.copy().items():
@@ -366,11 +367,11 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                 metrics_fields_levels_threshes_dict[metric][field][level] = threshes_list_filtered
 
     # If the --incl_only_threshes option is specified on the command line
-    # (i.e. if args.incl_only_threshes is not empty), then for each
-    # statistic-field-level combination to be plotted, keep in the
-    # corresponding list of thresholds in the plotting dictionary only
-    # those thresholds that also appear in the exclusive list of thresholds
-    # to include in the plotting.
+    # (i.e. if args.incl_only_threshes is not empty), then for each metric-
+    # field-level combination to be plotted, keep in the corresponding list
+    # of thresholds in the plotting dictionary only those thresholds that
+    # also appear in the exclusive list of thresholds to include in the
+    # plotting.
     if args.incl_only_threshes:
         for metric, fields_levels_threshes_dict in metrics_fields_levels_threshes_dict.copy().items():
             for field, levels_threshes_dict in fields_levels_threshes_dict.copy().items():
@@ -378,16 +379,16 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                     threshes_list_filtered = list(set(threshes_list).intersection(args.incl_only_threshes))
                     metrics_fields_levels_threshes_dict[metric][field][level] = threshes_list_filtered
 
-    # If, after removing the necessary thresholds, the values of any statistic,
+    # If, after removing the necessary thresholds, the values of any metric,
     # field, or level keys in the plot configuration dictionary have become
-    # empty, and if the associated statistic is one that needs a threshold,
+    # empty, and if the associated metric is one that needs a threshold,
     # then remove those keys.
     for metric, fields_levels_threshes_dict in metrics_fields_levels_threshes_dict.copy().items():
         for field, levels_threshes_dict in fields_levels_threshes_dict.copy().items():
             for level, threshes_list in levels_threshes_dict.copy().items():
-                # If the current statistic needs a threshold but threshes_list for the
+                # If the current metric needs a threshold but threshes_list for the
                 # current level is empty, remove the key (which is the level) from the
-                # dictionary.  If the statistic doesn't need a threshold, it is acceptable
+                # dictionary.  If the metric doesn't need a threshold, it is acceptable
                 # for the current level to have an empty threhold list, so don't remove
                 # the level key in this case.
                 if vx_metric_needs_thresh[metric] and (not threshes_list):
@@ -396,23 +397,23 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
             # dictionary.
             if not levels_threshes_dict:
                 metrics_fields_levels_threshes_dict[metric].pop(field, None)
-        # If fields_levels_threshes_dict is empty, remove the key (stat) from
+        # If fields_levels_threshes_dict is empty, remove the key (metric) from
         # the dictionary.
         if not fields_levels_threshes_dict:
             metrics_fields_levels_threshes_dict.pop(metric, None)
 
-    # If after removing the necessary statistics, fields, levels, and
-    # thresholds from the plot configuration dictionary there are no
-    # statistic-field-level-threshold combinations left in the dictionary
-    # to plot, print out an error message and exit.
+    # If after removing the necessary metrics, fields, levels, and thresholds
+    # from the plot configuration dictionary there are no metric-field-level-
+    # threshold combinations left in the dictionary to plot, print out an
+    # error message and exit.
     if not metrics_fields_levels_threshes_dict:
         msg = dedent(f"""
-            After removing verification statistics, forecast fields, forecast levels,
+            After removing verification metrics, forecast fields, forecast levels,
             and/or thresholds from the plot configuration dictionary according to
-            the arguments passed to the '--incl_only_[stats|fields|levels|threshes]'
-            and/or '--excl_[stats|fields|levels|threshes]' options, there are no
-            remaining statistic-field-level-threshold combinations in the dictionary
-            to plot, i.e. the plot configuration dictionary is empty:
+            the arguments passed to the '--incl_only_[metrics|fields|levels|threshes]'
+            and/or '--excl_[metrics|fields|levels|threshes]' options, there are no
+            remaining metric-field-level-threshold combinations in the dictionary to
+            plot, i.e. the plot configuration dictionary is empty:
               metrics_fields_levels_threshes_dict = {get_pprint_str(metrics_fields_levels_threshes_dict)}
             Please modify the plot configuration file and/or the arguments to one or
             more of the options above and rerun.  The plot configuration file is:
@@ -423,8 +424,8 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
         raise Exception(msg)
 
     # Check that all the fields passed to the --incl_only_fields option
-    # appear in at least one statistic sub-dictionary in the "processed"
-    # (i.e. after removing necssary statistics, fields, levels, and possibly
+    # appear in at least one metric sub-dictionary in the "processed" (i.e.
+    # after removing necssary metrics, fields, levels, and possibly
     # thresholds) plot configuration dictionary.  If not, issue a warning.
     for field in args.incl_only_fields:
         field_count = 0
@@ -445,10 +446,9 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
             logging.warning(msg)
 
     # Check that all the levels passed to the --incl_only_levels option
-    # appear in at least one statistic-field sub-sub-dictionary in the
-    # "processed" (i.e. after removing necssary statistics, fields, levels,
-    # and possibly thresholds) plot configuration dictionary.  If not, issue
-    # a warning.
+    # appear in at least one metric-field sub-sub-dictionary in the "processed"
+    # (i.e. after removing necssary metrics, fields, levels, and possibly
+    # thresholds) plot configuration dictionary.  If not, issue a warning.
     for level in args.incl_only_levels:
         level_count = 0
         for metric, fields_levels_threshes_dict in metrics_fields_levels_threshes_dict.items():
@@ -457,9 +457,9 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
         if level_count == 0:
             msg = dedent(f"""
                 The level '{level}' passed to the '--incl_only_levels' option does not
-                appear as a key in any of the statistic-field (sub-sub-)dictionaries in
-                the processed plot configuration dictionary.  The processed plot
-                configuration dictionary is:
+                appear as a key in any of the metric-field (sub-sub-)dictionaries in the
+                processed plot configuration dictionary.  The processed plot configuration
+                dictionary is:
                   metrics_fields_levels_threshes_dict
                   = """) + \
                 get_pprint_str(metrics_fields_levels_threshes_dict, ' '*4).lstrip() + \
@@ -469,10 +469,10 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
             logging.warning(msg)
 
     # Check that all the thresholds passed to the --incl_only_threshes
-    # option appear in at least one statistic-field-level threshold list in
-    # the "processed" (i.e. after removing necssary statistics, fields,
-    # levels, and possibly thresholds) plot configuration dictionary.  If
-    # not, issue a warning.
+    # option appear in at least one metric-field-level threshold list in the
+    # "processed" (i.e. after removing necssary metrics, fields, levels, and
+    # possibly thresholds) plot configuration dictionary.  If not, issue a
+    # warning.
     for thresh in args.incl_only_threshes:
         thresh_count = 0
         for metric, fields_levels_threshes_dict in metrics_fields_levels_threshes_dict.items():
@@ -481,11 +481,10 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                     if thresh in threshes_list: thresh_count += 1
         if thresh_count == 0:
             msg = dedent(f"""
-                The threshold '{thresh}' passed to the '--incl_only_threshes' option does
-                not appear in any of the statistic-field-level threshold lists in the
+                The threshold '{thresh}' passed to the '--incl_only_threshes' option
+                does not appear in any of the metric-field-level threshold lists in the
                 processed plot configuration dictionary.  The processed plot configuration
                 dictionary is:
-                configuration dictionary is:
                   metrics_fields_levels_threshes_dict
                   = """) + \
                 get_pprint_str(metrics_fields_levels_threshes_dict, ' '*4).lstrip() + \
@@ -506,26 +505,25 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
 
     # Print out the final (processed) plot configuration dictionary.
     msg = dedent(f"""
-        After removing (if necessary) verification statistics, forecast fields,
+        After removing (if necessary) verification (vx) metrics, forecast fields,
         forecast levels, and/or thresholds from the plot configuration dictionary
-        according to the arguments passed to the '--incl_only_[stats|fields|
-        levels|threshes]' and/or '--excl_[stats|fields|levels|threshes]' options,
-        the dictionary is:
+        according to the arguments passed to the '--incl_only_[metrics|fields|
+        levels|threshes]' and/or '--excl_[metrics|fields|levels|threshes]'
+        options, the dictionary is:
           metrics_fields_levels_threshes_dict
           = """) + \
         get_pprint_str(metrics_fields_levels_threshes_dict, ' '*4).lstrip() + \
         dedent(f"""
-        A verification plot will be generated for each statistic-field-level-
+        A verification plot will be generated for each metric-field-level-
         threshold combination in this dictionary.
         """)
     logging.info(msg)
 
-    # Loop through the plot configuration dictionary and plot all statistic-
+    # Loop through the plot configuration dictionary and plot all metric-
     # field-level-threshold combinations it contains (with the threshold set
-    # to an empty string for those statistics that do not need a threshold).
+    # to an empty string for those metrics that do not need a threshold).
     # Note that this dictionary has been filtered to contain only those
-    # statistic-field-level-threshold combinations that are consistent with
-    # the
+    # metric-field-level-threshold combinations that are consistent with the
     #
     #   --incl_only_[metrics|fields|levels|threshes]
     #
@@ -534,8 +532,8 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     #   --excl_[metrics|fields|levels|threshes]
     #
     # options.  For each such combination, the loop below calls the script
-    # make_single_mv_vx_plot(), which for a single statistic-field-level-
-    # threshold (with the threshold being unnecessary for certain statistics)
+    # make_single_mv_vx_plot(), which for a single metric-field-level-
+    # threshold (with the threshold being unnecessary for certain metrics)
     # combination generates a METviewer xml and then calls the METviewer
     # batch plotting script to create a plot (png image file).
 
@@ -544,22 +542,21 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
 
     for metric, fields_levels_threshes_dict in metrics_fields_levels_threshes_dict.items():
         msg = dedent(f"""
-            Plotting statistic '{metric}' for various forecast fields ...
+            Plotting verification (vx) metric '{metric}' for various forecast fields ...
             """)
         logging.debug(msg)
 
         msg = dedent(f"""
             Dictionary of fields, levels, and thresholds (if applicable) for this
-            statistic is:
+            metric is:
               fields_levels_threshes_dict = """) + \
             get_pprint_str(fields_levels_threshes_dict,
                            ' '*(5 + len('fields_levels_threshes_dict'))).lstrip()
         logging.debug(msg)
 
         # If args.make_vx_metric_subdirs is set to True, place the output for
-        # each statistic in a separate subdirectory under the main output
-        # directory.  Otherwise, place the output directly under the main output
-        # directory.
+        # each metric in a separate subdirectory under the main output directory.
+        # Otherwise, place the output directly under the main output directory.
         if args.make_vx_metric_subdirs:
             output_dir_crnt_vx_metric = os.path.join(args.output_dir, metric)
         else:
@@ -567,7 +564,8 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
 
         for field, levels_threshes_dict in fields_levels_threshes_dict.items():
             msg = dedent(f"""
-                Plotting statistic '{metric}' for forecast field '{field}' at various levels ...
+                Plotting vx metric '{metric}' for forecast field '{field}' at various
+                levels ...
                 """)
             logging.debug(msg)
 
@@ -580,7 +578,8 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
 
             for level, threshes_list in levels_threshes_dict.items():
                 msg = dedent(f"""
-                    Plotting statistic '{metric}' for forecast field '{field}' at level '{level}' ...
+                    Plotting vx metric '{metric}' for forecast field '{field}' at forecast
+                    level '{level}' ...
                     """)
                 logging.debug(msg)
 
@@ -611,8 +610,9 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                 for thresh in threshes_list:
 
                     msg = separator_str.rstrip() + dedent(f"""
-                        Plotting statistic '{metric}' for forecast field '{field}' at level '{level}'
-                        and threshold '{thresh}' (threshold may be empty for certain metrics) ...
+                        Plotting vx metric '{metric}' for forecast field '{field}' at forecast
+                        level '{level}' and threshold '{thresh}' (threshold may be empty for
+                        certain metrics) ...
                         """)
                     logging.info(msg)
 
@@ -762,8 +762,8 @@ def main():
     valid_fcst_fields = list(valid_vx_plot_params['valid_fcst_fields'].keys())
     valid_fcst_levels = list(valid_vx_plot_params['valid_fcst_levels_to_levels_in_db'].keys())
 
-    # Create dictionary that specifies whether each vx statistic (the keys)
-    # needs a threshold.
+    # Create dictionary that specifies whether each metric (the keys) needs
+    # a threshold.
     vx_metric_needs_thresh = {}
     for metric in valid_vx_metrics:
         vx_metric_needs_thresh[metric] = valid_vx_plot_params['valid_vx_metrics'][metric]['needs_thresh']
