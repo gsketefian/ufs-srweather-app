@@ -207,12 +207,12 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     # Ensure that any statistic passed to the --incl_only_metrics option
     # also appears in the plot configuration file.
     vx_metrics_in_config = list(metrics_fields_levels_threshes_dict.keys())
-    stats_not_in_config = list(set(args.incl_only_metrics).difference(vx_metrics_in_config))
-    if stats_not_in_config:
+    vx_metrics_not_in_config = list(set(args.incl_only_metrics).difference(vx_metrics_in_config))
+    if vx_metrics_not_in_config:
         msg = dedent(f"""
             One or more statistics passed to the '--incl_only_metrics' option are
             not included in the plot configuration file.  These are:
-              stats_not_in_config = {get_pprint_str(stats_not_in_config)}
+              vx_metrics_not_in_config = {get_pprint_str(vx_metrics_not_in_config)}
             Please include these in the plot configuration file or exclude them as
             arguments to '--incl_only_metrics', then rerun.  The plot configuration
             file is:
