@@ -397,7 +397,7 @@ def parse_args(argv, valid_vx_plot_params):
                         required=True,
                         help='Names of models to include in xml and plots')
 
-    parser.add_argument('--colors', nargs='+',
+    parser.add_argument('--model_colors', nargs='+',
                         type=str,
                         required=False, default=choices['color'],
                         choices=choices['color'],
@@ -535,13 +535,39 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     database_info = mv_databases_dict[cla.mv_database_name]
     valid_threshes_in_db = list(database_info['valid_threshes'])
     model_info = list(database_info['models'])
+
+    # METviewer expects the model (long) names passed to it to be in alphabetic
+    # order.  Thus, the list of model (short) names passed via the command
+    # line must be rearranged to make sure it is in the correct order.  We
+    # do that later below, but for simplicity, we now also rearrange the list
+    # of model dictionaries available in the database (model_info) so that
+    # the dictionaries are listed in alphabetic order based on the long name
+    # of the model, i.e. the name that is recognized by METviewer.
+    model_info = sorted(model_info, key=lambda d: d['long_name'])
+
     num_models_avail_in_db = len(model_info)
     model_names_avail_in_db = [model_info[i]['long_name'] for i in range(0,num_models_avail_in_db)]
     model_names_short_avail_in_db = [model_info[i]['short_name'] for i in range(0,num_models_avail_in_db)]
 
+    # Make sure model names on the command line are not duplicated because
+    # METviewer will throw an error in this case.  Create a set (using curly
+    # braces) to store duplicate values.  Note that a set must be used here
+    # so that duplicate values are not duplicated!
+    duplicates = {m for m in cla.model_names_short if cla.model_names_short.count(m) > 1}
+    if len(duplicates) > 0:
+        msg = dedent(f"""
+            A model can appear only once in the set of models to plot specified on
+            the command line.  However, the following models are duplicated:
+              duplicates = {get_pprint_str(duplicates)}
+            Please remove duplicated models from the command line and rerun.
+            Stopping.
+            """)
+        logging.error(msg)
+        raise ValueError(msg)
+
     # Make sure that the models specified on the command line exist in the
     # database.
-    for i,model_name_short in enumerate(cla.model_names_short):
+    for model_name_short in cla.model_names_short:
         if model_name_short not in model_names_short_avail_in_db:
             msg = dedent(f"""
                 A model specified on the command line (model_name_short) is not included
@@ -586,10 +612,26 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         logging.error(msg)
         raise ValueError(msg)
 
-    # Get the names in the database of those models that are to be plotted.
+    # Get the names of those models in the database that are to be plotted.
     inds_models_to_plot = [model_names_short_avail_in_db.index(m) for m in cla.model_names_short]
     num_models_to_plot = len(inds_models_to_plot)
-    model_names_in_db = [model_info[i]['long_name'] for i in inds_models_to_plot]
+    model_names_in_db_to_plot = [model_info[i]['long_name'] for i in inds_models_to_plot]
+
+    # Alphabetically sort the list of model (long) names to plot.  This is
+    # necesary because METviewer expects the model (long) names passed to it
+    # to be in alphabetic order.  Then reset the indices of these models into
+    # the model_info dictionary to make sure this alphabetical resorting is
+    # taken into account.
+    model_names_in_db_to_plot = sorted(model_names_in_db_to_plot) 
+    inds_models_to_plot = [model_names_avail_in_db.index(m) for m in model_names_in_db_to_plot]
+
+    # Now reset the model-related arguments on the command line to account
+    # for the alphabetical resorting above.
+    model_short_names_orig = cla.model_names_short
+    cla.model_names_short = [model_info[i]['short_name'] for i in inds_models_to_plot]
+    remap_inds = [model_short_names_orig.index(m) for m in cla.model_names_short]
+    model_colors_orig = cla.model_colors
+    cla.model_colors = [model_colors_orig[i] for i in remap_inds]
 
     # Get the number of ensemble members for each model and make sure all are
     # positive.
@@ -606,22 +648,6 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                 """)
             logging.error(msg)
             raise ValueError(msg)
-
-    # Make sure no model names are duplicated because METviewer will throw an
-    # error in this case.  Create a set (using curly braces) to store duplicate
-    # values.  Note that a set must be used here so that duplicate values are
-    # not duplicated!
-    duplicates = {m for m in cla.model_names_short if cla.model_names_short.count(m) > 1}
-    if len(duplicates) > 0:
-        msg = dedent(f"""
-            A model can appear only once in the set of models to plot specified on
-            the command line.  However, the following models are duplicated:
-              duplicates = {get_pprint_str(duplicates)}
-            Please remove duplicated models from the command line and rerun.
-            Stopping.
-            """)
-        logging.error(msg)
-        raise ValueError(msg)
 
     # Make sure that there are at least as many available colors as models to
     # plot.
@@ -645,8 +671,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # codes of the colors to use for each model as well as the codes for
     # the light versions of those colors (needed for some types of metric
     # plots).
-    model_color_codes = [avail_mv_colors_codes[m]['hex_code'] for m in cla.colors]
-    model_color_codes_light = [avail_mv_colors_codes[m]['hex_code_light'] for m in cla.colors]
+    model_color_codes = [avail_mv_colors_codes[m]['hex_code'] for m in cla.model_colors]
+    model_color_codes_light = [avail_mv_colors_codes[m]['hex_code_light'] for m in cla.model_colors]
 
     # Set the initialization times for the forecasts.
     fcst_init_time_first = datetime.strptime(cla.fcst_init_info[0], '%Y%m%d%H')
@@ -763,8 +789,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         msg = dedent(f"""
             A threshold is not needed for the following verification (vx) metrics:
               no_thresh_metrics = """) + \
-            get_pprint_str(no_thresh_metricsg,
-                           ' '*(5 + len('no_thresh_metricsg'))).lstrip() + \
+            get_pprint_str(no_thresh_metrics,
+                           ' '*(5 + len('no_thresh_metrics'))).lstrip() + \
             dedent(f"""
             Thus, the threshold passed via the '--threshold' option on the command
             line, i.e.
@@ -970,7 +996,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "mv_output_dir": cla.mv_output_dir,
                    "num_models_to_plot": num_models_to_plot,
                    "num_ens_mems_by_model": num_ens_mems_by_model,
-                   "model_names_in_db": model_names_in_db,
+                   "model_names_in_db": model_names_in_db_to_plot,
                    "model_names_short": cla.model_names_short,
                    "model_color_codes": model_color_codes,
                    "model_color_codes_light": model_color_codes_light,
