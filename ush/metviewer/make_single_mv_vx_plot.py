@@ -589,6 +589,21 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             logging.error(msg)
             raise ValueError(msg)
 
+    # Make sure the number of model colors specified on the command line is
+    # equal to the number of models to plot.
+    if len(cla.model_names_short) != len(cla.model_colors):
+        msg = dedent(f"""
+            The number of models specified on the command line must be equal to the
+            number of model colors specified but isn't:
+              cla.model_names_short = {cla.model_names_short}
+              len(cla.model_names_short) = {len(cla.model_names_short)}
+              cla.model_colors = {cla.model_colors}
+              len(cla.model_colors) = {len(cla.model_colors)}
+            Stopping.
+            """)
+        logging.error(msg)
+        raise ValueError(msg)
+
     # If the threshold specified on the command line is not an empty string,
     # make sure that it is one of the valid ones for this database.
     if (cla.threshold) and (cla.threshold not in valid_threshes_in_db):
@@ -627,9 +642,9 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Now reset the model-related arguments on the command line to account
     # for the alphabetical resorting above.
-    model_short_names_orig = cla.model_names_short
+    model_names_short_orig = cla.model_names_short
     cla.model_names_short = [model_info[i]['short_name'] for i in inds_models_to_plot]
-    remap_inds = [model_short_names_orig.index(m) for m in cla.model_names_short]
+    remap_inds = [model_names_short_orig.index(m) for m in cla.model_names_short]
     model_colors_orig = cla.model_colors
     cla.model_colors = [model_colors_orig[i] for i in remap_inds]
 
