@@ -792,7 +792,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             get_pprint_str(no_thresh_metrics,
                            ' '*(5 + len('no_thresh_metrics'))).lstrip() + \
             dedent(f"""
-            Thus, the threshold passed via the '--threshold' option on the command
+            Thus, the threshold passed via the --threshold option on the command
             line, i.e.
               cla.threshold = {get_pprint_str(cla.threshold)}
             will be reset to an empty string.
