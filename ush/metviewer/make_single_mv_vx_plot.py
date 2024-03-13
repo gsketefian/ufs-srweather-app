@@ -1045,7 +1045,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         get_pprint_str(jinja2_vars, ' '*(5 + len('jinja2_vars'))).lstrip()
     logging.debug(msg)
 
-    templates_dir = os.path.join(home_dir, 'parm', 'metviewer')
+    templates_dir = os.path.join(ush_dir, 'metviewer', 'parm')
     template_fn = ''.join([cla.vx_metric, '.xml'])
     if (cla.vx_metric in ['auc', 'brier']):
         template_fn = 'auc_brier.xml'
