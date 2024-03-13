@@ -589,16 +589,43 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             logging.error(msg)
             raise ValueError(msg)
 
-    # Make sure the number of model colors specified on the command line is
-    # equal to the number of models to plot.
-    if len(cla.model_names_short) != len(cla.model_colors):
+    # Make sure that there are at least as many available colors as models to
+    # plot.
+    num_models_to_plot = len(cla.model_names_short)
+    num_avail_colors = len(avail_mv_colors_codes)
+    if num_models_to_plot > num_avail_colors:
         msg = dedent(f"""
-            The number of models specified on the command line must be equal to the
-            number of model colors specified but isn't:
-              cla.model_names_short = {cla.model_names_short}
-              len(cla.model_names_short) = {len(cla.model_names_short)}
+            The number of models to plot (num_models_to_plot) must be less than
+            or equal to the number of available colors (num_avail_colors):
+              num_models_to_plot = {get_pprint_str(num_models_to_plot)}
+              num_avail_colors = {get_pprint_str(num_avail_colors)}
+            Either reduce the number of models to plot specified on the command
+            line or add new colors in the following configuration file:
+              valid_vx_plot_params_config_fp = {get_pprint_str(valid_vx_plot_params_config_fp)}
+            Stopping.
+            """)
+        logging.error(msg)
+        raise ValueError(msg)
+
+    # If the number of model colors specified on the command line (or set by
+    # default) is more than the number of models to plot, keep only the
+    # necessary number of colors.
+    num_model_colors = len(cla.model_colors)
+    if num_model_colors > num_models_to_plot:
+        cla.model_colors = cla.model_colors[0:num_models_to_plot]
+        num_model_colors = len(cla.model_colors)
+
+    # Make sure the number of model colors specified on the command line is
+    # equal to the number of models to plot (at this point, it might be less
+    # than the number of models to plot but won't be greater than).
+    if num_model_colors != num_models_to_plot:
+        msg = dedent(f"""
+            The number of model colors specified on the command line must be equal
+            to the number of specified model to plot but isn't:
               cla.model_colors = {cla.model_colors}
-              len(cla.model_colors) = {len(cla.model_colors)}
+              num_model_colors = {get_pprint_str(num_model_colors)}
+              cla.model_names_short = {cla.model_names_short}
+              num_models_to_plot = {get_pprint_str(num_models_to_plot)}
             Stopping.
             """)
         logging.error(msg)
@@ -629,7 +656,6 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Get the names of those models in the database that are to be plotted.
     inds_models_to_plot = [model_names_short_avail_in_db.index(m) for m in cla.model_names_short]
-    num_models_to_plot = len(inds_models_to_plot)
     model_names_in_db_to_plot = [model_info[i]['long_name'] for i in inds_models_to_plot]
 
     # Alphabetically sort the list of model (long) names to plot.  This is
@@ -663,23 +689,6 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                 """)
             logging.error(msg)
             raise ValueError(msg)
-
-    # Make sure that there are at least as many available colors as models to
-    # plot.
-    num_avail_colors = len(avail_mv_colors_codes)
-    if num_models_to_plot > num_avail_colors:
-        msg = dedent(f"""
-            The number of models to plot (num_models_to_plot) must be less than
-            or equal to the number of available colors:
-              num_models_to_plot = {get_pprint_str(num_models_to_plot)}
-              num_avail_colors = {get_pprint_str(num_avail_colors)}
-            Either reduce the number of models to plot specified on the command
-            line or add new colors in the following configuration file:
-              valid_vx_plot_params_config_fp = {get_pprint_str(valid_vx_plot_params_config_fp)}
-            Stopping.
-            """)
-        logging.error(msg)
-        raise ValueError(msg)
 
     # Pick out the plot color associated with each model from the list of
     # available colors.  The following lists will contain the hex RGB color
