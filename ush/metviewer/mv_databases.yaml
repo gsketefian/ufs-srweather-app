@@ -1,13 +1,18 @@
-valid_threshes_default: &valid_threshes_default
-    ['gt0.0mm', 'ge0.508mm', 'ge2.54mm', 'ge6.35mm', 'ge12.7mm', 'ge25.4mm',
-     'ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ',
-     'ge20kft', 'ge30kft', 'ge40kft', 'ge50kft',
-     'ge258K', 'ge263K', 'ge268K', 'ge278K', 'ge283K', 'ge288K', 'ge293K', 'ge298K', 'ge303K',
-     'lt1609m', 'ge8045m', 'ge5400m', 'ge5880m',
-     'ge5mps', 'ge10mps', 'ge15mps', 'ge21mps']
+generic_database: &generic_database
+    valid_threshes:
+        ['gt0.0mm', 'ge0.508mm', 'ge2.54mm', 'ge6.35mm', 'ge12.7mm', 'ge25.4mm',
+         'ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ',
+         'ge20kft', 'ge30kft', 'ge40kft', 'ge50kft',
+         'ge258K', 'ge263K', 'ge268K', 'ge278K', 'ge283K', 'ge288K', 'ge293K', 'ge298K', 'ge303K',
+         'lt1609m', 'ge8045m', 'ge5400m', 'ge5880m',
+         'ge5mps', 'ge10mps', 'ge15mps', 'ge21mps']
+    models:
+        - long_name: 'the_first_model_in_the_db'
+          short_name: 'model1'
+          num_ens_mems: '1'
 
 mv_gefs_gdas_rtps_href_spring_2022:
-    valid_threshes: *valid_threshes_default
+    <<: *generic_database
     models:
         - long_name: 'GDAS'
           short_name: 'gdas'
@@ -23,7 +28,7 @@ mv_gefs_gdas_rtps_href_spring_2022:
           num_ens_mems: 10
 
 mv_rrfse_icpert_stoch:
-    valid_threshes: *valid_threshes_default
+    <<: *generic_database
     models:
         - long_name: 'RRFSE_CONUS_ICperts_nostoch.rrfs_conuscompact_3km'
           short_name: 'nostoch'
