@@ -364,22 +364,22 @@ def parse_args(argv, valid_vx_plot_params):
     parser.add_argument('--mv_host',
                         type=str,
                         required=True,
-                        help='Host (name of machine) on which METviewer is installed')
+                        help='Host (name of machine) on which METviewer is installed.')
 
     parser.add_argument('--mv_machine_config_fp',
                         type=str,
                         required=False, default='mv_machines.yaml',
-                        help='METviewer machine (host) configuration file')
+                        help='METviewer machine (host) configuration file.')
 
     parser.add_argument('--mv_databases_config_fp',
                         type=str,
                         required=False, default='mv_databases.yaml',
-                        help='METviewer database configuration file')
+                        help='METviewer database configuration file.')
 
     parser.add_argument('--mv_database_name',
                         type=str,
                         required=True,
-                        help='Name of METviewer database')
+                        help='Name of METviewer database.')
 
     # Find the path to the directory containing the clone of the SRW App.
     # The index of .parents will have to be changed if this script is moved
@@ -390,58 +390,58 @@ def parse_args(argv, valid_vx_plot_params):
     parser.add_argument('--mv_output_dir',
                         type=str,
                         required=False, default=os.path.join(expts_dir, 'mv_output'),
-                        help='Directory in which to place output (e.g. plots) from METviewer')
+                        help='Directory in which to place output (e.g. plots) from METviewer.')
 
     parser.add_argument('--model_names_short', nargs='+',
                         type=str.lower,
                         required=True,
-                        help='Names of models to include in xml and plots')
+                        help='Names of models to include in xml and plots.')
 
     parser.add_argument('--model_colors', nargs='+',
                         type=str,
                         required=False, default=choices['color'],
                         choices=choices['color'],
-                        help='Color of each model used in verification (vx) metrics plots')
+                        help='Color of each model used in verification (vx) metrics plots.')
 
     parser.add_argument('--vx_metric',
                         type=str.lower,
                         required=True,
                         choices=choices['vx_metric'],
-                        help='Name of vx metric to plot')
+                        help='Name of vx metric to plot.')
 
     parser.add_argument('--incl_ens_means',
                         required=False, action=argparse.BooleanOptionalAction, default=argparse.SUPPRESS,
-                        help='Flag for including ensemble mean curves in plot')
+                        help='Flag for including ensemble mean curves in plot.')
 
     parser.add_argument('--fcst_init_info', nargs=3,
                         type=str,
                         required=True,
                         help=dedent(f"""
                             Initialization time of first forecast (in YYYYMMDDHH), number of forecasts,
-                            and forecast initialization interval (in HH)
+                            and forecast initialization interval (in HH).
                             """))
 
     parser.add_argument('--fcst_len_hrs',
                         type=int,
                         required=True,
-                        help='Forecast length (in integer hours)')
+                        help='Forecast length (in integer hours).')
 
     parser.add_argument('--fcst_field',
                         type=str.lower,
                         required=True,
                         choices=choices['fcst_field'],
-                        help='Name of forecast field to verify')
+                        help='Name of forecast field to verify.')
 
     parser.add_argument('--level_or_accum',
                         type=str,
                         required=False,
                         choices=choices['fcst_level'],
-                        help='Vertical level or accumulation period')
+                        help='Vertical level or accumulation period.')
 
     parser.add_argument('--threshold',
                         type=str,
                         required=False, default='',
-                        help='Threshold for the specified forecast field')
+                        help='Threshold for the specified forecast field.')
 
     # Parse the arguments.
     cla = parser.parse_args(argv)
