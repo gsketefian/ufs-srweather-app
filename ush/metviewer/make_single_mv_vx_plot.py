@@ -1081,6 +1081,10 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         """)
     logging.debug(msg)
 
+    # If the METviewer xml to be generated already exists, delete it.
+    if os.path.isfile(output_xml_fp):
+        os.remove(output_xml_fp)
+
     # Convert the dictionary of jinja2 variable settings above to yaml format
     # and write it to a temporary yaml file for reading by the set_template
     # function.
@@ -1099,6 +1103,23 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     logging.info(msg)
     set_template(args_list)
     os.remove(tmp_fn)
+
+    # Check if the xml was successfully generated.  If not, print out an
+    # error message and stop.
+    if os.path.isfile(output_xml_fp):
+        msg = dedent(f"""
+            Xml was successfully generated.  Path to xml is:
+              output_xml_fp = {get_pprint_str(output_xml_fp)}
+            """)
+        logging.info(msg)
+    else:
+        msg = dedent(f"""
+            Xml was not generated.  It should have been generated at:
+              output_xml_fp = {get_pprint_str(output_xml_fp)}
+            Stopping.
+            """)
+        logging.error(msg)
+        raise FileExistsError(msg)
 
     return(mv_machine_config_dict['mv_batch_fp'], output_xml_fp)
 
@@ -1128,6 +1149,13 @@ def run_mv_batch_script(mv_batch_fp, output_xml_fp):
     p = Path(output_xml_fp)
     mv_batch_log_fp = ''.join([os.path.join(p.parent, p.stem), '.log'])
 
+    # If the image file to be generated already exists, delete it.  This may
+    # already be done by the METviewer batch script, but make sure of it
+    # here.
+    output_image_fp = os.path.splitext(output_xml_fp)[0] + '.' + 'png'
+    if os.path.isfile(output_image_fp):
+        os.remove(output_image_fp)
+
     # Run METviewer in batch mode on the xml.
     msg = dedent(f"""
         Log file for call to METviewer batch script is:
@@ -1141,6 +1169,24 @@ def run_mv_batch_script(mv_batch_fp, output_xml_fp):
               result = """) + \
             get_pprint_str(vars(result), ' '*(5 + len('result'))).lstrip()
         logging.debug(msg)
+
+    # Check if the image file was successfully generated.  If not, print out
+    # a warning and continue.
+    if os.path.isfile(output_image_fp):
+        msg = dedent(f"""
+            Image file was successfully generated.  Path to image is:
+              output_image_fp = {get_pprint_str(output_image_fp)}
+            """)
+        logging.info(msg)
+    else:
+        msg = dedent(f"""
+            Image file was not generated.  It should have been generated at:
+              output_image_fp = {get_pprint_str(output_image_fp)}
+            See the following log file for details:
+              mv_batch_log_fp = {get_pprint_str(mv_batch_log_fp)}
+            Continuing ...
+            """)
+        logging.warning(msg)
 
     return result
 
