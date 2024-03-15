@@ -260,15 +260,15 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
 
         # Make sure all the levels/accumulations specified for the current
         # forecast field are in the master list of valid levels and accumulations.
-        for loa in valid_fcst_levels_by_fcst_field[field]:
-            if loa not in valid_fcst_levels_all_fields:
+        for level in valid_fcst_levels_by_fcst_field[field]:
+            if level not in valid_fcst_levels_all_fields:
                 msg = dedent(f"""
-                    One of the levels or accumulations (loa) in the set of valid forecast
+                    One of the levels or accumulations (level) in the set of valid forecast
                     levels and accumulations for the current forecast field (field) is not
                     in the master list of valid forecast levels and accumulations
                     (valid_fcst_levels_all_fields):
                       field = {get_pprint_str(field)}
-                      loa = {get_pprint_str(loa)}
+                      level = {get_pprint_str(level)}
                       valid_fcst_levels_all_fields = """) + \
                     get_pprint_str(valid_fcst_levels_all_fields,
                                    ' '*(5 + len('valid_fcst_levels_all_fields'))).lstrip() + \
