@@ -15,15 +15,18 @@ from datetime import timedelta
 import pprint
 import subprocess
 
-# Find the absolute paths to various directories.
+# Set various directories.
 from pathlib import Path
+# Full path to current script.
 crnt_script_fp = Path(__file__).resolve()
-# Find the path to the directory containing miscellaneous scripts for the SRW App.
-# The index of .parents will have to be changed if this script is moved elsewhere
-# in the SRW App's directory structure.
-ush_dir = crnt_script_fp.parents[1]
-# The directory in which the SRW App is cloned.  This is one level up from ush_dir.
-home_dir = Path(os.path.join(ush_dir, '..')).resolve()
+# Directory in which DTC-specific files are placed in the DTC fork of
+# the SRW App.
+dtc_dir = crnt_script_fp.parents[1]
+# Directory in which the SRW App is cloned.  This is one level up from
+# dtc_dir.
+home_dir = Path(os.path.join(dtc_dir, '..')).resolve()
+# Directory containing miscellaneous scripts for the SRW App.
+ush_dir = os.path.join(home_dir, 'ush')
 
 # Add ush_dir to the path so that python_utils can be imported.
 sys.path.append(str(ush_dir))
@@ -1054,7 +1057,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         get_pprint_str(jinja2_vars, ' '*(5 + len('jinja2_vars'))).lstrip()
     logging.debug(msg)
 
-    templates_dir = os.path.join(ush_dir, 'metviewer', 'parm')
+    templates_dir = os.path.join(dtc_dir, 'metviewer_plotting', 'parm')
     template_fn = ''.join([cla.vx_metric, '.xml'])
     if (cla.vx_metric in ['auc', 'brier']):
         template_fn = 'auc_brier.xml'

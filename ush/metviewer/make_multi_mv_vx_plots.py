@@ -20,10 +20,12 @@ from make_single_mv_vx_plot import make_single_mv_vx_plot
 from make_single_mv_vx_plot import get_pprint_str
 
 from pathlib import Path
-file = Path(__file__).resolve()
-ush_dir = file.parents[1]
+# Full path to current script.
+crnt_script_fp = Path(__file__).resolve()
+# Directory containing miscellaneous scripts for the SRW App.
+ush_dir = crnt_script_fp.parents[1]
+# Add ush_dir to the path so that python_utils can be imported.
 sys.path.append(str(ush_dir))
-
 from python_utils import (
     log_info,
     load_config_file,
