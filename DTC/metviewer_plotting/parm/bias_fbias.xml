@@ -92,7 +92,7 @@
 {%- if obs_type == "ADPUPA" %}
   {%- set fhr_incr = 12 -%}
 {%- elif fcst_field_uc == "APCP" %}
-  {%- set fhr_incr = level_or_accum_no0pad | int -%}
+  {%- set fhr_incr = level_no0pad | int -%}
 {%- endif -%}
 {#- #}
 {%- set indent = "\n            " -%}

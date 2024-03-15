@@ -51,8 +51,8 @@ from templater import (
 #
 # For BIAS, RHST, and SS:
 # ======================
-# fcst_field    level_or_accum             threshold    metric types
-# ----------    --------------             ---------    ------------
+# fcst_field    fcst_level                 threshold    metric types
+# ----------    ----------                 ---------    ------------
 # apcp          03hr, 06hr                 none         RHST, SS
 # cape          L0                         none         RHST
 # dpt           2m                         none         BIAS, RHST, SS
@@ -63,8 +63,8 @@ from templater import (
 #
 # For AUC, BRIER, FBIAS, and RELY:
 # ===============================
-# fcst_field    level_or_accum    threshold
-# ----------    --------------    ---------
+# fcst_field    fcst_level        threshold
+# ----------    ----------        ---------
 # apcp          03hr              gt0.0mm (AUC,BRIER,FBIAS,RELY), ge2.54mm (AUC,BRIER,FBIAS,RELY)
 # dpt           2m                ge288K (AUC,BRIER,RELY), ge293K (AUC,BRIER)
 # refc          L0                ge20dBZ (AUC,BRIER,FBIAS,RELY), ge30dBZ (AUC,BRIER,FBIAS,RELY), ge40dBZ (AUC,BRIER,FBIAS,RELY), ge50dBZ (AUC,BRIER,FBIAS)
@@ -398,23 +398,27 @@ def parse_args(argv, valid_vx_plot_params):
     parser.add_argument('--model_names_short', nargs='+',
                         type=str.lower,
                         required=True,
-                        help='Names of models to include in xml and plots.')
+                        help='Short names of models to include in the verification (vx) plot.')
 
     parser.add_argument('--model_colors', nargs='+',
                         type=str,
                         required=False, default=choices['color'],
                         choices=choices['color'],
-                        help='Color of each model used in verification (vx) metrics plots.')
+                        help='Color to use for each model appearing the vx plot.')
 
     parser.add_argument('--vx_metric',
                         type=str.lower,
                         required=True,
                         choices=choices['vx_metric'],
-                        help='Name of vx metric to plot.')
+                        help='Verification metric to plot.')
 
     parser.add_argument('--incl_ens_means',
                         required=False, action=argparse.BooleanOptionalAction, default=argparse.SUPPRESS,
-                        help='Flag for including ensemble mean curves in plot.')
+                        help=dedent(f"""
+                            Flag for including ensemble mean curves in plot.  This flag is only
+                            relevant for the metrics 'bias' and 'fbias'.  It is ignored for other
+                            metrics.
+                            """))
 
     parser.add_argument('--fcst_init_info', nargs=3,
                         type=str,
@@ -433,18 +437,21 @@ def parse_args(argv, valid_vx_plot_params):
                         type=str.lower,
                         required=True,
                         choices=choices['fcst_field'],
-                        help='Name of forecast field to verify.')
+                        help='Forecast field for which to generate the vx plot.')
 
-    parser.add_argument('--level_or_accum',
+    parser.add_argument('--fcst_level',
                         type=str,
                         required=False,
                         choices=choices['fcst_level'],
-                        help='Vertical level or accumulation period.')
+                        help='Forecast level or accumulation period for which to generate the vx plot.')
 
     parser.add_argument('--threshold',
                         type=str,
                         required=False, default='',
-                        help='Threshold for the specified forecast field.')
+                        help=dedent(f"""
+                            Threshold for the specified forecast field for which to generate the vx
+                            plot.  This option is ignored for metrics that do not require a threshold.
+                            """))
 
     # Parse the arguments.
     cla = parser.parse_args(argv)
@@ -733,30 +740,31 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # as follows:
     cla.incl_ens_means = incl_ens_means
 
-    valid_fcst_levels_or_accums = valid_fcst_levels_by_fcst_field[cla.fcst_field]
-    if cla.level_or_accum not in valid_fcst_levels_or_accums:
+    valid_fcst_levels = valid_fcst_levels_by_fcst_field[cla.fcst_field]
+    if cla.fcst_level not in valid_fcst_levels:
         msg = dedent(f"""
             The specified forecast level or accumulation is not compatible with the
             specified forecast field:
               cla.fcst_field = {get_pprint_str(cla.fcst_field)}
-              cla.level_or_accum = {get_pprint_str(cla.level_or_accum)}
+              cla.fcst_level = {get_pprint_str(cla.fcst_level)}
             Valid options for forecast level or accumulation for this forecast field
             are:
-              valid_fcst_levels_or_accums = """) + \
-            get_pprint_str(valid_fcst_levels_or_accums,
-                           ' '*(5 + len('valid_fcst_levels_or_accums'))).lstrip() + \
+              valid_fcst_levels = """) + \
+            get_pprint_str(valid_fcst_levels,
+                           ' '*(5 + len('valid_fcst_levels'))).lstrip() + \
             dedent(f"""
             Stopping.
             """)
         logging.error(msg)
         raise ValueError(msg)
 
-    # Parse the level/accumulation specified on the command line (cla.level_or_accum)
-    # to obtain its value and units.  The returned value is a list.  If the regular
-    # expression doesn't match anything in cla.level_or_accum (e.g. if the latter is
-    # set to 'L0'), an empty list will be returned.  In that case, the else portion
-    # of the if-else construct below will set loa_value and loa_units to empty strings.
-    loa = re.findall(r'(\d*\.*\d+)([A-Za-z]+)', cla.level_or_accum)
+    # Parse the level/accumulation specified on the command line to obtain
+    # its value and units.  The returned value is a list.  If the regular
+    # expression doesn't match anything in the specified level/accumulation,
+    # (e.g. if the latter is set to 'L0'), an empty list will be returned.
+    # In that case, the else portion of the if-else construct below will set
+    # loa_value and loa_units to empty strings.
+    loa = re.findall(r'(\d*\.*\d+)([A-Za-z]+)', cla.fcst_level)
 
     if loa:
         # Parse specified level/threshold to obtain its value and units.
@@ -773,7 +781,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             Valid units are:
               valid_loa_units = {get_pprint_str(valid_loa_units)}
             Related variables:
-              cla.level_or_accum = {get_pprint_str(cla.level_or_accum)}
+              cla.fcst_level = {get_pprint_str(cla.fcst_level)}
               loa_value = {get_pprint_str(loa_value)}
               loa_value_no0pad = {get_pprint_str(loa_value_no0pad)}
             Stopping.
@@ -789,11 +797,11 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         width_0pad = 2
     elif loa_units == 'mb':
         width_0pad = 3
-    elif (loa_units == '' and cla.level_or_accum == 'L0'):
+    elif (loa_units == '' and cla.fcst_level == 'L0'):
         msg = dedent(f"""
-            Since the specified level/accumulation is '{cla.level_or_accum}', we set loa_units to an empty
+            Since the specified level/accumulation is '{cla.fcst_level}', we set loa_units to an empty
             string:
-              cla.level_or_accum = {get_pprint_str(cla.level_or_accum)}
+              cla.fcst_level = {get_pprint_str(cla.fcst_level)}
               loa_units = {get_pprint_str(loa_units)}
             Related variables:
               loa_value = {get_pprint_str(loa_value)}
@@ -883,7 +891,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Get names of level/accumulation, threshold, and models as they are set
     # in the database.
-    level_in_db = valid_fcst_levels_to_levels_in_db[cla.level_or_accum]
+    level_in_db = valid_fcst_levels_to_levels_in_db[cla.fcst_level]
 
     line_types = list()
     for imod in range(0,num_models_to_plot):
@@ -918,13 +926,13 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         vx_metric_avail_intvl_hrs = 1
         # If the level is actually an accumulation, reset the metric availability
         # interval to the accumulation interval.
-        if (cla.level_or_accum in ['01h', '03h', '06h', '24h']):
+        if (cla.fcst_level in ['01h', '03h', '06h', '24h']):
             vx_metric_avail_intvl_hrs = int(loa_value)
         # If the level is an upper air location, we consider values only at 12Z
         # because the number of observations at other hours of the day is very
         # low (so metrics are unreliable).  Thus, we set vx_metric_avail_intvl_hrs
         # to 12.
-        elif (cla.level_or_accum in ['500mb', '700mb', '850mb']):
+        elif (cla.fcst_level in ['500mb', '700mb', '850mb']):
             vx_metric_avail_intvl_hrs = 12
 
         # Use the metric availability interval to set the forecast hours at
@@ -949,7 +957,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # Generate name of forecast field as it appears in the METviewer database.
     fcst_field_name_in_db = fcst_field_uc
     if fcst_field_uc == 'APCP':
-        fcst_field_name_in_db = '_'.join([fcst_field_name_in_db, cla.level_or_accum[0:2]])
+        fcst_field_name_in_db = '_'.join([fcst_field_name_in_db, cla.fcst_level[0:2]])
     if cla.vx_metric in ['auc', 'brier', 'rely']:
         fcst_field_name_in_db \
         = '_'.join(filter(None,[fcst_field_name_in_db, 'ENS_FREQ',
@@ -1001,9 +1009,9 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         obs_type = 'ADPUPA'
     elif cla.fcst_field == 'vis':
         obs_type = 'ADPSFC'
-    elif cla.level_or_accum in ['2m','02m','10m']:
+    elif cla.fcst_level in ['2m','02m','10m']:
         obs_type = 'ADPSFC'
-    elif cla.level_or_accum in ['500mb','700mb','850mb']:
+    elif cla.fcst_level in ['500mb','700mb','850mb']:
         obs_type = 'ADPUPA'
 
     msg = dedent(f"""
@@ -1030,7 +1038,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "fcst_field_uc": fcst_field_uc,
                    "fcst_field_name_in_db": fcst_field_name_in_db,
                    "level_in_db": level_in_db,
-                   "level_or_accum_no0pad": loa_value_no0pad,
+                   "level_no0pad": loa_value_no0pad,
                    "thresh_in_db": thresh_info['in_db'],
                    "obs_type": obs_type,
                    "vx_metric_uc": cla.vx_metric.upper(),

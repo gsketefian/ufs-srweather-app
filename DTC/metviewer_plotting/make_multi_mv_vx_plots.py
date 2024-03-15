@@ -956,7 +956,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                                  '--fcst_init_info'] + fcst_init_info \
                               + ['--fcst_len_hrs', fcst_len_hrs,
                                  '--fcst_field', field,
-                                 '--level_or_accum', level,
+                                 '--fcst_level', level,
                                  '--threshold', thresh,
                                  '--mv_output_dir', output_dir_crnt_vx_metric]
 
