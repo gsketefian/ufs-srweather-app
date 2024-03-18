@@ -108,7 +108,7 @@ def get_thresh_info(thresh_in_config):
     Arguments:
     ---------
     thresh_in_config:
-      Threshold setting specified on the command line.
+      Threshold specified on the command line.
 
     Returns:
     -------
@@ -743,11 +743,11 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     valid_fcst_levels = valid_fcst_levels_by_fcst_field[cla.fcst_field]
     if cla.fcst_level not in valid_fcst_levels:
         msg = dedent(f"""
-            The specified forecast level or accumulation is not compatible with the
+            The specified forecast level/accumulation is not compatible with the
             specified forecast field:
               cla.fcst_field = {get_pprint_str(cla.fcst_field)}
               cla.fcst_level = {get_pprint_str(cla.fcst_level)}
-            Valid options for forecast level or accumulation for this forecast field
+            Valid options for forecast level/accumulation for this forecast field
             are:
               valid_fcst_levels = """) + \
             get_pprint_str(valid_fcst_levels,
@@ -1009,9 +1009,9 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         obs_type = 'ADPUPA'
     elif cla.fcst_field == 'vis':
         obs_type = 'ADPSFC'
-    elif cla.fcst_level in ['2m','02m','10m']:
+    elif cla.fcst_level in ['2m', '02m', '10m']:
         obs_type = 'ADPSFC'
-    elif cla.fcst_level in ['500mb','700mb','850mb']:
+    elif cla.fcst_level in ['500mb', '700mb', '850mb']:
         obs_type = 'ADPUPA'
 
     msg = dedent(f"""
@@ -1038,7 +1038,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "fcst_field_uc": fcst_field_uc,
                    "fcst_field_name_in_db": fcst_field_name_in_db,
                    "level_in_db": level_in_db,
-                   "level_no0pad": loa_value_no0pad,
+                   "level_value_no_0pad": loa_value_no0pad,
                    "thresh_in_db": thresh_info['in_db'],
                    "obs_type": obs_type,
                    "vx_metric_uc": cla.vx_metric.upper(),
