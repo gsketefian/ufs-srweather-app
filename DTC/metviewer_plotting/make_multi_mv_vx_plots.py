@@ -22,8 +22,15 @@ from make_single_mv_vx_plot import get_pprint_str
 from pathlib import Path
 # Full path to current script.
 crnt_script_fp = Path(__file__).resolve()
+# Directory in which DTC-specific files are placed in the DTC fork of
+# the SRW App.
+dtc_dir = crnt_script_fp.parents[1]
+# Directory in which the SRW App is cloned.  This is one level up from
+# dtc_dir.
+home_dir = Path(os.path.join(dtc_dir, '..')).resolve()
 # Directory containing miscellaneous scripts for the SRW App.
-ush_dir = crnt_script_fp.parents[1]
+ush_dir = os.path.join(home_dir, 'ush')
+
 # Add ush_dir to the path so that python_utils can be imported.
 sys.path.append(str(ush_dir))
 from python_utils import (
