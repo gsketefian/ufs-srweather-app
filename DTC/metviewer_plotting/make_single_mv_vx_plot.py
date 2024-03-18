@@ -100,6 +100,75 @@ def get_pprint_str(var, indent_str=''):
     return var_str
 
 
+def get_level_info(level_in_config):
+    """
+    Function to extract and form various pieces of level- or accumulation-
+    related information from the level or accumulation specified on the
+    command line.
+
+    Arguments:
+    ---------
+    level_in_config:
+      Level or accumulation specified on the command line.
+
+    Returns:
+    -------
+    level_info:
+      Dictionary containing varous level- or accumulation- related variables.
+    """
+
+    # Parse the level/accumulation specified on the command line to obtain
+    # its value and units.  The returned value is a list of tuples, and it
+    # is expected to contain only one tuple.
+    #
+    # The regular expression used below matches a string of digits (including
+    # possibly a decimal point) that represents a number followed by a string
+    # of letters that represents the units (both strings must be at least one
+    # character long).  If the regular expression doesn't match anything in
+    # the specified level/accumulation, (e.g. if the latter is set to 'L0'),
+    # an empty list will be returned.  In that case, the else portion of the
+    # if-else construct below will set level_value and level_units to empty
+    # strings.
+    level_parts = re.findall(r'^(\d*\.*\d+)([A-Za-z]+$)', level_in_config)
+
+    if level_parts:
+        # Parse specified level/threshold to obtain its value and units.
+        level_value, level_units = list(level_parts[0])
+    else:
+        level_value = ''
+        level_units = ''
+
+    valid_level_units = ['', 'h', 'm', 'mb']
+    if level_units not in valid_level_units:
+        msg = dedent(f"""
+            Unknown units extracted from specified level/accumulation:
+              level_units = {get_pprint_str(level_units)}
+            The specified level/accumulation is:
+              level_in_config = {get_pprint_str(level_in_config)}
+            Valid units that may be specified as part of the level/accumulation are:
+              valid_level_units = {get_pprint_str(valid_level_units)}
+            Stopping.
+            """)
+        logging.error(msg)
+        raise ValueError(msg)
+
+    level_value_no_0pad = level_value.lstrip('0')
+    msg = dedent(f"""
+        Level/accumulation parameters have been set as follows:
+          level_value = {get_pprint_str(level_value)}
+          level_value_no_0pad = {get_pprint_str(level_value_no_0pad)}
+          level_units = {get_pprint_str(level_units)}
+        """)
+    logging.debug(msg)
+
+    # Create a dictionary containing the values to return and return it.
+    level_info = {'in_config': level_in_config,
+                  'value': level_value,
+                  'units': level_units,
+                  'value_no_0pad': level_value_no_0pad}
+    return level_info
+
+
 def get_thresh_info(thresh_in_config):
     """
     Function to extract and form various pieces of threshold-related
@@ -758,66 +827,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         logging.error(msg)
         raise ValueError(msg)
 
-    # Parse the level/accumulation specified on the command line to obtain
-    # its value and units.  The returned value is a list.  If the regular
-    # expression doesn't match anything in the specified level/accumulation,
-    # (e.g. if the latter is set to 'L0'), an empty list will be returned.
-    # In that case, the else portion of the if-else construct below will set
-    # loa_value and loa_units to empty strings.
-    loa = re.findall(r'(\d*\.*\d+)([A-Za-z]+)', cla.fcst_level)
-
-    if loa:
-        # Parse specified level/threshold to obtain its value and units.
-        loa_value, loa_units = list(loa[0])
-    else:
-        loa_value = ''
-        loa_units = ''
-
-    valid_loa_units = ['', 'h', 'm', 'mb']
-    if loa_units not in valid_loa_units:
-        msg = dedent(f"""
-            Unknown units (loa_units) for level or accumulation:
-              loa_units = {get_pprint_str(loa_units)}
-            Valid units are:
-              valid_loa_units = {get_pprint_str(valid_loa_units)}
-            Related variables:
-              cla.fcst_level = {get_pprint_str(cla.fcst_level)}
-              loa_value = {get_pprint_str(loa_value)}
-              loa_value_no0pad = {get_pprint_str(loa_value_no0pad)}
-            Stopping.
-            """)
-        logging.error(msg)
-        raise ValueError(msg)
-
-    loa_value_no0pad = loa_value.lstrip('0')
-    width_0pad = 0
-    if loa_units == 'h':
-        width_0pad = 2
-    elif loa_units == 'm':
-        width_0pad = 2
-    elif loa_units == 'mb':
-        width_0pad = 3
-    elif (loa_units == '' and cla.fcst_level == 'L0'):
-        msg = dedent(f"""
-            Since the specified level/accumulation is '{cla.fcst_level}', we set loa_units to an empty
-            string:
-              cla.fcst_level = {get_pprint_str(cla.fcst_level)}
-              loa_units = {get_pprint_str(loa_units)}
-            Related variables:
-              loa_value = {get_pprint_str(loa_value)}
-              loa_value_no0pad = {get_pprint_str(loa_value_no0pad)}
-            """)
-        logging.debug(msg)
-
-    loa_value_0pad = loa_value_no0pad.zfill(width_0pad)
-    msg = dedent(f"""
-        Level/accumulation parameters have been set as follows:
-          loa_value = {get_pprint_str(loa_value)}
-          loa_value_no0pad = {get_pprint_str(loa_value_no0pad)}
-          loa_value_0pad = {get_pprint_str(loa_value_0pad)}
-          loa_units = {get_pprint_str(loa_units)}
-        """)
-    logging.debug(msg)
+    level_info = get_level_info(cla.fcst_level)
 
     if (not vx_metric_needs_thresh[cla.vx_metric]) and (cla.threshold):
         no_thresh_metrics = [key for key,val in vx_metric_needs_thresh.items() if val]
@@ -865,14 +875,16 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         raise ValueError(msg)
 
     # Form the plot title.
+    level_str = ''.join([level_info['value'], level_info['units']])
     plot_title = ' '.join(filter(None,
                           [vx_metric_long_names[cla.vx_metric], 'for',
-                           ''.join([loa_value, loa_units]), fcst_field_long_names[cla.fcst_field],
+                           level_str, 
+                           fcst_field_long_names[cla.fcst_field],
                            thresh_info['in_plot_title']]))
 
     # Form the job title needed in the xml.
     fcst_field_uc = cla.fcst_field.upper()
-    var_lvl_str = ''.join(filter(None, [fcst_field_uc, loa_value, loa_units]))
+    var_lvl_str = ''.join(filter(None, [fcst_field_uc, level_str]))
     thresh_str = ''.join(filter(None, [thresh_info['comp_oper'], thresh_info['value'], thresh_info['units']]))
     var_lvl_thresh_str = '_'.join(filter(None, [var_lvl_str, thresh_str]))
     models_str = '_'.join(cla.model_names_short)
@@ -927,7 +939,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         # If the level is actually an accumulation, reset the metric availability
         # interval to the accumulation interval.
         if (cla.fcst_level in ['01h', '03h', '06h', '24h']):
-            vx_metric_avail_intvl_hrs = int(loa_value)
+            vx_metric_avail_intvl_hrs = int(level_info['value'])
         # If the level is an upper air location, we consider values only at 12Z
         # because the number of observations at other hours of the day is very
         # low (so metrics are unreliable).  Thus, we set vx_metric_avail_intvl_hrs
@@ -1038,7 +1050,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "fcst_field_uc": fcst_field_uc,
                    "fcst_field_name_in_db": fcst_field_name_in_db,
                    "level_in_db": level_in_db,
-                   "level_value_no_0pad": loa_value_no0pad,
+                   "level_value_no_0pad": level_info['value_no_0pad'],
                    "thresh_in_db": thresh_info['in_db'],
                    "obs_type": obs_type,
                    "vx_metric_uc": cla.vx_metric.upper(),
