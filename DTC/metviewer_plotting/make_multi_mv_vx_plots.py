@@ -1063,7 +1063,7 @@ def main():
 
     parser.add_argument('--plot_config_fp',
                         type=str,
-                        required=False, default='plot_config.default.yaml',
+                        required=False, default='multi_plot_config.default.yaml',
                         help=dedent(f"""
                             Name of or path (absolute or relative) to yaml user plot configuration
                             file for METviewer plot generation.  Among other pieces of information,
