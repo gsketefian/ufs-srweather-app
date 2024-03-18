@@ -14,7 +14,7 @@ generic_database: &generic_database
 mv_gefs_gdas_rtps_href_spring_2022:
     <<: *generic_database
     models:
-        - long_name: 'GDAS'
+        - long_name: 'RRFS_GDAS_GF.SPP.SPPT'
           short_name: 'gdas'
           num_ens_mems: 10
         - long_name: 'HREF'
