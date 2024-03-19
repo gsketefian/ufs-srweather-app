@@ -5,14 +5,14 @@
     <connection>
         <host>{{mv_host}}</host>
         <database>{{mv_database}}</database>
-        <user>{{mv_machine_config_dict["user"]}}</user>
-        <password>{{mv_machine_config_dict["password"]}}</password>
+        <user>{{mv_host_config_dict["user"]}}</user>
+        <password>{{mv_host_config_dict["password"]}}</password>
         <management_system>mariadb</management_system>
     </connection>
-    <rscript>{{mv_machine_config_dict["Rscript_fp"]}}</rscript>
+    <rscript>{{mv_host_config_dict["Rscript_fp"]}}</rscript>
     <folders>
-        <r_tmpl>{{mv_machine_config_dict["R_tmpl_dir"]}}</r_tmpl>
-        <r_work>{{mv_machine_config_dict["R_work_dir"]}}</r_work>
+        <r_tmpl>{{mv_host_config_dict["R_tmpl_dir"]}}</r_tmpl>
+        <r_work>{{mv_host_config_dict["R_work_dir"]}}</r_work>
         <plots>{{output_dir}}/plots</plots>
         <data>{{output_dir}}/data</data>
         <scripts>{{output_dir}}/scripts</scripts>
