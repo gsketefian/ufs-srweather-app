@@ -146,7 +146,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     logging.debug(msg)
     mv_host = plot_config_dict['mv_host']
     mv_database_name = plot_config_dict['mv_database_name']
-    model_names = plot_config_dict['model_names']
+    model_names_short = plot_config_dict['model_names_short']
     fcst_init_info = plot_config_dict['fcst_init_info']
     fcst_len_hrs = plot_config_dict['fcst_len_hrs']
     metrics_fields_levels_threshes_dict = plot_config_dict["metrics_fields_levels_threshes"]
@@ -894,10 +894,10 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                            ' '*(5 + len('fields_levels_threshes_dict'))).lstrip()
         logging.debug(msg)
 
-        # If args.make_vx_metric_subdirs is set to True, place the output for
-        # each metric in a separate subdirectory under the main output directory.
+        # If args.make_metric_subdirs is set to True, place the output for each
+        # metric in a separate subdirectory under the main output directory.
         # Otherwise, place the output directly under the main output directory.
-        if args.make_vx_metric_subdirs:
+        if args.make_metric_subdirs:
             output_dir_crnt_vx_metric = os.path.join(args.output_dir, metric)
         else:
             output_dir_crnt_vx_metric = args.output_dir
@@ -958,14 +958,14 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
 
                     args_list = ['--mv_host', mv_host, \
                                  '--mv_database_name', mv_database_name, \
-                                 '--model_names', ] + model_names \
-                              + ['--vx_metric', metric,
-                                 '--fcst_init_info'] + fcst_init_info \
-                              + ['--fcst_len_hrs', fcst_len_hrs,
+                                 '--output_dir', output_dir_crnt_vx_metric, \
+                                 '--model_names_short', ] + model_names_short \
+                              + ['--fcst_init_info'] + fcst_init_info \
+                              + ['--fcst_len_hrs', fcst_len_hrs, \
+                                 '--vx_metric', metric,
                                  '--fcst_field', field,
                                  '--fcst_level', level,
-                                 '--threshold', thresh,
-                                 '--mv_output_dir', output_dir_crnt_vx_metric]
+                                 '--threshold', thresh]
 
                     msg = dedent(f"""
                         Argument list passed to plotting script is:
@@ -1091,7 +1091,7 @@ def main():
                             Method for dealing with pre-existing output directories.
                             """))
 
-    parser.add_argument('--make_vx_metric_subdirs',
+    parser.add_argument('--make_metric_subdirs',
                         required=False, action=argparse.BooleanOptionalAction,
                         help=dedent(f"""
                             Flag for placing output for each metric to be plotted in a separate

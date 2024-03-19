@@ -459,7 +459,7 @@ def parse_args(argv, valid_vx_plot_params):
     crnt_script_fp = Path(__file__).resolve()
     home_dir = crnt_script_fp.parents[2]
     expts_dir = Path(os.path.join(home_dir, '../expts_dir')).resolve()
-    parser.add_argument('--mv_output_dir',
+    parser.add_argument('--output_dir',
                         type=str,
                         required=False, default=os.path.join(expts_dir, 'mv_output'),
                         help='Directory in which to place output (e.g. plots) from METviewer.')
@@ -1040,7 +1040,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     jinja2_vars = {"mv_host": cla.mv_host,
                    "mv_machine_config_dict": mv_machine_config_dict,
                    "mv_database_name": cla.mv_database_name,
-                   "mv_output_dir": cla.mv_output_dir,
+                   "output_dir": cla.output_dir,
                    "num_models_to_plot": num_models_to_plot,
                    "num_ens_mems_by_model": num_ens_mems_by_model,
                    "model_names_in_db": model_names_in_db_to_plot,
@@ -1097,7 +1097,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Place xmls generated below in the same directory as the plots that
     # METviewer will generate from the xmls.
-    output_xml_dir = Path(os.path.join(cla.mv_output_dir, 'plots')).resolve()
+    output_xml_dir = Path(os.path.join(cla.output_dir, 'plots')).resolve()
     if not os.path.exists(output_xml_dir):
         os.makedirs(output_xml_dir)
     output_xml_fn = '_'.join(filter(None,

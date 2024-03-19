@@ -11,9 +11,9 @@
     <folders>
         <r_tmpl>{{mv_machine_config_dict["R_tmpl_dir"]}}</r_tmpl>
         <r_work>{{mv_machine_config_dict["R_work_dir"]}}</r_work>
-        <plots>{{mv_output_dir}}/plots</plots>
-        <data>{{mv_output_dir}}/data</data>
-        <scripts>{{mv_output_dir}}/scripts</scripts>
+        <plots>{{output_dir}}/plots</plots>
+        <data>{{output_dir}}/data</data>
+        <scripts>{{output_dir}}/scripts</scripts>
     </folders>
     <plot>
         <template>series_plot.R_tmpl</template>
