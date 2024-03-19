@@ -145,7 +145,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
         """)
     logging.debug(msg)
     mv_host = plot_config_dict['mv_host']
-    mv_database_name = plot_config_dict['mv_database_name']
+    mv_database = plot_config_dict['mv_database']
     model_names_short = plot_config_dict['model_names_short']
     fcst_init_info = plot_config_dict['fcst_init_info']
     fcst_len_hrs = plot_config_dict['fcst_len_hrs']
@@ -156,7 +156,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     # in the plot configuration file.
     mv_databases_config_fp = 'mv_databases.yaml'
     mv_databases_dict = load_config_file(mv_databases_config_fp)
-    valid_threshes_for_db = list(mv_databases_dict[mv_database_name]['valid_threshes'])
+    valid_threshes_for_db = list(mv_databases_dict[mv_database]['valid_threshes'])
 
     # Some of the values in the fcst_init_info dictionary are strings while
     # others are integers.  Also, we don't need the keys.  Thus, convert
@@ -199,7 +199,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
             msg = dedent(f"""
                 One or more thresholds passed to the '--{option}' option are
                 not valid for the specified database.  The name of this database is:
-                  mv_database_name = {get_pprint_str(mv_database_name)}
+                  mv_database = {get_pprint_str(mv_database)}
                 The specified thresholds that are not valid for this database are:
                   threshes_not_in_db = {get_pprint_str(threshes_not_in_db)}
                 If these thresholds are in fact in the database, then add them to the
@@ -957,7 +957,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                     logging.info(msg)
 
                     args_list = ['--mv_host', mv_host, \
-                                 '--mv_database_name', mv_database_name, \
+                                 '--mv_database', mv_database, \
                                  '--output_dir', output_dir_crnt_vx_metric, \
                                  '--model_names_short', ] + model_names_short \
                               + ['--fcst_init_info'] + fcst_init_info \

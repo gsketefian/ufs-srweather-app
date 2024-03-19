@@ -443,7 +443,7 @@ def parse_args(argv, valid_vx_plot_params):
                         required=False, default='mv_machines.yaml',
                         help='METviewer machine (host) configuration file.')
 
-    parser.add_argument('--mv_database_name',
+    parser.add_argument('--mv_database',
                         type=str,
                         required=True,
                         help='Name of METviewer database.')
@@ -598,12 +598,12 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Make sure that the database specified on the command line exists in the
     # list of databases in the database configuration file.
-    if cla.mv_database_name not in mv_databases_dict.keys():
+    if cla.mv_database not in mv_databases_dict.keys():
         msg = dedent(f"""
-            The database specified on the command line (cla.mv_database_name) is not
+            The database specified on the command line (cla.mv_database) is not
             in the set of METviewer databases specified in the database configuration
             file (cla.mv_databases_config_fp):
-              cla.mv_database_name = {get_pprint_str(cla.mv_database_name)}
+              cla.mv_database = {get_pprint_str(cla.mv_database)}
               cla.mv_databases_config_fp = {get_pprint_str(cla.mv_databases_config_fp)}
             Stopping.
             """)
@@ -611,7 +611,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         raise ValueError(msg)
 
     # Extract the METviewer database information.
-    database_info = mv_databases_dict[cla.mv_database_name]
+    database_info = mv_databases_dict[cla.mv_database]
     valid_threshes_in_db = list(database_info['valid_threshes'])
     model_info = list(database_info['models'])
 
@@ -650,10 +650,10 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         if model_name_short not in model_names_short_avail_in_db:
             msg = dedent(f"""
                 A model specified on the command line (model_name_short) is not included
-                in the entry for the specified database (cla.mv_database_name) in the
-                METviewer database configuration file (cla.mv_databases_config_fp)
+                in the entry for the specified database (cla.mv_database) in the METviewer
+                database configuration file (cla.mv_databases_config_fp)
                   cla.mv_databases_config_fp = {get_pprint_str(cla.mv_databases_config_fp)}
-                  cla.mv_database_name = {get_pprint_str(cla.mv_database_name)}
+                  cla.mv_database = {get_pprint_str(cla.mv_database)}
                   model_name_short = {get_pprint_str(model_name_short)}
                 Models that are included in the database configuration file are:
                   model_names_short_avail_in_db = """) + \
@@ -716,7 +716,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         msg = dedent(f"""
             The specified threshold is not in the list of valid thresholds for the
             specified database.  Database is:
-              cla.mv_database_name = {get_pprint_str(cla.mv_database_name)}
+              cla.mv_database = {get_pprint_str(cla.mv_database)}
             Threshold is:
               cla.threshold = {get_pprint_str(cla.threshold)}
             The list of valid thresholds for this database is:
@@ -1039,7 +1039,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # jinja2 template.
     jinja2_vars = {"mv_host": cla.mv_host,
                    "mv_machine_config_dict": mv_machine_config_dict,
-                   "mv_database_name": cla.mv_database_name,
+                   "mv_database": cla.mv_database,
                    "output_dir": cla.output_dir,
                    "num_models_to_plot": num_models_to_plot,
                    "num_ens_mems_by_model": num_ens_mems_by_model,
