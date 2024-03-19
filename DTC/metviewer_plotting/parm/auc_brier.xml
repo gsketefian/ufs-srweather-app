@@ -2,7 +2,7 @@
 <plot_spec>
     <connection>
         <host>{{mv_host}}</host>
-        <database>{{mv_database_name}}</database>
+        <database>{{mv_database}}</database>
         <user>{{mv_machine_config_dict["user"]}}</user>
         <password>{{mv_machine_config_dict["password"]}}</password>
         <management_system>mariadb</management_system>
