@@ -443,15 +443,15 @@ def parse_args(argv, valid_vx_plot_params):
                         required=False, default='mv_machines.yaml',
                         help='METviewer machine (host) configuration file.')
 
-    parser.add_argument('--mv_databases_config_fp',
-                        type=str,
-                        required=False, default='mv_databases.yaml',
-                        help='METviewer database configuration file.')
-
     parser.add_argument('--mv_database_name',
                         type=str,
                         required=True,
                         help='Name of METviewer database.')
+
+    parser.add_argument('--mv_databases_config_fp',
+                        type=str,
+                        required=False, default='mv_databases.yaml',
+                        help='METviewer database configuration file.')
 
     # Find the path to the directory containing the clone of the SRW App.
     # The index of .parents will have to be changed if this script is moved
@@ -475,20 +475,6 @@ def parse_args(argv, valid_vx_plot_params):
                         choices=choices['color'],
                         help='Color to use for each model appearing the vx plot.')
 
-    parser.add_argument('--vx_metric',
-                        type=str.lower,
-                        required=True,
-                        choices=choices['vx_metric'],
-                        help='Verification metric to plot.')
-
-    parser.add_argument('--incl_ens_means',
-                        required=False, action=argparse.BooleanOptionalAction, default=argparse.SUPPRESS,
-                        help=dedent(f"""
-                            Flag for including ensemble mean curves in plot.  This flag is only
-                            relevant for the metrics 'bias' and 'fbias'.  It is ignored for other
-                            metrics.
-                            """))
-
     parser.add_argument('--fcst_init_info', nargs=3,
                         type=str,
                         required=True,
@@ -501,6 +487,12 @@ def parse_args(argv, valid_vx_plot_params):
                         type=int,
                         required=True,
                         help='Forecast length (in integer hours).')
+
+    parser.add_argument('--vx_metric',
+                        type=str.lower,
+                        required=True,
+                        choices=choices['vx_metric'],
+                        help='Verification metric to plot.')
 
     parser.add_argument('--fcst_field',
                         type=str.lower,
@@ -520,6 +512,14 @@ def parse_args(argv, valid_vx_plot_params):
                         help=dedent(f"""
                             Threshold for the specified forecast field for which to generate the vx
                             plot.  This option is ignored for metrics that do not require a threshold.
+                            """))
+
+    parser.add_argument('--incl_ens_means',
+                        required=False, action=argparse.BooleanOptionalAction, default=argparse.SUPPRESS,
+                        help=dedent(f"""
+                            Flag for including ensemble mean curves in plot.  This flag is only
+                            relevant for the metrics 'bias' and 'fbias'.  It is ignored for other
+                            metrics.
                             """))
 
     # Parse the arguments.

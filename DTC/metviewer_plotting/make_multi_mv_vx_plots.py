@@ -1053,6 +1053,21 @@ def main():
         description='Call METviewer to create vx plots.'
     )
 
+    parser.add_argument('--plot_config_fp',
+                        type=str,
+                        required=False, default='multi_plot_config.default.yaml',
+                        help=dedent(f"""
+                            Name of or path (absolute or relative) to yaml user plot configuration
+                            file for METviewer plot generation.  Among other pieces of information,
+                            this file specifies the initial set of vx metric, forecast field,
+                            forecast level, and field threshold (if the metric requires a threshold)
+                            combinations to consider for plotting.  Combinations are then removed
+                            from this set according to the --incl_only_[metrics|fields|levels|threshes]
+                            --excl_[metrics|fields|levels|threshes] options specified on the command
+                            line to obtain a final set of metric-field-level-threshold combinations
+                            for which to generate verification (vx) plots.
+                            """))
+
     # Find the path to the directory containing the clone of the SRW App.
     # The index of .parents will have to be changed if this script is moved
     # elsewhere in the SRW App's directory structure.
@@ -1068,19 +1083,30 @@ def main():
                             subdirectories under this output directory.
                             """))
 
-    parser.add_argument('--plot_config_fp',
-                        type=str,
-                        required=False, default='multi_plot_config.default.yaml',
+    parser.add_argument('--preexisting_dir_method',
+                        type=str.lower,
+                        required=False, default='rename',
+                        choices=['rename', 'delete', 'quit'],
                         help=dedent(f"""
-                            Name of or path (absolute or relative) to yaml user plot configuration
-                            file for METviewer plot generation.  Among other pieces of information,
-                            this file specifies the initial set of vx metric, forecast field,
-                            forecast level, and field threshold (if the metric requires a threshold)
-                            combinations to consider for plotting.  Combinations are then removed
-                            from this set according to the --incl_only_[metrics|fields|levels|threshes]
-                            --excl_[metrics|fields|levels|threshes] options specified on the command
-                            line to obtain a final set of metric-field-level-threshold combinations
-                            for which to generate verification (vx) plots.
+                            Method for dealing with pre-existing output directories.
+                            """))
+
+    parser.add_argument('--make_vx_metric_subdirs',
+                        required=False, action=argparse.BooleanOptionalAction,
+                        help=dedent(f"""
+                            Flag for placing output for each metric to be plotted in a separate
+                            subdirectory under the output directory.
+                            """))
+
+    parser.add_argument('--create_ordered_plots',
+                        required=False, action=argparse.BooleanOptionalAction,
+                        help=dedent(f"""
+                            Flag for creating a directory that contains copies of all the generated
+                            images (png files) and renamed such that they are alphabetically in the
+                            same order as the user has specified in the plot configuration file (the
+                            one passed to the optional --plot_config_fp argument).  This is useful
+                            for creating a pdf of the plots from the images that includes the plots
+                            in the same order as in the plot configuration file.
                             """))
 
     parser.add_argument('--log_fp',
@@ -1264,32 +1290,6 @@ def main():
                             file, a warning is issued (and, as expected, no plots involving that
                             threshold are generated).  For simplicity, this option cannot be
                             specified together with the --incl_only_threshes option.
-                            """))
-
-    parser.add_argument('--preexisting_dir_method',
-                        type=str.lower,
-                        required=False, default='rename',
-                        choices=['rename', 'delete', 'quit'],
-                        help=dedent(f"""
-                            Method for dealing with pre-existing output directories.
-                            """))
-
-    parser.add_argument('--make_vx_metric_subdirs',
-                        required=False, action=argparse.BooleanOptionalAction,
-                        help=dedent(f"""
-                            Flag for placing output for each metric to be plotted in a separate
-                            subdirectory under the output directory.
-                            """))
-
-    parser.add_argument('--create_ordered_plots',
-                        required=False, action=argparse.BooleanOptionalAction,
-                        help=dedent(f"""
-                            Flag for creating a directory that contains copies of all the generated
-                            images (png files) and renamed such that they are alphabetically in the
-                            same order as the user has specified in the plot configuration file (the
-                            one passed to the optional --plot_config_fp argument).  This is useful
-                            for creating a pdf of the plots from the images that includes the plots
-                            in the same order as in the plot configuration file.
                             """))
 
     args = parser.parse_args()
