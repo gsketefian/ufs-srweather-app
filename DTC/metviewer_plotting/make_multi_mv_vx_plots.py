@@ -154,8 +154,8 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     # Load the yaml-format METviewer database configuration file and extract
     # from it the list of valid threshold values for the database specified
     # in the plot configuration file.
-    mv_databases_config_fp = 'mv_databases.yaml'
-    mv_databases_dict = load_config_file(mv_databases_config_fp)
+    mv_database_config_fp = 'mv_databases.yaml'
+    mv_databases_dict = load_config_file(mv_database_config_fp)
     valid_threshes_for_db = list(mv_databases_dict[mv_database]['valid_threshes'])
 
     # Some of the values in the fcst_init_info dictionary are strings while
@@ -205,7 +205,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                 If these thresholds are in fact in the database, then add them to the
                 list of valid thresholds in the database configuration file and rerun.
                 The database configuration file is:
-                  mv_databases_config_fp = {get_pprint_str(mv_databases_config_fp)}
+                  mv_database_config_fp = {get_pprint_str(mv_database_config_fp)}
                 Thresholds that are currently specified in this file as valid for the
                 database are:
                   valid_threshes_for_db

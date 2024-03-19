@@ -383,14 +383,14 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     return valid_vx_plot_params
 
 
-def get_database_info(mv_databases_config_fp):
+def get_database_info(mv_database_config_fp):
     """
     Function to read in information about the METviewer database from which
     verification (vx) metrics will be plotted.
 
     Arguments:
     ---------
-    mv_databases_config_fp:
+    mv_database_config_fp:
       Path to yaml METviewer database configuration file.
 
     Returns:
@@ -400,7 +400,7 @@ def get_database_info(mv_databases_config_fp):
     """
 
     # Load the yaml file containing database information.
-    mv_databases_dict = load_config_file(mv_databases_config_fp)
+    mv_databases_dict = load_config_file(mv_database_config_fp)
 
     return mv_databases_dict
 
@@ -448,7 +448,7 @@ def parse_args(argv, valid_vx_plot_params):
                         required=True,
                         help='Name of METviewer database.')
 
-    parser.add_argument('--mv_databases_config_fp',
+    parser.add_argument('--mv_database_config_fp',
                         type=str,
                         required=False, default='mv_databases.yaml',
                         help='METviewer database configuration file.')
@@ -602,9 +602,9 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         msg = dedent(f"""
             The database specified on the command line (cla.mv_database) is not
             in the set of METviewer databases specified in the database configuration
-            file (cla.mv_databases_config_fp):
+            file (cla.mv_database_config_fp):
               cla.mv_database = {get_pprint_str(cla.mv_database)}
-              cla.mv_databases_config_fp = {get_pprint_str(cla.mv_databases_config_fp)}
+              cla.mv_database_config_fp = {get_pprint_str(cla.mv_database_config_fp)}
             Stopping.
             """)
         logging.error(msg)
@@ -651,8 +651,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             msg = dedent(f"""
                 A model specified on the command line (model_name_short) is not included
                 in the entry for the specified database (cla.mv_database) in the METviewer
-                database configuration file (cla.mv_databases_config_fp)
-                  cla.mv_databases_config_fp = {get_pprint_str(cla.mv_databases_config_fp)}
+                database configuration file (cla.mv_database_config_fp)
+                  cla.mv_database_config_fp = {get_pprint_str(cla.mv_database_config_fp)}
                   cla.mv_database = {get_pprint_str(cla.mv_database)}
                   model_name_short = {get_pprint_str(model_name_short)}
                 Models that are included in the database configuration file are:
@@ -727,7 +727,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
             Make sure the specified threshold is one of the valid ones, or, if it
             exists in the database, add it to the 'valid_threshes' list in the
             METviewer database configuration file given by:
-              cla.mv_databases_config_fp = {get_pprint_str(cla.mv_databases_config_fp)}
+              cla.mv_database_config_fp = {get_pprint_str(cla.mv_database_config_fp)}
             Stopping.
             """)
         logging.error(msg)
@@ -1319,11 +1319,11 @@ def make_single_mv_vx_plot(argv):
     # Get METviewer database information.
     msg = dedent(f"""
         Obtaining METviewer database information from file
-          {get_pprint_str(cla.mv_databases_config_fp)}
+          {get_pprint_str(cla.mv_database_config_fp)}
         ...
         """)
     logging.info(msg)
-    mv_databases_dict = get_database_info(cla.mv_databases_config_fp)
+    mv_databases_dict = get_database_info(cla.mv_database_config_fp)
 
     # Generate a METviewer xml.
     msg = dedent(f"""
