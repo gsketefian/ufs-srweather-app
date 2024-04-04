@@ -1,8 +1,8 @@
 mv_host: 'mohawk'
 
-mv_database_name: 'mv_gefs_gdas_rtps_href_spring_2022'
+mv_database: 'mv_gefs_gdas_rtps_href_spring_2022'
 
-model_names: ['href', 'gdas', 'gefs']
+model_names_short: ['href', 'gdas', 'gefs']
 
 fcst_init_info:
     fcst_init_time_first: '2022050100'
