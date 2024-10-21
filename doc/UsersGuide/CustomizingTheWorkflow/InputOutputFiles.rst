@@ -226,14 +226,14 @@ A set of input files, including static (fix) data and raw initial and lateral bo
 Static Files
 --------------
 
-Static files are available in the `"fix" directory <https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html#develop-20240618/fix/>`__ of the SRW App Data Bucket. Users can download the full set of fix files as a tar file:
+Static files are available in the "fix" directory of the SRW App Data Bucket. Users can download the full set of fix files as a tar file:
 
 .. code-block:: console
 
    wget https://noaa-ufs-srw-pds.s3.amazonaws.com/experiment-user-cases/release-public-v2.2.0/out-of-the-box/fix_data.tgz
    tar -xzf fix_data.tgz
 
-Alternatively, users can download the static files individually from the `"fix" directory <https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html#develop-20240618/fix/>`__ of the SRW Data Bucket using the ``wget`` command for each required file. Users will need to create an appropriate directory structure for the files when downloading them individually. The best solution is to download the files into directories that mirror the structure of the `Data Bucket <https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html>`__.
+Alternatively, users can download the static files individually from the "fix" directory of the SRW Data Bucket using the ``wget`` command for each required file. Users will need to create an appropriate directory structure for the files when downloading them individually. The best solution is to download the files into directories that mirror the structure of the `Data Bucket <https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html>`__.
 
 The environment variables ``FIXgsm``, ``FIXorg``, and ``FIXsfc`` indicate the path to the directories where the static files are located. After downloading the experiment data, users must set the paths to the files in ``config.yaml``. Add the following code to the ``task_run_fcst:`` section of the ``config.yaml`` file, and alter the variable paths accordingly:
 
@@ -320,7 +320,7 @@ Default Initial and Lateral Boundary Conditions
 -----------------------------------------------
 
 The default initial and lateral boundary condition files are set to be a severe weather case from June 15, 2019 (20190615) at 18 UTC. FV3GFS GRIB2 files are the default model and file format. A tar file
-(``gst_data.tgz``) containing the model data for this case is available in the `UFS SRW App Data Bucket <https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html#experiment-user-cases/release-public-v2.2.0/out-of-the-box/>`__. 
+(``gst_data.tgz``) containing the model data for this case is available in the UFS SRW App Data Bucket.
 
 Running the App for Different Dates
 -----------------------------------
@@ -356,7 +356,6 @@ AWS S3 Data Buckets:
 * HRRR: https://registry.opendata.aws/noaa-hrrr-pds/ (necessary fields for initializing available for dates 2015 and newer)
 * A list of the NOAA Open Data Dissemination (NODD) datasets can be found here: https://www.noaa.gov/nodd/datasets
 * RRFS - experimental data is available starting 02/01/2024 for deteministic forecasts starting hourly. Forecast data are available out to 60 hours for 00, 06, 12, and 18 UTC starting times (cycles), and out to 18 hours for other cycles. Earlier dates, from 05/01/2023 to 01/31/2024, may contain only forecasts at 00, 06, 12, 18 UTC; user needs to verify that data exist for needed dates.
-  https://noaa-rrfs-pds.s3.amazonaws.com/index.html#rrfs_a/
 
 NCEI Archive:
 

@@ -45,12 +45,12 @@ On :srw-wiki:`Level 1 <Supported-Platforms-and-Compilers>` systems, users can fi
 
    * FV3GFS data for the first forecast (``control``) is located at: 
    
-      * https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html#develop-20240618/input_model_data/FV3GFS/grib2/2019061518/
+      * Bad link here
 
    * HRRR and RAP data for the second forecast (``test_expt``) is located at: 
       
-      * https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html#develop-20240618/input_model_data/HRRR/2019061518/
-      * https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html#develop-20240618/input_model_data/RAP/2019061518/
+      * Bad link here
+      * Bad link here
 
 Load the Workflow
 --------------------
