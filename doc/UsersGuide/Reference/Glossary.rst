@@ -257,7 +257,7 @@ Glossary
       A repository that houses external code, or "externals," from additional repositories.
 
    Updraft helicity
-      Helicity measures the rotation in a storm's updraft (rising) air. Significant rotation increases the probability that the storm will produce severe weather, including tornadoes. See http://ww2010.atmos.uiuc.edu/(Gh)/guides/mtr/svr/modl/fcst/params/hel.rxml for more details on updraft helicity. 
+      Helicity measures the rotation in a storm's updraft (rising) air. Significant rotation increases the probability that the storm will produce severe weather, including tornadoes. See <a possibly broken link> for more details on updraft helicity. 
 
    UPP
       The `Unified Post Processor <https://github.com/NOAA-EMC/UPP>`__ is software developed at :term:`NCEP` and used operationally to 
