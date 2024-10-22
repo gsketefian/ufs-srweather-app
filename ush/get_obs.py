@@ -53,12 +53,10 @@ def get_obs_arcv_hr(obtype, arcv_intvl_hrs, hod):
     """
 
     valid_obtypes = ['CCPA', 'NOHRSC', 'MRMS', 'NDAS']
-    obtype_upper = obtype.upper()
-    if obtype_upper not in valid_obtypes:
+    if obtype not in valid_obtypes:
         msg = dedent(f"""
-            The specified observation type (after converting to upper case) is not
-            supported:
-                {obtype_upper = }
+            The specified observation type is not supported:
+                {obtype = }
             Valid observation types are:
                 {valid_obtypes}
         """)
@@ -91,19 +89,19 @@ def get_obs_arcv_hr(obtype, arcv_intvl_hrs, hod):
     # through 6 of the day in the archive labeled with hour 6 while an
     # instantaneous obs type may put the obs files for hours 0 through 5 of
     # the day in the archive labeled with hour 6.
-    if obtype_upper in ['CCPA']:
+    if obtype in ['CCPA']:
         if hod == 0:
             arcv_hr = 24
         else:
             arcv_hr = ceil(hod/arcv_intvl_hrs)*arcv_intvl_hrs
-    elif obtype_upper in ['NOHRSC']:
+    elif obtype in ['NOHRSC']:
         if hod == 0:
             arcv_hr = 24
         else:
             arcv_hr = floor(hod/arcv_intvl_hrs)*arcv_intvl_hrs
-    elif obtype_upper in ['MRMS']:
+    elif obtype in ['MRMS']:
         arcv_hr = (floor(hod/arcv_intvl_hrs))*arcv_intvl_hrs
-    elif obtype_upper in ['NDAS']:
+    elif obtype in ['NDAS']:
         arcv_hr = (floor(hod/arcv_intvl_hrs) + 1)*arcv_intvl_hrs
 
     return arcv_hr

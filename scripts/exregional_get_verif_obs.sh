@@ -68,7 +68,7 @@ python3 -u ${USHdir}/get_obs.py \
 --obs_day ${PDY}"
 print_info_msg "
 CALLING: ${cmd}"
-${cmd} || print_err_msg_exit "Error calling ${script_bn}.py."
+${cmd} || print_err_msg_exit "Error calling get_obs.py"
 #
 #-----------------------------------------------------------------------
 #
