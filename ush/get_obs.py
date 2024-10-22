@@ -15,7 +15,14 @@ import retrieve_data
 from python_utils import (
     load_yaml_config,
 )
-
+from mrms_pull_topofhour import mrms_pull_topofhour
+try:
+    sys.path.append(os.environ['METPLUS_ROOT'])
+except:
+    print("\nERROR ERROR ERROR\n")
+    print("Environment variable METPLUS_ROOT must be set to use this script\n")
+    raise
+from metplus.util import string_template_substitution as sts
 
 def get_obs_arcv_hr(obtype, arcv_intvl_hrs, hod):
     """
@@ -482,20 +489,14 @@ def get_obs(config, obtype, yyyymmdd_task):
     for fg, fp_proc_templ in zip(field_groups_in_obs, fp_proc_templates):
         all_fp_proc_dict[fg] = []
         for yyyymmddhh in obs_retrieve_times_crnt_day:
-            # Set the lead hour, i.e. the number of hours from the beginning of the
+            # Set the lead time, a timedelta object from the beginning of the
             # day at which the file is valid.
-            lhr = int((yyyymmddhh - yyyymmdd_task)/dt.timedelta(hours=1))
-            # Call a bash script to evaluate the template for the full path to the
-            # file containing METplus timestrings at the current time.  This should
-            # be upgraded to a python script at some point.
-            cmd = '; '.join(['export USHdir=' + ushdir,
-                             'export yyyymmdd_task=' + yyyymmdd_task_str,
-                             'export lhr=' + str(lhr),
-                             'export METplus_timestr_tmpl=' + fp_proc_templ,
-                              os.path.join(ushdir, 'run_eval_METplus_timestr_tmpl.sh')])
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            fp_proc = result.stdout.strip()
-            all_fp_proc_dict[fg].append(fp_proc)
+            leadtime = yyyymmddhh - yyyymmdd_task
+            # Call METplus subroutine to evaluate the template for the full path to
+            # the file containing METplus timestrings at the current time.
+            fn = sts.do_string_sub(tmpl=fp_proc_templ,init=yyyymmdd_task,valid=yyyymmddhh,
+                                   lead=leadtime.total_seconds())
+            all_fp_proc_dict[fg].append(fn)
 
     # Check whether any obs files already exist on disk in their processed
     # (i.e. final) locations.  If so, adjust the starting archive hour.  In
@@ -804,25 +805,21 @@ def get_obs(config, obtype, yyyymmdd_task):
                         # those that are nearest in time to the current hour.  Unzip these in a
                         # temporary subdirectory under the raw base directory.
                         #
-                        # Note that the script we call to do this (mrms_pull_topofhour.py) assumes
+                        # Note that the function we call to do this (mrms_pull_topofhour) assumes
                         # a certain file naming convention.  That convention must match the names
                         # of the files that the retrieve_data.py script called above ends up
                         # retrieving.  The list of possible templates for these names is given
                         # in parm/data_locations.yml, but which of those is actually used is not
                         # known until retrieve_data.py completes.  Thus, that information needs
-                        # to be passed back by retrieve_data.py and then passed to mrms_pull_topofhour.py.
+                        # to be passed back by retrieve_data.py and then passed to mrms_pull_topofhour.
                         # For now, we hard-code the file name here.
                         if obtype == 'MRMS':
                             yyyymmddhh_str = dt.datetime.strftime(yyyymmddhh, '%Y%m%d%H')
-                            cmd = ' '.join(['python3', \
-                                            '-u', os.path.join(ushdir, 'mrms_pull_topofhour.py'), \
-                                            '--valid_time', yyyymmddhh_str, \
-                                            '--source', basedir_raw, \
-                                            '--outdir', os.path.join(basedir_raw, 'topofhour'), \
-                                            '--product', fields_in_filenames[i], \
-                                            '--no-add_vdate_subdir'])
-                            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-                            rc = result.returncode
+                            mrms_pull_topofhour(valid_time=yyyymmddhh_str,
+                                                source=basedir_raw,
+                                                outdir=os.path.join(basedir_raw, 'topofhour'),
+                                                product=fields_in_filenames[i],
+                                                add_vdate_subdir=False)
 
                         # The raw file name needs to be the same as what the retrieve_data.py
                         # script called above ends up retrieving.  The list of possible templates

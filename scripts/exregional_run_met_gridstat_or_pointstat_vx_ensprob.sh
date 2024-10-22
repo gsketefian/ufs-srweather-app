@@ -22,7 +22,6 @@ done
 #
 . $USHdir/get_metplus_tool_name.sh
 . $USHdir/set_vx_params.sh
-. $USHdir/set_leadhrs.sh
 #
 #-----------------------------------------------------------------------
 #
@@ -175,15 +174,17 @@ case "$OBTYPE" in
 esac
 vx_hr_end="${FCST_LEN_HRS}"
 
-set_leadhrs \
-  yyyymmddhh_init="${CDATE}" \
-  lhr_min="${vx_hr_start}" \
-  lhr_max="${vx_hr_end}" \
-  lhr_intvl="${vx_intvl}" \
-  base_dir="${OBS_INPUT_DIR}" \
-  fn_template="${OBS_INPUT_FN_TEMPLATE}" \
-  num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}" \
-  outvarname_lhrs_list="VX_LEADHR_LIST"
+set -x
+VX_LEADHR_LIST=$( python3 $USHdir/set_leadhrs.py \
+  --date_init="${CDATE}" \
+  --lhr_min="${vx_hr_start}" \
+  --lhr_max="${vx_hr_end}" \
+  --lhr_intvl="${vx_intvl}" \
+  --base_dir="${OBS_INPUT_DIR}" \
+  --fn_template="${OBS_INPUT_FN_TEMPLATE}" \
+  --num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}" ) || \
+print_err_msg_exit "Call to set_leadhrs.py failed with return code: $?"
+
 #
 #-----------------------------------------------------------------------
 #

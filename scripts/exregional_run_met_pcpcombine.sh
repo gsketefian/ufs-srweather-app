@@ -22,7 +22,6 @@ done
 #
 . $USHdir/get_metplus_tool_name.sh
 . $USHdir/set_vx_params.sh
-. $USHdir/set_leadhrs.sh
 #
 #-----------------------------------------------------------------------
 #
@@ -212,12 +211,14 @@ fi
 #
 #-----------------------------------------------------------------------
 #
+set -x
 vx_intvl="$((10#${ACCUM_HH}))"
-set_leadhrs_no_missing \
-  lhr_min="${vx_intvl}" \
-  lhr_max="${FCST_LEN_HRS}" \
-  lhr_intvl="${vx_intvl}" \
-  outvarname_lhrs_list_no_missing="VX_LEADHR_LIST"
+VX_LEADHR_LIST=$( python3 $USHdir/set_leadhrs.py \
+  --lhr_min="${vx_intvl}" \
+  --lhr_max="${FCST_LEN_HRS}" \
+  --lhr_intvl="${vx_intvl}" \
+  --skip_check_files ) || \
+print_err_msg_exit "Call to set_leadhrs.py failed with return code: $?"
 #
 #-----------------------------------------------------------------------
 #
@@ -250,15 +251,16 @@ for hr_end in ${subintvl_end_hrs[@]}; do
 Checking for the presence of files that will contribute to the ${vx_intvl}-hour
 accumulation ending at lead hour ${hr_end} (relative to ${CDATE})...
 "
-  set_leadhrs \
-    yyyymmddhh_init="${CDATE}" \
-    lhr_min="${hr_start}" \
-    lhr_max="${hr_end}" \
-    lhr_intvl="${subintvl}" \
-    base_dir="${base_dir}" \
-    fn_template="${fn_template}" \
-    num_missing_files_max="${num_missing_files_max}" \
-    outvarname_lhrs_list="tmp"
+  python3 $USHdir/set_leadhrs.py \
+    --date_init="${CDATE}" \
+    --lhr_min="${hr_start}" \
+    --lhr_max="${hr_end}" \
+    --lhr_intvl="${subintvl}" \
+    --base_dir="${base_dir}" \
+    --fn_template="${fn_template}" \
+    --num_missing_files_max="${num_missing_files_max}" \
+    --time_lag="${time_lag%.*}" || \
+print_err_msg_exit "Call to set_leadhrs.py failed with return code: $?"
 done
 
 print_info_msg "

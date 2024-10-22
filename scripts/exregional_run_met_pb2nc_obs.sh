@@ -160,11 +160,12 @@ for yyyymmddhh in ${obs_retrieve_times_crnt_day[@]}; do
   # create.
   sec_since_ref=$(${DATE_UTIL} --date "${yyyymmdd} ${hh} hours" +%s)
   lhr=$(( (sec_since_ref - sec_since_ref_task)/3600 ))
-  eval_METplus_timestr_tmpl \
-    init_time="${yyyymmdd_task}00" \
-    fhr="${lhr}" \
-    METplus_timestr_tmpl="${OBS_DIR}/${OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE}" \
-    outvarname_evaluated_timestr="fp"
+
+  fp=$( python3 $USHdir/run_eval_metplus_timestr_tmpl.py \
+    --init_time="${yyyymmdd_task}00" \
+    --fhr="${lhr}" \
+    --fn_template="${OBS_DIR}/${OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE}") || \
+print_err_msg_exit "Call to run_eval_metplus_timestr_tmpl.py failed with return code: $?"
 
   if [[ -f "${fp}" ]]; then
     print_info_msg "
