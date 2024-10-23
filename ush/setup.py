@@ -706,57 +706,62 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
     #
     # -----------------------------------------------------------------------
     #
-    vx_fields_all = {}
-    vx_metatasks_all = {}
+    vx_field_groups_all_by_obtype = {}
+    vx_metatasks_all_by_obtype = {}
 
-    vx_fields_all["CCPA"] = ["APCP"]
-    vx_metatasks_all["CCPA"] = ["task_get_obs_ccpa",
-                                "metatask_PcpCombine_obs_APCP_all_accums_CCPA",
-                                "metatask_PcpCombine_fcst_APCP_all_accums_all_mems",
-                                "metatask_GridStat_CCPA_all_accums_all_mems",
-                                "metatask_GenEnsProd_EnsembleStat_CCPA",
-                                "metatask_GridStat_CCPA_ensmeanprob_all_accums"]
+    vx_field_groups_all_by_obtype["CCPA"] = ["APCP"]
+    vx_metatasks_all_by_obtype["CCPA"] \
+    = ["task_get_obs_ccpa",
+       "metatask_PcpCombine_obs_APCP_all_accums_CCPA",
+       "metatask_PcpCombine_fcst_APCP_all_accums_all_mems",
+       "metatask_GridStat_CCPA_all_accums_all_mems",
+       "metatask_GenEnsProd_EnsembleStat_CCPA",
+       "metatask_GridStat_CCPA_ensmeanprob_all_accums"]
 
-    vx_fields_all["NOHRSC"] = ["ASNOW"]
-    vx_metatasks_all["NOHRSC"] = ["task_get_obs_nohrsc",
-                                  "metatask_PcpCombine_obs_ASNOW_all_accums_NOHRSC",
-                                  "metatask_PcpCombine_fcst_ASNOW_all_accums_all_mems",
-                                  "metatask_GridStat_NOHRSC_all_accums_all_mems",
-                                  "metatask_GenEnsProd_EnsembleStat_NOHRSC",
-                                  "metatask_GridStat_NOHRSC_ensmeanprob_all_accums"]
+    vx_field_groups_all_by_obtype["NOHRSC"] = ["ASNOW"]
+    vx_metatasks_all_by_obtype["NOHRSC"] \
+    = ["task_get_obs_nohrsc",
+       "metatask_PcpCombine_obs_ASNOW_all_accums_NOHRSC",
+       "metatask_PcpCombine_fcst_ASNOW_all_accums_all_mems",
+       "metatask_GridStat_NOHRSC_all_accums_all_mems",
+       "metatask_GenEnsProd_EnsembleStat_NOHRSC",
+       "metatask_GridStat_NOHRSC_ensmeanprob_all_accums"]
 
-    vx_fields_all["MRMS"] = ["REFC", "RETOP"]
-    vx_metatasks_all["MRMS"] = ["task_get_obs_mrms",
-                                "metatask_GridStat_MRMS_all_mems",
-                                "metatask_GenEnsProd_EnsembleStat_MRMS",
-                                "metatask_GridStat_MRMS_ensprob"]
+    vx_field_groups_all_by_obtype["MRMS"] = ["REFC", "RETOP"]
+    vx_metatasks_all_by_obtype["MRMS"] \
+    = ["task_get_obs_mrms",
+       "metatask_GridStat_MRMS_all_mems",
+       "metatask_GenEnsProd_EnsembleStat_MRMS",
+       "metatask_GridStat_MRMS_ensprob"]
 
-    vx_fields_all["NDAS"] = ["ADPSFC", "ADPUPA"]
-    vx_metatasks_all["NDAS"] = ["task_get_obs_ndas",
-                                "task_run_MET_Pb2nc_obs_NDAS",
-                                "metatask_PointStat_NDAS_all_mems",
-                                "metatask_GenEnsProd_EnsembleStat_NDAS",
-                                "metatask_PointStat_NDAS_ensmeanprob"]
+    vx_field_groups_all_by_obtype["NDAS"] = ["ADPSFC", "ADPUPA"]
+    vx_metatasks_all_by_obtype["NDAS"] \
+    = ["task_get_obs_ndas",
+       "task_run_MET_Pb2nc_obs_NDAS",
+       "metatask_PointStat_NDAS_all_mems",
+       "metatask_GenEnsProd_EnsembleStat_NDAS",
+       "metatask_PointStat_NDAS_ensmeanprob"]
 
-    # If there are no vx fields specified, remove those tasks that are necessary
-    # for all observation types.
-    vx_fields = vx_config["VX_FIELDS"]
-    if not vx_fields:
+    # If there are no field groups specified for verification, remove those
+    # tasks that are common to all observation types.
+    vx_field_groups = vx_config["VX_FIELD_GROUPS"]
+    if not vx_field_groups:
         metatask = "metatask_check_post_output_all_mems"
         rocoto_config['tasks'].pop(metatask)
 
-    # If for a given obstype no fields are specified, remove all vx metatasks
-    # for that obstype.
-    for obstype in vx_fields_all:
-        vx_fields_by_obstype = [field for field in vx_fields if field in vx_fields_all[obstype]]
-        if not vx_fields_by_obstype:
-            for metatask in vx_metatasks_all[obstype]:
+    # If for a given obs type none of its field groups are specified for
+    # verification, remove all vx metatasks for that obs type.
+    for obtype in vx_field_groups_all_by_obtype:
+        #vx_field_groups_crnt_obtype = [field for field in vx_fields if field in vx_fields_all[obtype]]
+        vx_field_groups_crnt_obtype = list(set(vx_field_groups) & set(vx_field_groups_all_by_obtype[obtype]))
+        if not vx_field_groups_crnt_obtype:
+            for metatask in vx_metatasks_all_by_obtype[obtype]:
                 if metatask in rocoto_config['tasks']:
                     logging.info(dedent(
                         f"""
-                        Removing verification [meta]task
+                        Removing verification (meta)task
                           "{metatask}"
-                        from workflow since no fields belonging to observation type "{obstype}"
+                        from workflow since no fields belonging to observation type "{obtype}"
                         are specified for verification."""
                     ))
                     rocoto_config['tasks'].pop(metatask)
