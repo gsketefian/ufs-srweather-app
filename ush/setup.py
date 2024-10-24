@@ -768,6 +768,36 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
     #
     # -----------------------------------------------------------------------
     #
+    # If there are at least some field groups to verify, then make sure that
+    # the base directories in which retrieved obs files will be placed are
+    # distinct for the different obs types.
+    #
+    # -----------------------------------------------------------------------
+    #
+    if vx_field_groups:
+        obtypes_all = ['CCPA', 'NOHRSC', 'MRMS', 'NDAS']
+        obs_basedir_var_names = [f'{obtype}_OBS_DIR' for obtype in obtypes_all]
+        obs_basedirs_dict = {key: vx_config[key] for key in obs_basedir_var_names}
+        obs_basedirs_orig = list(obs_basedirs_dict.values())
+        obs_basedirs_uniq = list(set(obs_basedirs_orig))
+        if len(obs_basedirs_orig) != len(obs_basedirs_uniq):
+            msg1 = dedent(f"""
+                The base directories for the obs files must be distinct, but at least two
+                are identical:""")
+            msg2 = ''
+            for obs_basedir_var_name, obs_dir in obs_basedirs_dict.items():
+                msg2 = msg2 + dedent(f"""
+                    {obs_basedir_var_name} = {obs_dir}""")
+            msg3 = dedent(f"""
+                Modify these in the SRW App's user configuration file to make them distinct
+                and rerun.
+                """)
+            msg = msg1 + '    '.join(msg2.splitlines(True)) + msg3
+            logging.error(msg)
+            raise ValueError(msg)
+    #
+    # -----------------------------------------------------------------------
+    #
     # The "cycled_from_second" cycledef in the default workflow configuration
     # file (default_workflow.yaml) requires the starting date of the second
     # cycle.  That is difficult to calculate in the yaml file itself because
