@@ -2558,12 +2558,12 @@ verification:
   VX_APCP_ACCUMS_HRS: [ 1, 3, 6, 24 ]
   VX_ASNOW_ACCUMS_HRS: [ 6, 24 ]
   #
-  # Set the forecast output interval to use for verification purposes.
-  # If the forecasts to be verified are being run in the SRW (i.e. they
-  # are not staged from another forecast model), then this should be set
-  # set to the SRW's forecast output interval, but such a variable is
-  # currently not available in this configuration file.  Instead, for
-  # now we set it to a default value of 1 hour.
+  # VX_FCST_OUTPUT_INTVL_HRS:
+  # The forecast output interval to use for verification purposes.  The
+  # default value is currently 1 hour, but if/when a variable is created
+  # in this configuration file that specifies the forecast output interval
+  # for native SRW forecasts, then the default value of VX_FCST_OUTPUT_INTVL_HRS
+  # should be set to that.
   #
   VX_FCST_OUTPUT_INTVL_HRS: 1
   #
