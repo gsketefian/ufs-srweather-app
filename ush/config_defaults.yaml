@@ -2372,48 +2372,108 @@ verification:
   MRMS_OBS_DIR: "{{ workflow.EXPTDIR }}/obs_data/mrms"
   NDAS_OBS_DIR: "{{ workflow.EXPTDIR }}/obs_data/ndas"
   #
-  # OBS_[CCPA_APCP|NOHRSC_ASNOW|MRMS_[REFC|RETOP]|NDAS_ADPSFCandADPUPA]_FN_TEMPLATE:
-  # File name templates for various obs type and vx field group combinations.
+  # OBS_[CCPA|NOHRSC|MRMS|NDAS]_FN_TEMPLATES:
+  # File name templates for various obs types.  These are meant to be used
+  # in METplus configuration files and thus contain METplus time formatting
+  # strings.  Each of these variables is a python list containing pairs of
+  # values.  The first element of each pair specifies the verification field
+  # group(s) for which the file name template will be needed, and the second
+  # element is the file name template itself, which may include a leading
+  # relative directory.  (Here, by "verification field group" we mean a
+  # group of fields that is verified together in the workflow.)  For example,
+  # for the CCPA obs type, the variable name is OBS_CCPA_FN_TEMPLATES, and
+  # its default value contains only one pair of values given by
+  #
+  #     [ 'APCP',
+  #       '{%- set obs_avail_intvl_hrs = "%02d" % CCPA_OBS_AVAIL_INTVL_HRS %}
+  #        {{- "{valid?fmt=%Y%m%d}/ccpa.t{valid?fmt=%H}z." ~ obs_avail_intvl_hrs ~ "h.hrap.conus.gb2" }}' ]
+  #
+  # Thus, if CCPA_OBS_AVAIL_INTVL_HRS is set to 1 above (i.e. the CCPA obs
+  # are available every 1 hour), then for a valid time of 2024042903, the
+  # obs file name (including a relative path) to look for and, if necessary,
+  # create, will be
+  #
+  #     20240429/ccpa.t03z.01h.hrap.conus.gb2
+  #
+  # This file will be used in the verification of fields under the APCP
+  # field group (which consist of accumulated precipitation for various
+  # accumulation intervals).
   #
   # Notes:
   #
-  # * These are relative to the obs base directories
+  # * The file name templates are relative to the obs base directories given
+  #   in the variables
+  #
   #       [CCPA|NOHRSC|MRMS|NDAS]_OBS_DIR
-  #   defined above.  Thus, the full template to the obs files is given, e.g.
-  #   for CCPA obs, by {CCPA_OBS_DIR}/{OBS_CCPA_APCP_FN_TEMPLATE}.
   #
-  # * These may represent file names only, or they may include relative paths
-  #   before the file names.
+  #   defined above.  Thus, the template for the full path to the obs files
+  #   is given, e.g. for CCPA obs, by
   #
-  # * These templates must contain full information about the year, month,
-  #   day, and hour by including METplus time strings that serve as templates
-  #   for this information.  Some of this information may be in the relative
-  #   directory portion and the rest in the file name, or there may be no
-  #   relative directory portion and all of it may be in the file name, but
-  #   all four pieces of timing information must be present somewhere in
-  #   this template as METplus time strings.  Otherwise, obs files created 
-  #   by the get_obs tasks for different days might overwrite each other.
+  #       {CCPA_OBS_DIR}/{OBS_CCPA_FN_TEMPLATES[1]},
   #
-  # * If one or more of the obs files specified by this full path do not
-  #   exist on disk, all the files will be created by first retrieving "raw"
-  #   versions of them from a data store (e.g. NOAA's HPSS) and then placing
-  #   these raw files in the locations specified by this full path template.
+  #   where the [1] indicates the second element of the list OBS_CCPA_FN_TEMPLATES.
+  #
+  # * The file name templates may represent file names only, or they may
+  #   include leading relative directories.
+  #
+  # * The default values of these variables for the CCPA, NOHRSC, and NDAS
+  #   obs types contain only one pair of values (because these obs types
+  #   contain only one set of file that we use in the verification) while
+  #   the default value for the MRMS obs type contains two pairs of values,
+  #   one for obs files that contain composite reflectivity data and another
+  #   for the ones that contain echo top data (simply because the MRMS obs
+  #   do not group these two fields together in one set of file as do, for
+  #   example, the NDAS obs).
+  #
+  # * Each template must contain full information about the year, month,
+  #   day, and hour by including METplus time formatting strings that serve
+  #   as templates for this information.  Some of this information (e.g.
+  #   the year, month, and day) may be in the relative directory portion
+  #   of the template and the rest (e.g. the hour) in the file name, or
+  #   there may be no relative directory portion and all of this information
+  #   may be in the file name, but all four pieces of timing information
+  #   must be present somewhere in each template as METplus time formatting
+  #   strings.  If not, obs files created by the get_obs tasks for different
+  #   days might overwrite each other.
+  #
+  # * The workflow creates a get_obs task for each obs type that is needed
+  #   in the verification and for each day on which that obs type is needed
+  #   at at least some hours.  That get_obs task first checks whether all
+  #   the necessary obs files for that day already exist at the locations
+  #   specified by the full path template(s) (which is formed by combining
+  #   the base directory and the file name template).  If for a given day
+  #   one or more of these obs files do not exist on disk, the get_obs task
+  #   will retrieve "raw" versions of these files from a data store (e.g.
+  #   NOAA's HPSS) and will place them in a temporary "raw" directory.  It
+  #   will then move or copy these raw files to the locations specified by
+  #   the full path template(s).
   #
   # * The raw obs files, i.e. the obs files as they are named and arranged
-  #   in the data stores, may be different than the file path/name specified
-  #   in these variables.  The list of templates for raw files to search
-  #   for in the data stores is given in the data retrieval configuration
-  #   file at parm/data_locations.yml.  Once retrieved, these raw files are
-  #   renamed and relocated on disk to the locations specified by
-  #   {..._OBS_DIR}/{..._FN_TEMPLATE}.
+  #   in the data stores and retrieved to the raw directories, may be
+  #   arranged differently and/or have names that are different from the
+  #   ones specified in the file name templates.  If so, they are renamed
+  #   while being moved or copied from the raw directories to the locations
+  #   specified by the full path template(s).  (The lists of templates for
+  #   searching for and retrieving files from the data stores is different
+  #   than the METplus templates described here; the former are given in
+  #   the data retrieval configuration file at parm/data_locations.yml.)
   #
-  OBS_CCPA_APCP_FN_TEMPLATE: '{%- set data_intvl_hrs = "%02d" % CCPA_OBS_AVAIL_INTVL_HRS %}
-                              {{- "{valid?fmt=%Y%m%d}/ccpa.t{valid?fmt=%H}z." ~ data_intvl_hrs ~ "h.hrap.conus.gb2" }}'
-  OBS_NOHRSC_ASNOW_FN_TEMPLATE: '{%- set data_intvl_hrs = "%d" % NOHRSC_OBS_AVAIL_INTVL_HRS %}
-                                 {{- "sfav2_CONUS_" ~ data_intvl_hrs ~ "h_{valid?fmt=%Y%m%d%H}_grid184.grb2" }}'
-  OBS_MRMS_REFC_FN_TEMPLATE: '{valid?fmt=%Y%m%d}/MergedReflectivityQCComposite_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2'
-  OBS_MRMS_RETOP_FN_TEMPLATE: '{valid?fmt=%Y%m%d}/EchoTop_18_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2'
-  OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE: 'prepbufr.ndas.{valid?fmt=%Y%m%d%H}'
+  # * When the ex-scripts for the various vx tasks are converted from bash
+  #   to python scripts, these variables should be converted from python
+  #   lists to python dictionaries, where the first element of each pair
+  #   becomes the key and the second becomes the value.  This currently
+  #   cannot be done due to limitations in the workflow on converting
+  #   python dictionaries to bash variables.
+  #
+  OBS_CCPA_FN_TEMPLATES: [ 'APCP',
+                           '{%- set obs_avail_intvl_hrs = "%02d" % CCPA_OBS_AVAIL_INTVL_HRS %}
+                            {{- "{valid?fmt=%Y%m%d}/ccpa.t{valid?fmt=%H}z." ~ obs_avail_intvl_hrs ~ "h.hrap.conus.gb2" }}' ]
+  OBS_NOHRSC_FN_TEMPLATES: [ 'ASNOW',
+                             '{%- set obs_avail_intvl_hrs = "%d" % NOHRSC_OBS_AVAIL_INTVL_HRS %}
+                              {{- "sfav2_CONUS_" ~ obs_avail_intvl_hrs ~ "h_{valid?fmt=%Y%m%d%H}_grid184.grb2" }}' ]
+  OBS_MRMS_FN_TEMPLATES: [ 'REFC', '{valid?fmt=%Y%m%d}/MergedReflectivityQCComposite_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2',
+                           'RETOP', '{valid?fmt=%Y%m%d}/EchoTop_18_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2' ]
+  OBS_NDAS_FN_TEMPLATES: [ 'ADPSFCandADPUPA', 'prepbufr.ndas.{valid?fmt=%Y%m%d%H}' ]
   #
   # Time interval (in hours) at which various types of obs are available on
   # NOAA's HPSS.
@@ -2429,13 +2489,13 @@ verification:
   NDAS_OBS_AVAIL_INTVL_HRS: 1
   #
   # REMOVE_RAW_OBS_DIRS_[CCPA|NOHRSC|MRMS|NDAS]:
-  # Boolean flag specifying whether to remove the "raw" observation
-  # directories after pulling the specified type of obs (CCPA, NOHRSC,
-  # MRMS, or NOHRSC).  The raw directories are the ones in which the
-  # observation files are placed immediately after pulling them from
-  # a data store (e.g. NOAA's HPSS) but before performing any processing
-  # on them (e.g. renaming the files or reorganizing their directory
-  # structure).
+  # Flag specifying whether to remove the "raw" observation directories
+  # after retrieving the specified type of obs (CCPA, NOHRSC, MRMS, or
+  # NOHRSC) from a data store (e.g. NOAA's HPSS).  The raw directories
+  # are the ones in which the observation files are placed immediately
+  # after pulling them from the data store but before performing any
+  # processing on them such as renaming the files and/or reorganizing
+  # their directory structure.
   #
   REMOVE_RAW_OBS_CCPA: true
   REMOVE_RAW_OBS_NOHRSC: true
@@ -2443,30 +2503,29 @@ verification:
   REMOVE_RAW_OBS_NDAS: true
   # 
   # OBS_CCPA_APCP_FN_TEMPLATE_PCPCOMBINE_OUTPUT: 
-  # Template used to specify the names of the output NetCDF observation
-  # files generated by the worfklow verification tasks that call the METplus
-  # PcpCombine tool on CCPA observations.  (These files will contain obs
-  # APCP, both for 1 hour and for > 1 hour accumulation periods, in NetCDF
-  # format.)
+  # METplus file name template used to specify the names of the NetCDF
+  # files generated by the worfklow verification tasks that call METplus's
+  # PcpCombine tool on CCPA observations.  These files will contain observed
+  # accumulated precip in NetCDF format for various accumulation intervals.
   #
   # OBS_NOHRSC_ASNOW_FN_TEMPLATE_PCPCOMBINE_OUTPUT: 
-  # Template used to specify the names of the output NetCDF observation
-  # files generated by the worfklow verification tasks that call the METplus
-  # PcpCombine tool on NOHRSC observations.  (These files will contain obs
-  # APCP, both for 1 hour and for > 1 hour accumulation periods, in NetCDF
-  # format.)
+  # METplus file name template used to specify the names of the NetCDF
+  # files generated by the worfklow verification tasks that call METplus's
+  # PcpCombine tool on NOHRSC observations.  These files will contain 
+  # observed observed accumulated snow for various accumulaton intervals.
   #
   # OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE_PB2NC_OUTPUT: 
-  # Template used to specify the names of the output NetCDF observation
-  # files generated by the worfklow verification tasks that call the
-  # METplus Pb2nc tool on NDAS observations.  (These files will contain
-  # obs ADPSFC or ADPUPA fields in NetCDF format.)
+  # METplus file name template used to specify the names of the NetCDF
+  # files generated by the worfklow verification tasks that call METplus's
+  # Pb2nc tool on NDAS observations.  These files will contain the observed
+  # ADPSFC or ADPUPA fields in NetCDF format (instead of NDAS's native
+  # prepbufr format).
   #
-  OBS_CCPA_APCP_FN_TEMPLATE_PCPCOMBINE_OUTPUT: '{%- set data_intvl_hrs = "%02d" % CCPA_OBS_AVAIL_INTVL_HRS %}
-                                                {{- "ccpa.t{valid?fmt=%H}z." ~ data_intvl_hrs ~ "h.hrap.conus.gb2_a${ACCUM_HH}h.nc" }}'
-  OBS_NOHRSC_ASNOW_FN_TEMPLATE_PCPCOMBINE_OUTPUT: '{%- set data_intvl_hrs = "%d" % NOHRSC_OBS_AVAIL_INTVL_HRS %}
-                                                   {{- "sfav2_CONUS_" ~ data_intvl_hrs ~ "h_{valid?fmt=%Y%m%d%H}_grid184.grb2_a${ACCUM_HH}h.nc" }}'
-  OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE_PB2NC_OUTPUT: '${OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE}.nc'
+  OBS_CCPA_APCP_FN_TEMPLATE_PCPCOMBINE_OUTPUT: '{%- set obs_avail_intvl_hrs = "%02d" % CCPA_OBS_AVAIL_INTVL_HRS %}
+                                                {{- "ccpa.t{valid?fmt=%H}z." ~ obs_avail_intvl_hrs ~ "h.hrap.conus.gb2_a${ACCUM_HH}h.nc" }}'
+  OBS_NOHRSC_ASNOW_FN_TEMPLATE_PCPCOMBINE_OUTPUT: '{%- set obs_avail_intvl_hrs = "%d" % NOHRSC_OBS_AVAIL_INTVL_HRS %}
+                                                   {{- "sfav2_CONUS_" ~ obs_avail_intvl_hrs ~ "h_{valid?fmt=%Y%m%d%H}_grid184.grb2_a${ACCUM_HH}h.nc" }}'
+  OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE_PB2NC_OUTPUT: '${OBS_NDAS_FN_TEMPLATES[1]}.nc'
   #
   # VX_FCST_MODEL_NAME:
   # String that specifies a descriptive name for the model being verified.

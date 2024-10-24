@@ -132,11 +132,11 @@ if [ "${grid_or_point}" = "grid" ]; then
       ;;
     "REFC")
       OBS_INPUT_DIR="${OBS_DIR}"
-      OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_REFC_FN_TEMPLATE}"
+      OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_FN_TEMPLATES[1]}"
       ;;
     "RETOP")
       OBS_INPUT_DIR="${OBS_DIR}"
-      OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_RETOP_FN_TEMPLATE}"
+      OBS_INPUT_FN_TEMPLATE="${OBS_MRMS_FN_TEMPLATES[3]}"
       ;;
   esac
 

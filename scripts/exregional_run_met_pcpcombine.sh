@@ -195,7 +195,7 @@ if [ "${FCST_OR_OBS}" = "FCST" ]; then
 elif [ "${FCST_OR_OBS}" = "OBS" ]; then
 
   OBS_INPUT_DIR="${OBS_DIR}"
-  fn_template=$(eval echo \${OBS_${OBTYPE}_${VAR}_FN_TEMPLATE})
+  fn_template=$(eval echo \${OBS_${OBTYPE}_FN_TEMPLATES[1]})
   OBS_INPUT_FN_TEMPLATE=$( eval echo ${fn_template} )
 
   OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}${slash_obs_or_null}"

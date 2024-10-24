@@ -136,7 +136,7 @@ set_vx_params \
 vx_output_basedir=$( eval echo "${VX_OUTPUT_BASEDIR}" )
 
 OBS_INPUT_DIR="${OBS_DIR}"
-OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE} )
+OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_FN_TEMPLATES[1]} )
 
 OUTPUT_BASE="${vx_output_basedir}"
 OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_obs"
@@ -163,7 +163,7 @@ for yyyymmddhh in ${obs_retrieve_times_crnt_day[@]}; do
   eval_METplus_timestr_tmpl \
     init_time="${yyyymmdd_task}00" \
     fhr="${lhr}" \
-    METplus_timestr_tmpl="${OBS_DIR}/${OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE}" \
+    METplus_timestr_tmpl="${OBS_DIR}/${OBS_NDAS_FN_TEMPLATES[1]}" \
     outvarname_evaluated_timestr="fp"
 
   if [[ -f "${fp}" ]]; then

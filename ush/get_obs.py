@@ -322,53 +322,30 @@ def get_obs(config, obtype, yyyymmdd_task):
     # Get the base directory for the observations.
     obs_dir = vx_config[f'{obtype}_OBS_DIR']
 
-    # For each observation type, set the group of fields contained in those
-    # observation files that we need for verification.  Each group of fields
-    # is one that is verified together in the workflow.  We assume there is
-    # a separate set of obs files for each such field group in the observations,
-    # and in the code below we loop over these sets of files as necessary.
-    # There are several scenarios to consider:
-    #
-    # * An obs type consists of only one set of files containing only one
-    #   field.
-    #   This is the case for CCPA and NOHRSC obs.  CCPA obs consist only one
-    #   set of files that contain APCP data, and NOHRSC obs consist of only
-    #   one set of files that contain ASNOW data.
-    #
-    # * An obs type consists of more than one set of files, with each file
-    #   containing a different field.
-    #   This is the case for MRMS obs.  These consist of two sets of files.
-    #   The first set contains REFC data, and the second contains RETOP data.
-    #
-    # * An obs type consists of only one set of files, but each file contains
-    #   multiple groups of fields needed for verification.
-    #   This is the case for NDAS obs.  These consist of a single set of files,
-    #   but each file contains both the ADPSFC fields (like 2-m temperature)
-    #   and ADPUPA fields (like 500-mb temperature) that are verified separately
-    #   in the workflow tasks and thus are considered separate field groups.
-    #
-    # Other obs type and field group scenarios are also possible, but we do
-    # not describe them since they are not applicable to any of the obs types
-    # considered here.
-    if obtype == 'CCPA':
-        field_groups_in_obs = ['APCP']
-    elif obtype == 'NOHRSC':
-        field_groups_in_obs = ['ASNOW']
-    elif obtype == 'MRMS':
-        field_groups_in_obs = ['REFC', 'RETOP']
-    elif obtype == 'NDAS':
-        field_groups_in_obs = ['ADPSFCandADPUPA']
-    num_field_groups = len(field_groups_in_obs)
+    # Get from the verification configuration dictionary the list of METplus
+    # file name template(s) corresponding to the obs type.
+    obs_fn_templates = vx_config[f'OBS_{obtype}_FN_TEMPLATES']
 
-    # For each field group in the observations, get the METplus file name
-    # template for the observation files.  Then combine these with the base
-    # directory to get the METplus template for the full path on disk to
-    # the processed obs files.  If obs files do not already exist at these
-    # locations, they will be retrieved from HPSS and placed at these locations.
-    fp_proc_templates = []
-    for fg in field_groups_in_obs:
-        fn_proc_template = vx_config[f'OBS_{obtype}_{fg}_FN_TEMPLATE']
-        fp_proc_templates.append(os.path.join(obs_dir, fn_proc_template))
+    # Note that the list obs_fn_templates consists of pairs of elements such
+    # that the first element of the pair represents the verification field
+    # group(s) for which an obs file name template will be needed and the
+    # second element is the template itself.  For convenience, convert this
+    # information to a dictionary in which the field groups are the keys and
+    # the templates are the values.
+    #
+    # Note:
+    # Once the ex-scripts for the vx tasks are converted from bash to python,
+    # the lists in the SRW App's configuration file containing the METplus
+    # obs file name template(s) (from which the variable obs_fn_templates
+    # was obtained above) can be converted to python dictionaries.  Then the
+    # list-to-dictionary conversion step here will no longer be needed.
+    obs_fn_templates_by_fg = dict()
+    for i in range(0, len(obs_fn_templates), 2):
+        obs_fn_templates_by_fg[obs_fn_templates[i]] = obs_fn_templates[i+1]
+
+    # For convenience, get the list of verification field groups for which
+    # the various obs file templates will be used.
+    field_groups_in_obs = obs_fn_templates_by_fg.keys()
     #
     #-----------------------------------------------------------------------
     #
@@ -388,27 +365,25 @@ def get_obs(config, obtype, yyyymmdd_task):
 
     # For MRMS obs, set field-dependent parameters needed in forming grib2
     # file names.
-    fields_in_filenames = []
-    levels_in_filenames = []
+    mrms_fields_in_obs_filenames = []
+    mrms_levels_in_obs_filenames = []
     if obtype == 'MRMS':
-        valid_mrms_field_groups = ['REFC', 'RETOP']
         for fg in field_groups_in_obs:
-            if fg not in valid_mrms_field_groups:
+            if fg == 'REFC':
+                mrms_fields_in_obs_filenames.append('MergedReflectivityQCComposite')
+                mrms_levels_in_obs_filenames.append('00.50')
+            elif fg == 'RETOP':
+                mrms_fields_in_obs_filenames.append('EchoTop')
+                mrms_levels_in_obs_filenames.append('18_00.50')
+            else:
                 msg = dedent(f"""
-                    Invalid field group specified for obs type:
+                    Field and level names have not been specified for this {obtype} field
+                    group:
                         {obtype = }
                         {fg = }
-                    Valid field group are:
-                        {valid_mrms_field_groups}
                     """)
                 logging.error(msg)
                 raise ValueError(msg)
-            if fg == 'REFC':
-                fields_in_filenames.append('MergedReflectivityQCComposite')
-                levels_in_filenames.append('00.50')
-            elif fg == 'RETOP':
-                fields_in_filenames.append('EchoTop')
-                levels_in_filenames.append('18_00.50')
 
     # CCPA files for 1-hour accumulation have incorrect metadata in the files
     # under the "00" directory from 20180718 to 20210504.  Set these starting
@@ -477,7 +452,8 @@ def get_obs(config, obtype, yyyymmdd_task):
     # files, i.e. the files as they are named and arranged within the archive
     # (tar) files on HPSS.
     all_fp_proc_dict = {}
-    for fg, fp_proc_templ in zip(field_groups_in_obs, fp_proc_templates):
+    for fg, fn_proc_tmpl in obs_fn_templates_by_fg.items():
+        fp_proc_tmpl = os.path.join(obs_dir, fn_proc_tmpl)
         all_fp_proc_dict[fg] = []
         for yyyymmddhh in obs_retrieve_times_crnt_day:
             # Set the lead hour, i.e. the number of hours from the beginning of the
@@ -489,7 +465,7 @@ def get_obs(config, obtype, yyyymmdd_task):
             cmd = '; '.join(['export USHdir=' + ushdir,
                              'export yyyymmdd_task=' + yyyymmdd_task_str,
                              'export lhr=' + str(lhr),
-                             'export METplus_timestr_tmpl=' + fp_proc_templ,
+                             'export METplus_timestr_tmpl=' + fp_proc_tmpl,
                               os.path.join(ushdir, 'run_eval_METplus_timestr_tmpl.sh')])
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             fp_proc = result.stdout.strip()
@@ -527,7 +503,10 @@ def get_obs(config, obtype, yyyymmdd_task):
 
     # If the number of obs files that already exist on disk is equal to the
     # number of obs files needed, then there is no need to retrieve any files.
-    num_files_needed = len(obs_retrieve_times_crnt_day)*num_field_groups
+    # The number of obs files needed (i.e. that need to be staged) is equal
+    # to the number of times in the current day that obs are needed times the
+    # number of sets of files that the current obs type contains.
+    num_files_needed = len(obs_retrieve_times_crnt_day)*len(obs_fn_templates_by_fg)
     if num_existing_files == num_files_needed:
 
         msg = dedent(f"""
@@ -545,7 +524,7 @@ def get_obs(config, obtype, yyyymmdd_task):
     # from which files will be retrieved.
     arcv_hrs = [hr for hr in range(arcv_hr_start, arcv_hr_end+arcv_intvl_hrs, arcv_intvl_hrs)]
     msg = dedent(f"""
-        At least some obs files needed needed for the current day (yyyymmdd_task)
+        At least some obs files needed for the current day (yyyymmdd_task)
         do not exist on disk:
             {yyyymmdd_task = }
         The number of obs files needed for the current day is:
@@ -817,7 +796,7 @@ def get_obs(config, obtype, yyyymmdd_task):
                                             '--valid_time', yyyymmddhh_str, \
                                             '--source', basedir_raw, \
                                             '--outdir', os.path.join(basedir_raw, 'topofhour'), \
-                                            '--product', fields_in_filenames[i], \
+                                            '--product', mrms_fields_in_obs_filenames[i], \
                                             '--no-add_vdate_subdir'])
                             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
                             rc = result.returncode
@@ -836,7 +815,7 @@ def get_obs(config, obtype, yyyymmdd_task):
                             fn_raw = 'sfav2_CONUS_' + accum_obs_formatted + 'h_' + yyyymmddhh_str + '_grid184.grb2'
                         elif obtype == 'MRMS':
                             hr = yyyymmddhh.hour
-                            fn_raw = fields_in_filenames[i] + '_' + levels_in_filenames[i] \
+                            fn_raw = mrms_fields_in_obs_filenames[i] + '_' + mrms_levels_in_obs_filenames[i] \
                                    + '_' + yyyymmdd_task_str + '-' + f'{hr:02d}' + '0000.grib2'
                             fn_raw = os.path.join('topofhour', fn_raw)
                         elif obtype == 'NDAS':
