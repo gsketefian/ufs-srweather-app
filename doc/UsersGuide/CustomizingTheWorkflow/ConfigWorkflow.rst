@@ -1634,7 +1634,7 @@ General VX Parameters
    then ``VX_ASNOW_ACCUMS_HRS`` must contain at least one element.  Otherwise,
    ``VX_ASNOW_ACCUMS_HRS`` will be ignored.  Valid values: ``6`` | ``12`` | ``18`` | ``24``
 
-``VX_CONFIG_[DET|ENS]_FN``: (Default: ``vx_config_[det|ens].yaml``)
+``VX_CONFIG_[DET|ENS]_FN``: (Default: ``vx_configs/vx_config_[det|ens].yaml``)
    Names of configuration files for deterministic and ensemble verification
    that specify the field groups, field names, levels, and (if applicable)
    thresholds for which to run verification.  These are relative to the

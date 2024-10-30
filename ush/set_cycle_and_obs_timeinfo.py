@@ -624,97 +624,224 @@ def get_obs_retrieve_times_by_day(
     # Get list of field groups to be verified.
     vx_field_groups = vx_config['VX_FIELD_GROUPS']
 
-    # Define dictionary containing information about all field groups that
-    # can possibly be verified.  This information includes their temporal
-    # characteristics (cumulative vs. instantaneous) and the mapping between
-    # the observation type and the field group.
-    vx_field_info = {'cumul': [{'obtype': 'CCPA',   'field_groups': ['APCP']},
-                               {'obtype': 'NOHRSC', 'field_groups': ['ASNOW']}],
-                     'inst':  [{'obtype': 'MRMS',   'field_groups': ['REFC', 'RETOP']},
-                               {'obtype': 'NDAS',   'field_groups': ['ADPSFC', 'ADPUPA']}]
-                    }
+    # Define a list of dictionaries containing information about all the obs
+    # types that can possibly be used for verification in the SRW App.  Each
+    # dictionary in the list contains the name of the obs type, the temporal
+    # nature of that obs type (i.e. whether the obs type contains cumulative
+    # or instantaneous fields), and a list of the field groups that the obs
+    # type may be used to verify.
+    all_obs_info \
+    = [{'obtype': 'CCPA',   'time_type': 'cumul', 'field_groups': ['APCP']},
+       {'obtype': 'NOHRSC', 'time_type': 'cumul', 'field_groups': ['ASNOW']},
+       {'obtype': 'MRMS',   'time_type': 'inst',  'field_groups': ['REFC', 'RETOP']},
+       {'obtype': 'NDAS',   'time_type': 'inst',  'field_groups': ['ADPSFC', 'ADPUPA']}
+      ]
 
-    # Keep only those items in the dictionary vx_field_info defined above that
-    # have field groups that appear in the list of field groups to verify.
-    for obs_time_type, obtypes_to_field_groups_dict_list in vx_field_info.copy().items():
-        for obtypes_to_field_groups_dict in obtypes_to_field_groups_dict_list.copy():
-            obtype = obtypes_to_field_groups_dict['obtype']
-            field_groups = obtypes_to_field_groups_dict['field_groups']
-            field_groups = [fg for fg in field_groups if fg in vx_field_groups]
-            obtypes_to_field_groups_dict['field_groups'] = field_groups
-            if not field_groups: obtypes_to_field_groups_dict_list.remove(obtypes_to_field_groups_dict)
-        if not obtypes_to_field_groups_dict_list: vx_field_info.pop(obs_time_type)
+    # Create new list that has the same form as the list of dictionaries
+    # defined above but contains only those obs types that have at least one
+    # field group that appears in the list of field groups to verify.  Note
+    # that for those obs types that are retained in the list, the field groups
+    # that will not be verified are discarded.
+    obs_info = []
+    for obs_dict in all_obs_info.copy():
+        obtype = obs_dict['obtype']
+        field_groups = obs_dict['field_groups']
+        field_groups = [field for field in field_groups if field in vx_field_groups]
+        obs_dict = obs_dict.copy()
+        obs_dict['field_groups'] = field_groups
+        if field_groups: obs_info.append(obs_dict)
 
-    # Create dictionary containing the temporal characteristics as keys and
-    # a string list of obs types to verify as the values.
-    obs_time_type_to_obtypes_dict = dict()
-    for obs_time_type, obtypes_to_field_groups_dict_list in vx_field_info.items():
-        obtype_list = [a_dict['obtype'] for a_dict in obtypes_to_field_groups_dict_list]
-        obs_time_type_to_obtypes_dict[obs_time_type] = obtype_list
-
-    # Initialize the return variable.
-    obs_retrieve_times_by_day = dict()
-
-    # Define timedelta object representing a single day.
+    # For convenience, define timedelta object representing a single day.
     one_day = timedelta(days=1)
 
-    # Loop over all obs types to be verified (by looping over the temporal
-    # type and the specific obs under that type).  For each obs type, loop
-    # over each obs day and find the times within that that at which the obs
-    # need to be retrieved.
-    for obs_time_type, obtypes in obs_time_type_to_obtypes_dict.items():
+    # Generate a dictionary (of dictionaries) that, for each obs type to be
+    # used in the vx and for each day for which there is forecast output,
+    # will contain the times at which verification will be performed, i.e.
+    # the times at which the forecast output will be compared to observations.
+    # We refer to these times as the vx comparison times.
+    vx_compare_times_by_day = dict()
+    for obs_dict in obs_info:
+
+        obtype = obs_dict['obtype']
+        obs_time_type = obs_dict['time_type']
 
         fcst_output_times_all_cycles_crnt_ttype = fcst_output_times_all_cycles[obs_time_type]
         obs_days_all_cycles_crnt_ttype = obs_days_all_cycles[obs_time_type]
 
-        for obtype in obtypes:
+        vx_compare_times_by_day[obtype] = dict()
 
-            obs_retrieve_times_by_day[obtype] = dict()
+        # Get the availability interval for the current observation type from the
+        # verification configuration dictionary.  Then make sure it divides evenly
+        # into 24.
+        config_var_name = "".join([obtype, "_OBS_AVAIL_INTVL_HRS"])
+        obs_avail_intvl_hrs = vx_config[config_var_name]
+        remainder = 24 % obs_avail_intvl_hrs
+        if remainder != 0:
+            msg = dedent(f"""
+                The obs availability interval for obs of type {obtype} must divide evenly
+                into 24 but doesn't:
+                  obs_avail_intvl_hrs = {obs_avail_intvl_hrs}
+                  24 % obs_avail_intvl_hrs = {remainder}"
+                """)
+            logging.error(msg)
+            raise Exception(msg)
+        obs_avail_intvl = timedelta(hours=obs_avail_intvl_hrs)
+        num_obs_avail_times_per_day = int(24/obs_avail_intvl_hrs)
 
-            # Get the availability interval for the current observation type from the
-            # verification configuration dictionary.  Then make sure it divides evenly
-            # into 24.
-            config_var_name = "".join([obtype, "_OBS_AVAIL_INTVL_HRS"])
-            obs_avail_intvl_hrs = vx_config[config_var_name]
-            remainder = 24 % obs_avail_intvl_hrs
-            if remainder != 0:
-                msg = dedent(f"""
-                    The obs availability interval for obs of type {obtype} must divide evenly
-                    into 24 but doesn't:
-                        {obs_avail_intvl_hrs = }
-                        24 % obs_avail_intvl_hrs = {remainder}"
-                    """)
-                raise ValueError(msg)
-            obs_avail_intvl = timedelta(hours=obs_avail_intvl_hrs)
-            num_obs_avail_times_per_day = int(24/obs_avail_intvl_hrs)
+        # Loop over all obs days over all cycles (for the current obs type).  For
+        # each such day, get the list forecast output times and the list of obs
+        # availability times.  Finally, set the times (on that day) that verification
+        # will be performed to the intersection of these two lists.
+        for obs_day in obs_days_all_cycles_crnt_ttype:
 
-            # Loop over all obs days over all cycles (for the current obs type).  For
-            # each such day, get the list forecast output times and the list of obs
-            # availability times.  Finally, set the times (on that day) that obs need
-            # to be retrieved to the intersection of these two lists.
-            for obs_day in obs_days_all_cycles_crnt_ttype:
+            next_day = obs_day + one_day
+            if obs_time_type == "cumul":
+                fcst_output_times_crnt_day \
+                = [time for time in fcst_output_times_all_cycles_crnt_ttype if obs_day < time <= next_day]
+            elif obs_time_type == "inst":
+                fcst_output_times_crnt_day \
+                = [time for time in fcst_output_times_all_cycles_crnt_ttype if obs_day <= time < next_day]
+            fcst_output_times_crnt_day = [datetime.strftime(time, "%Y%m%d%H") for time in fcst_output_times_crnt_day]
 
-                next_day = obs_day + one_day
-                if obs_time_type == "cumul":
-                    fcst_output_times_crnt_day \
-                    = [time for time in fcst_output_times_all_cycles_crnt_ttype if obs_day < time <= next_day]
-                elif obs_time_type == "inst":
-                    fcst_output_times_crnt_day \
-                    = [time for time in fcst_output_times_all_cycles_crnt_ttype if obs_day <= time < next_day]
-                fcst_output_times_crnt_day = [datetime.strftime(time, "%Y%m%d%H") for time in fcst_output_times_crnt_day]
+            if obs_time_type == "cumul":
+                obs_avail_times_crnt_day \
+                = [obs_day + (i+1)*obs_avail_intvl for i in range(0,num_obs_avail_times_per_day)]
+            elif obs_time_type == "inst":
+                obs_avail_times_crnt_day \
+                = [obs_day + i*obs_avail_intvl for i in range(0,num_obs_avail_times_per_day)]
+            obs_avail_times_crnt_day = [datetime.strftime(time, "%Y%m%d%H") for time in obs_avail_times_crnt_day]
 
-                if obs_time_type == "cumul":
-                    obs_avail_times_crnt_day \
-                    = [obs_day + (i+1)*obs_avail_intvl for i in range(0,num_obs_avail_times_per_day)]
-                elif obs_time_type == "inst":
-                    obs_avail_times_crnt_day \
-                    = [obs_day + i*obs_avail_intvl for i in range(0,num_obs_avail_times_per_day)]
-                obs_avail_times_crnt_day = [datetime.strftime(time, "%Y%m%d%H") for time in obs_avail_times_crnt_day]
+            vx_compare_times_crnt_day = list(set(fcst_output_times_crnt_day) & set(obs_avail_times_crnt_day))
+            vx_compare_times_crnt_day.sort()
 
-                obs_retrieve_times_crnt_day = list(set(fcst_output_times_crnt_day) & set(obs_avail_times_crnt_day))
-                obs_retrieve_times_crnt_day.sort()
+            obs_day_str = datetime.strftime(obs_day, "%Y%m%d")
+            vx_compare_times_by_day[obtype][obs_day_str] = vx_compare_times_crnt_day
 
-                obs_day_str = datetime.strftime(obs_day, "%Y%m%d")
-                obs_retrieve_times_by_day[obtype][obs_day_str] = obs_retrieve_times_crnt_day
+    # For each obs type to be used in the vx and for each day for which there
+    # is forecast output, calculate the times at which obs need to be retrieved.
+    # For instantaneous fields, the obs retrieval times are the same as the
+    # times at which vx will be performed.  For cumulative fields, each field
+    # value needs to be constructed by adding values from previous times.  For
+    # example, if we're verifying 6-hourly precipitation and the obs availability
+    # interval for precip obs (CCPA) is 1 hour, then the 6-hourly values must
+    # be built by adding the 1-hour values.  Thus, this requires obs at every
+    # hour, not just every 6 hours.
+    #
+    # First, initialze the dictionary (of dictionaries) that will contain the
+    # obs retreival times (for all obs types and each day for which there is
+    # forecast output), and set the values for instantaneous obs to the vx
+    # comparison times calculated above.
+    obs_retrieve_times_by_day = dict()
+    for obs_dict in obs_info:
+        obtype = obs_dict['obtype']
+        obs_time_type = obs_dict['time_type']
+        if obs_time_type == 'inst':
+            obs_retrieve_times_by_day[obtype] = vx_compare_times_by_day[obtype]
+
+    # Next, calculate the obs retrieval times for cumulative fields.  We want
+    # these times grouped into days because the get_obs workflow tasks that
+    # will use this information are day-based (i.e. each task will get obs
+    # for a single day).  However, it is easier to first calculate these
+    # times as a single group over all cycles.  We do this next.
+    obs_retrieve_times_all_cycles = dict()
+    for obs_dict in obs_info:
+
+        obtype = obs_dict['obtype']
+        obs_time_type = obs_dict['time_type']
+        field_groups = obs_dict['field_groups']
+
+        # Consider only cumulative fields.
+        if obs_time_type != 'cumul':
+            continue
+
+        # Initialize the set that will contain the obs retrieval times over all
+        # cycles.
+        obs_retrieve_times_all_cycles[obtype] = set()
+
+        # Get the availability interval for the current observation type from the
+        # verification configuration dictionary.
+        config_var_name = "".join([obtype, "_OBS_AVAIL_INTVL_HRS"])
+        obs_avail_intvl_hrs = vx_config[config_var_name]
+        obs_avail_intvl = timedelta(hours=obs_avail_intvl_hrs)
+
+        # Consider all field groups to be verified for the current obs type.
+        for fg in field_groups:
+
+            # Get the list of accumulation intervals for the current cumulative obs
+            # type and field group combination.
+            accum_intvls_array_name = "".join(["VX_", fg, "_ACCUMS_HRS"])
+            accum_intvls_hrs = vx_config[accum_intvls_array_name]
+
+            for cycle_start_time in cycle_start_times:
+
+                # Loop through the accumulation intervals for this obs type and field
+                # group combination.
+                for accum_intvl_hrs in accum_intvls_hrs:
+                    accum_intvl = timedelta(hours=accum_intvl_hrs)
+                    # Get the number of accumulation intervals that fits in the duration of
+                    # the forecast.  Note that the accumulation interval doesn't necessarily
+                    # have to evenly divide the forecast duration; we simply drop any fractional
+                    # accumulation intervals by rounding down to the nearest integer.
+                    num_accum_intvls_in_fcst = int(fcst_len/accum_intvl)
+                    # Calulate the times at which the current cumulative obs field will be
+                    # compared to the forecast field(s) in the corresponding cumulative field
+                    # group (for the current accumulation interval).
+                    vx_compare_times_crnt_cycl = [cycle_start_time + (i+1)*accum_intvl
+                                                  for i in range(0,num_accum_intvls_in_fcst)]
+                    # For each such comparison time, get the times at which obs are needed
+                    # to form that accumulation.  For example, if the current accumulation
+                    # interval is 6 hours and the obs are available every hour, then the
+                    # times at which obs are needed will be the comparison time as well as
+                    # the five hours preceeding it.  Then put all such times over all vx
+                    # comparison times within all cycles into a single array of times (which
+                    # is stored in the dictionary obs_retrieve_times_all_cycles).
+                    for vx_compare_time in vx_compare_times_crnt_cycl:
+                        remainder = accum_intvl_hrs % obs_avail_intvl_hrs
+                        if remainder != 0:
+                            msg = dedent(f"""
+                                The obs availability interval for obs of type {obtype} must divide evenly
+                                into the current accumulation interval (accum_intvl) but doesn't:
+                                  accum_intvl_hrs = {accum_intvl_hrs}
+                                  obs_avail_intvl_hrs = {obs_avail_intvl_hrs}
+                                  accum_intvl_hrs % obs_avail_intvl_hrs = {remainder}"
+                                """)
+                            logging.error(msg)
+                            raise Exception(msg)
+                        num_obs_avail_times_in_accum_intvl = int(accum_intvl/obs_avail_intvl)
+                        obs_retrieve_times_crnt_accum_intvl \
+                        = [vx_compare_time - i*obs_avail_intvl \
+                           for i in range(0,num_obs_avail_times_in_accum_intvl)]
+                        obs_retrieve_times_all_cycles[obtype] \
+                        = obs_retrieve_times_all_cycles[obtype] | set(obs_retrieve_times_crnt_accum_intvl)
+
+            # Convert the final set of obs retrieval times for the current obs type
+            # to a sorted list.  Note that the sorted() function will convert a set
+            # to a sorted list (a set itself cannot be sorted).
+            obs_retrieve_times_all_cycles[obtype] = sorted(obs_retrieve_times_all_cycles[obtype])
+
+    # Now that the obs retrival times for cumulative fields have been obtained
+    # but grouped by cycle start date, regroup them by day and save results
+    # in obs_retrieve_times_by_day.
+    for obs_dict in obs_info:
+
+        obtype = obs_dict['obtype']
+        obs_time_type = obs_dict['time_type']
+
+        # Consider only cumulative obs/fields.
+        if obs_time_type != 'cumul':
+            continue
+
+        # Initialize variables before looping over obs days.
+        obs_retrieve_times_by_day[obtype] = dict()
+        obs_days_all_cycles_crnt_ttype = obs_days_all_cycles[obs_time_type]
+        obs_retrieve_times_all_cycles_crnt_obtype = obs_retrieve_times_all_cycles[obtype]
+
+        for obs_day in obs_days_all_cycles_crnt_ttype:
+            next_day = obs_day + one_day
+            obs_retrieve_times_crnt_day \
+            = [time for time in obs_retrieve_times_all_cycles_crnt_obtype if obs_day < time <= next_day]
+            obs_retrieve_times_crnt_day = [datetime.strftime(time, "%Y%m%d%H") for time in obs_retrieve_times_crnt_day]
+            obs_day_str = datetime.strftime(obs_day, "%Y%m%d")
+            obs_retrieve_times_by_day[obtype][obs_day_str] = obs_retrieve_times_crnt_day
 
     return obs_retrieve_times_by_day
