@@ -639,7 +639,7 @@ The output files (in ``.png`` format) will be located in the ``postprd`` directo
 Configure METplus Verification Suite (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Users who want to use the METplus verification suite to evaluate their forecasts need to add additional information to their machine file (``ush/machine/<platform>.yaml``) or their ``config.yaml`` file. Other users may skip to the next step (:numref:`Section %s: Generate the SRW App Workflow <GenerateWorkflow>`). 
+Users who want to use the METplus verification suite to evaluate their forecasts need to add additional information to their machine file (``ush/machine/<platform>.yaml``) [what would need to change in the machine file?] or their ``config.yaml`` file. Other users may skip to the next step (:numref:`Section %s: Generate the SRW App Workflow <GenerateWorkflow>`). 
 
 .. note::
    If METplus users update their METplus installation, they must update the module load statements in ``ufs-srweather-app/modulefiles/tasks/<machine>/run_vx.local`` to correspond to their system's updated installation:
@@ -658,7 +658,12 @@ To use METplus verification,  MET and METplus modules need to be installed. To t
      tasks:
        taskgroups: '{{ ["parm/wflow/prep.yaml", "parm/wflow/coldstart.yaml", "parm/wflow/post.yaml", "parm/wflow/verify_pre.yaml", "parm/wflow/verify_det.yaml"]|include }}'
 
-:numref:`Table %s <VX-yamls>` indicates which functions each ``verify_*.yaml`` file configures. Users must add ``verify_pre.yaml`` anytime they want to run verification (VX); it runs preprocessing tasks that are necessary for both deterministic and ensemble VX. Then users can add ``verify_det.yaml`` for deterministic VX or ``verify_ens.yaml`` for ensemble VX (or both). Note that ensemble VX requires the user to be running an ensemble forecast or to stage ensemble forecast files in an appropriate location.
+:numref:`Table %s <VX-yamls>` indicates which verification capabilities/workflow tasks each ``verify_*.yaml`` file enables.
+Users must add ``verify_pre.yaml`` anytime they want to run verification (VX); it runs preprocessing tasks that are necessary
+for both deterministic and ensemble VX, including retrieval of obs files from various data stores (e.g. NOAA's HPSS) if those
+files do not already exist on disk at the locations specified by some of the parameters in the ``verification:`` section of
+``config_defaults.yaml`` and/or ``config.yaml`` (see ?? for details).
+Then users can add ``verify_det.yaml`` for deterministic VX or ``verify_ens.yaml`` for ensemble VX (or both). Note that ensemble VX requires the user to be running an ensemble forecast or to stage ensemble forecast files in an appropriate location.
 
 .. _VX-yamls:
 
@@ -669,11 +674,11 @@ To use METplus verification,  MET and METplus modules need to be installed. To t
    * - File
      - Description
    * - verify_pre.yaml
-     - Contains (meta)tasks that are prerequisites for both deterministic and ensemble verification (vx)
+     - Enables (meta)tasks that are prerequisites for both deterministic and ensemble verification (vx)
    * - verify_det.yaml
-     - Perform deterministic vx
+     - Enables (meta)tasks that perform deterministic vx on a single forecast or on each member of an ensemble forecast
    * - verify_ens.yaml
-     - Perform ensemble vx (must set ``DO_ENSEMBLE: true`` in ``config.yaml``)
+     - Enables (meta)tasks that perform ensemble vx on an ensemble of forecasts as a whole (must set ``DO_ENSEMBLE: true`` in ``config.yaml``)
 
 The ``verify_*.yaml`` files include the definitions of several common verification tasks by default. Individual verification tasks appear in :numref:`Table %s <VXWorkflowTasksTable>`. The tasks in the ``verify_*.yaml`` files are independent of each other, so users may want to turn some off depending on the needs of their experiment. To turn off a task, simply include its entry from ``verify_*.yaml`` as an empty YAML entry in ``config.yaml``. For example, to turn off PointStat tasks:
 
@@ -688,21 +693,51 @@ The ``verify_*.yaml`` files include the definitions of several common verificati
 
 More information about configuring the ``rocoto:`` section can be found in :numref:`Section %s <DefineWorkflow>`.
 
-If users have access to NOAA :term:`HPSS` but have not pre-staged the data, the default ``verify_pre.yaml`` taskgroup will activate the tasks, and the workflow will attempt to download the appropriate data from NOAA HPSS. In this case, the ``*_OBS_DIR`` paths must be set to the location where users want the downloaded data to reside. 
+If users have access to NOAA :term:`HPSS` but have not pre-staged the obs data, the default ``verify_pre.yaml``
+taskgroup will activate a set of ``get_obs_...`` workflow tasks that will attempt to retrieve the required
+files from a data store such as NOAA HPSS. In this case, the variables ``*_OBS_DIR`` in ``config.yaml`` must
+be set to the base directories under which users want the files to reside, and the variables ``OBS_*_FN_TEMPLATES[1]``
+must be set to METplus file name templates (possibly including leading subdirectories relative to ``*_OBS_DIR``)
+that will be used to name the obs files.  (Here, the ``*`` represents any one of the obs types :term:`CCPA`,
+:term:`NOHRSC`, :term:`MRMS`, and :term:`NDAS`.)
 
-Users who do not have access to NOAA HPSS and do not have the data on their system will need to download :term:`CCPA`, :term:`MRMS`, and :term:`NDAS` data manually from collections of publicly available data, such as the ones listed here.
+Users who do not have access to NOAA HPSS and do not have the data on their system will need to download
+:term:`CCPA`, :term:`MRMS`, and :term:`NDAS` data manually from collections of publicly available data,
+such as the ones listed here [is there supposed to be a link here?].
 
-Users who have already staged the observation data needed for METplus (i.e., the :term:`CCPA`, :term:`MRMS`, and :term:`NDAS` data) on their system should set the path to this data in ``config.yaml``. 
+Users who have already staged the observation data needed for verification on their system should set
+``*_OBS_DIR`` and ``OBS_*_FN_TEMPLATES[1]`` in ``config.yaml`` to match those staging locations and
+file names  For example, for a case in which all four types of obs are needed for vx, these variables
+might be set as follows:
 
 .. code-block:: console
 
-   platform:
-      CCPA_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/ccpa/proc
-      NOHRSC_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/nohrsc/proc
-      MRMS_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/mrms/proc
-      NDAS_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/ndas/proc
+   verification:
 
-After adding the VX tasks to the ``rocoto:`` section and the data paths to the ``platform:`` section, users can proceed to generate the experiment, which will perform VX tasks in addition to the default workflow tasks.
+      CCPA_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/ccpa
+      NOHRSC_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/nohrsc
+      MRMS_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/mrms
+      NDAS_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/ndas
+
+      OBS_CCPA_FN_TEMPLATES: [ 'APCP', '{valid?fmt=%Y%m%d}/ccpa.t{valid?fmt=%H}z.01h.hrap.conus.gb2' ]
+      OBS_NOHRSC_FN_TEMPLATES: [ 'ASNOW', 'sfav2_CONUS_6h_{valid?fmt=%Y%m%d%H}_grid184.grb2' ]
+      OBS_MRMS_FN_TEMPLATES: [ 'REFC', '{valid?fmt=%Y%m%d}/MergedReflectivityQCComposite_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2',
+                               'RETOP', '{valid?fmt=%Y%m%d}/EchoTop_18_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2' ]
+      OBS_NDAS_FN_TEMPLATES: [ 'ADPSFCandADPUPA', 'prepbufr.ndas.{valid?fmt=%Y%m%d%H}' ]
+
+If one of the days encompassed by the experiment was 20240429, and if one of the hours during
+that day at which vx will be performed was 03, then, taking the CCPA obs type as an example, 
+one of the ``get_obs_ccpa_...`` tasks in the workflow will look for a CCPA file on disk 
+corresponding to this day and hour at
+
+``/path/to/UFS_SRW_data/develop/obs_data/ccpa/20240429/ccpa.t03z.01h.hrap.conus.gb2``
+
+As described above, if this file does not exist, it will try to retrieve it from a data store
+and place it at this location.
+
+After adding the VX tasks to the ``rocoto:`` section and the data paths to the ``verification:``
+section, users can proceed to generate the experiment, which will perform VX tasks in addition
+to the default workflow tasks.
 
 .. _GenerateWorkflow: 
 
