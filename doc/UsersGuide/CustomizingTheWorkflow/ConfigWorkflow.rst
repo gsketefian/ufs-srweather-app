@@ -1607,6 +1607,7 @@ Non-default parameters for verification tasks are set in the ``verification:`` s
       * ``mm`` refers to the 2-digit valid minutes of the hour
       * ``SS`` refers to the two-digit valid seconds of the hour
 
+.. _GeneralVXParams:
 
 General VX Parameters
 ---------------------------------
