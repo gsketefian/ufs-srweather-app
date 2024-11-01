@@ -203,15 +203,6 @@ The user must set the specifics of their experiment configuration in a ``config.
    * - ACCOUNT
      - ""
      - "an_account"
-   * - CCPA_OBS_DIR
-     - "{{ workflow.EXPTDIR }}/obs_data/ccpa/proc"
-     - ""
-   * - MRMS_OBS_DIR
-     - "{{ workflow.EXPTDIR }}/obs_data/mrms/proc"
-     - ""
-   * - NDAS_OBS_DIR
-     - "{{ workflow.EXPTDIR }}/obs_data/ndas/proc"
-     - ""
    * - USE_CRON_TO_RELAUNCH
      - false
      - false
@@ -269,9 +260,6 @@ The user must set the specifics of their experiment configuration in a ``config.
    * - NUM_ENS_MEMBERS
      - 1
      - 2
-   * - VX_FCST_MODEL_NAME
-     - '{{ nco.NET_default }}.{{ task_run_post.POST_OUTPUT_DOMAIN_NAME }}'
-     - FV3_GFS_v16_CONUS_25km
 
 .. _GeneralConfig:
 
@@ -1216,7 +1204,7 @@ Each task should finish with error code 0. For example:
    
    End exregional_get_extrn_mdl_files.sh at Wed Nov 16 18:08:19 UTC 2022 with error code 0 (time elapsed: 00:00:01)
 
-Check the batch script output file in your experiment directory for a “SUCCESS” message near the end of the file.
+Check the batch script output file in your experiment directory for a "SUCCESS" message near the end of the file.
 
 .. _RegionalWflowTasks:
 
