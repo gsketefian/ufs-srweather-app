@@ -98,7 +98,7 @@ FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
   obtype="${OBTYPE}" \
-  field="$VAR" \
+  field="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH}" \
   outvarname_grid_or_point="grid_or_point" \
   outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
@@ -199,7 +199,7 @@ elif [ "${FCST_OR_OBS}" = "OBS" ]; then
 
   OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}${slash_obs_or_null}"
   OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_obs"
-  fn_template=$(eval echo \${OBS_${OBTYPE}_${VAR}_FN_TEMPLATE_PCPCOMBINE_OUTPUT})
+  fn_template=$(eval echo \${OBS_${OBTYPE}_${FIELD_GROUP}_FN_TEMPLATE_PCPCOMBINE_OUTPUT})
   OUTPUT_FN_TEMPLATE=$( eval echo ${fn_template} )
   STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 
@@ -394,7 +394,7 @@ settings="\
   'output_accum_hh': '${ACCUM_HH:-}'
   'accum_no_pad': '${ACCUM_NO_PAD:-}'
   'metplus_templates_dir': '${METPLUS_CONF:-}'
-  'input_field_group': '${VAR:-}'
+  'input_field_group': '${FIELD_GROUP:-}'
   'input_level_fcst': '${FCST_LEVEL:-}'
   'input_thresh_fcst': '${FCST_THRESH:-}'
 "

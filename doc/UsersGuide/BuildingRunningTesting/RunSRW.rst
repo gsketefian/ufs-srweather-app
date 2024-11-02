@@ -711,7 +711,7 @@ might be set as follows:
       OBS_NOHRSC_FN_TEMPLATES: [ 'ASNOW', 'sfav2_CONUS_6h_{valid?fmt=%Y%m%d%H}_grid184.grb2' ]
       OBS_MRMS_FN_TEMPLATES: [ 'REFC', '{valid?fmt=%Y%m%d}/MergedReflectivityQCComposite_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2',
                                'RETOP', '{valid?fmt=%Y%m%d}/EchoTop_18_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2' ]
-      OBS_NDAS_FN_TEMPLATES: [ 'ADPSFCandADPUPA', 'prepbufr.ndas.{valid?fmt=%Y%m%d%H}' ]
+      OBS_NDAS_FN_TEMPLATES: [ 'SFC_UPA', 'prepbufr.ndas.{valid?fmt=%Y%m%d%H}' ]
 
 If one of the days encompassed by the experiment was 20240429, and if one of the hours during
 that day at which vx will be performed was 03, then, taking the CCPA obs type as an example, 
@@ -844,7 +844,7 @@ about metatasks.
 .. _VXWorkflowTasksTable:
 
 .. list-table:: Verification (VX) Workflow Tasks and Metatasks in the SRW App
-   :widths: 20 80
+   :widths: 5 95
    :header-rows: 1
 
    * - Workflow Task (``taskgroup``)
@@ -872,34 +872,34 @@ about metatasks.
      - Checks for existence of staged :term:`NDAS` obs files at locations specified by ``NDAS_OBS_DIR``
        and ``OBS_NDAS_FN_TEMPLATES``.  If any files do not exist, it attempts to retrieve all the files
        from a data store (e.g. NOAA :term:`HPSS`) and place them in those locations.  This task is included
-       in the workflow only if `'ADPSFC'`` and/or ``'ADPUPA'`` are included in ``VX_FIELD_GROUPS``.
+       in the workflow only if `'SFC'`` and/or ``'UPA'`` are included in ``VX_FIELD_GROUPS``.
 
    * - :bolditalic:`task_run_MET_Pb2nc_obs_NDAS` (``verify_pre.yaml``)
      - Converts NDAS obs prepbufr files to NetCDF format.
 
-   * - :bolditalic:`metatask_PcpCombine_obs_APCP_all_accums_CCPA` (``verify_pre.yaml``)
+   * - :bolditalic:`metatask_PcpCombine_APCP_all_accums_obs_CCPA` (``verify_pre.yaml``)
      - Set of tasks that generate NetCDF files containing observed APCP for the accumulation intervals
        specified in ``VX_APCP_ACCUMS_HRS``.  Files for accumulation intervals larger than the one
        provided in the obs are obtained by adding APCP values over multiple obs accumulation intervals,
        e.g. if the obs contain 1-hour accumulations and 3-hr accumulation is specified in ``VX_APCP_ACCUMS_HRS``,
        then groups of 3 successive 1-hour APCP values in the obs are added to obtain the 3-hour values.
-       In rocoto, the tasks under this metatask are named ``run_MET_PcpCombine_obs_APCP{accum_intvl}h_CCPA``,
+       In rocoto, the tasks under this metatask are named ``run_MET_PcpCombine_APCP{accum_intvl}h_obs_CCPA``,
        where ``{accum_intvl}`` is the accumulation interval in hours (e.g. ``01``, ``03``, ``06``, etc)
        for which the task is being run.  This metatask is included in the workflow only if ``'APCP'`` is
        included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_PcpCombine_obs_ASNOW_all_accums_NOHRSC` (``verify_pre.yaml``)
+   * - :bolditalic:`metatask_PcpCombine_ASNOW_all_accums_obs_NOHRSC` (``verify_pre.yaml``)
      - Set of tasks that generate NetCDF files containing observed ASNOW for the accumulation intervals
        specified in ``VX_ASNOW_ACCUMS_HRS``.  Files for accumulation intervals larger than the one
        provided in the obs are obtained by adding ASNOW values over multiple obs accumulation intervals,
        e.g. if the obs contain 6-hour accumulations and 24-hr accumulation is specified in ``VX_ASNOW_ACCUMS_HRS``,
        then groups of 4 successive 6-hour ASNOW values in the obs are added to obtain the 24-hour values.
-       In rocoto, the tasks under this metatask are named ``run_MET_PcpCombine_obs_ASNOW{accum_intvl}h_NOHRSC``,
+       In rocoto, the tasks under this metatask are named ``run_MET_PcpCombine_ASNOW{accum_intvl}h_obs_NOHRSC``,
        where ``{accum_intvl}`` is the accumulation interval in hours (e.g. ``06``, ``24``, etc) for which
        the task is being run.  This metatask is included in the workflow only if ``'ASNOW'`` is included in
        ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_check_post_output_all_mems` (``verify_pre.yaml```)
+   * - :bolditalic:`metatask_check_post_output_all_mems` (``verify_pre.yaml``)
      - Set of tasks that ensure that the post-processed forecast files required for verification exist in
        the locations specified by ``VX_FCST_INPUT_BASEDIR``, ``FCST_SUBDIR_TEMPLATE``, and ``FCST_FN_TEMPLATE``.
        In rocoto, the tasks under this metatask are named ``check_post_output_mem{mem_indx}``, where ``{mem_indx}``
@@ -907,33 +907,33 @@ about metatasks.
        ensemble of forecasts or just ``000`` for a single deterministic forecast.  This metatask is included
        in the workflow if at least one other verification task or metatask is included.
 
-   * - :bolditalic:`metatask_PcpCombine_fcst_APCP_all_accums_all_mems` (``verify_pre.yaml``)
+   * - :bolditalic:`metatask_PcpCombine_APCP_all_accums_all_mems` (``verify_pre.yaml``)
      - Set of tasks that generate NetCDF files containing forecast APCP for the accumulation intervals
        specified in ``VX_APCP_ACCUMS_HRS``.  Files for accumulation intervals larger than the one
        provided in the forecasts are obtained by adding APCP values over multiple forecast accumulation
        intervals, e.g. if the forecasts contain 1-hour accumulations and 3-hr accumulation is specified
        in ``VX_APCP_ACCUMS_HRS``, then groups of 3 successive 1-hour APCP values in the forecasts are
        added to obtain the 3-hour values.  In rocoto, the tasks under this metatask are named
-       ``run_MET_PcpCombine_fcst_APCP{accum_intvl}h_mem{mem_indx}``, where ``{accum_intvl}`` and
+       ``run_MET_PcpCombine_APCP{accum_intvl}h_fcst_mem{mem_indx}``, where ``{accum_intvl}`` and
        ``{mem_indx}`` are the accumulation interval (in hours, e.g. ``01``, ``03``, ``06``, etc) and
        the ensemble forecast member index (or just ``000`` for a single deterministic forecast) for
        which the task is being run.  This metatask is included in the workflow only if ``'APCP'`` is
        included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_PcpCombine_fcst_ASNOW_all_accums_all_mems` (``verify_pre.yaml``)
+   * - :bolditalic:`metatask_PcpCombine_ASNOW_all_accums_all_mems` (``verify_pre.yaml``)
      - Set of tasks that generate NetCDF files containing forecast ASNOW for the accumulation intervals
        specified in ``VX_ASNOW_ACCUMS_HRS``.  Files for accumulation intervals larger than the one
        provided in the forecasts are obtained by adding ASNOW values over multiple forecast accumulation
        intervals, e.g. if the forecasts contain 1-hour accumulations and 6-hr accumulation is specified
        in ``VX_ASNOW_ACCUMS_HRS``, then groups of 6 successive 1-hour ASNOW values in the forecasts are
        added to obtain 6-hour values.  In rocoto, the tasks under this metatask are named
-       ``run_MET_PcpCombine_fcst_ASNOW{accum_intvl}h_mem{mem_indx}``, where ``{accum_intvl}`` and
+       ``run_MET_PcpCombine_ASNOW{accum_intvl}h_fcst_mem{mem_indx}``, where ``{accum_intvl}`` and
        ``{mem_indx}`` are the accumulation interval (in hours, e.g. ``06``, ``24``, etc) and the ensemble
        forecast member index (or just ``000`` for a single deterministic forecast) for which the task is
        being run.  This metatask is included in the workflow only if ``'ASNOW'`` is included in
        ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GridStat_CCPA_all_accums_all_mems` (``verify_det.yaml``)
+   * - :bolditalic:`metatask_GridStat_APCP_all_accums_all_mems` (``verify_det.yaml``)
      - Set of tasks that run grid-to-grid verification of accumulated precipitation (represented by the
        verification field group ``APCP``) for the intervals specified in ``VX_APCP_ACCUMS_HRS``.  In rocoto,
        the tasks under this metatask are named ``run_MET_GridStat_vx_APCP{accum_intvl}h_mem{mem_indx}``,
@@ -942,7 +942,7 @@ about metatasks.
        forecast) for which the task is being run.  This metatask is included in the workflow only if ``'APCP'``
        is included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GridStat_NOHRSC_all_accums_all_mems` (``verify_det.yaml``)
+   * - :bolditalic:`metatask_GridStat_ASNOW_all_accums_all_mems` (``verify_det.yaml``)
      - Set of tasks that run grid-to-grid verification of accumulated snowfall (represented by the verification
        field group ``ASNOW``) for the intervals specified in ``VX_ASNOW_ACCUMS_HRS``.  In rocoto, the tasks under
        this metatask are named ``run_MET_GridStat_vx_ASNOW{accum_intvl}h_mem{mem_indx}``, where ``{accum_intvl}``
@@ -950,27 +950,27 @@ about metatasks.
        forecast member index (or just ``000`` for a single deterministic forecast) for which the task is being
        run.  This metatask is included in the workflow only if ``'ASNOW'`` is included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GridStat_MRMS_all_mems` (``verify_det.yaml``)
+   * - :bolditalic:`metatask_GridStat_REFC_RETOP_all_mems` (``verify_det.yaml``)
      - Set of tasks that run grid-to-grid verification of :term:`composite reflectivity` (represented by
        the verification field group ``REFC``) and :term:`echo top` (represented by the verification field
        group ``RETOP``).  In rocoto, the tasks under this metatask are named ``run_MET_GridStat_vx_{field_group}_mem{mem_indx}``,
-       where ``field_group`` and ``{mem_indx}`` are the field group (in this case either ``REFC`` or
-       ``RETOP``) and the ensemble forecast member index (or just ``000`` for a single deterministic
-       forecast) for which the task is being run.  The tasks for ``REFC`` are included in the workflow only
-       if ``'REFC'`` is included in ``VX_FIELD_GROUPS``, and the ones for ``RETOP`` are included only if
-       ``'RETOP'`` is included in ``VX_FIELD_GROUPS``.
+       where ``field_group`` and ``{mem_indx}`` are the field group (in this case either ``REFC`` or ``RETOP``)
+       and the ensemble forecast member index (or just ``000`` for a single deterministic forecast) for which
+       the task is being run.  The tasks for ``REFC`` are included in the workflow only if ``'REFC'`` is
+       included in ``VX_FIELD_GROUPS``, and the ones for ``RETOP`` are included only if ``'RETOP'`` is included
+       in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_PointStat_NDAS_all_mems` (``verify_det.yaml``)
+   * - :bolditalic:`metatask_PointStat_SFC_UPA_all_mems` (``verify_det.yaml``)
      - Set of tasks that run grid-to-point verification of surface fields (represented by the verification field
-       group ``ADPSFC``) and upper-air fields (represented by the verification field group ``ADPUPA``).  In
-       rocoto, the tasks under this metatask are named ``run_MET_PointStat_vx_{field_group}_mem{mem_indx}``,
-       where ``field_group`` and ``{mem_indx}`` are the field group (in this case either ``ADPSFC`` or ``ADPUPA``)
-       and the ensemble forecast member index (or just ``000`` for a single deterministic forecast) for which the
-       task is being run.  The tasks for the surface fields are included in the workflow only if ``'ADPSFC'`` is
-       included in ``VX_FIELD_GROUPS``, and the ones for the upper-air fields are included only if ``'ADPUPA'`` is
-       included in ``VX_FIELD_GROUPS``.
+       group ``SFC``) and upper-air fields (represented by the verification field group ``UPA``).  In rocoto,
+       the tasks under this metatask are named ``run_MET_PointStat_vx_{field_group}_mem{mem_indx}``, where
+       ``field_group`` and ``{mem_indx}`` are the field group (in this case either ``SFC`` or ``UPA``) and the
+       ensemble forecast member index (or just ``000`` for a single deterministic forecast) for which the task
+       is being run.  The tasks for the surface fields are included in the workflow only if ``'SFC'`` is included
+       in ``VX_FIELD_GROUPS``, and the ones for the upper-air fields are included only if ``'UPA'`` is included
+       in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GenEnsProd_EnsembleStat_CCPA` (``verify_ens.yaml``)
+   * - :bolditalic:`metatask_GenEnsProd_EnsembleStat_APCP_all_accums` (``verify_ens.yaml``)
      - Set of tasks that run :term:`MET`'s ``GenEnsProd`` and ``EnsembleStat`` tools on APCP for the intervals
        specified in ``VX_APCP_ACCUMS_HRS``.  In rocoto, the tasks under this metatask that run ``GenEnsProd``
        are named ``run_MET_GenEnsProd_vx_APCP{accum_intvl}h``, and the ones that run `EnsembleStat`` are
@@ -979,7 +979,7 @@ about metatasks.
        is included in the workflow only if ``DO_ENSEMBLE`` is set to ``True`` in ``config.yaml`` and ``'APCP'``
        is included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GenEnsProd_EnsembleStat_NOHRSC` (``verify_ens.yaml``)
+   * - :bolditalic:`metatask_GenEnsProd_EnsembleStat_ASNOW_all_accums` (``verify_ens.yaml``)
      - Set of tasks that run :term:`MET`'s ``GenEnsProd`` and ``EnsembleStat`` tools on ASNOW for the intervals
        specified in ``VX_ASNOW_ACCUMS_HRS``.  In rocoto, the tasks under this metatask that run ``GenEnsProd``
        are named ``run_MET_GenEnsProd_vx_ASNOW{accum_intvl}h`` and the ones that run `EnsembleStat`` are
@@ -988,7 +988,7 @@ about metatasks.
        included in the workflow only if ``DO_ENSEMBLE`` is set to ``True`` in ``config.yaml`` and ``'ASNOW'``
        is included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GenEnsProd_EnsembleStat_MRMS` (``verify_ens.yaml``)
+   * - :bolditalic:`metatask_GenEnsProd_EnsembleStat_REFC_RETOP` (``verify_ens.yaml``)
      - Set of tasks that run :term:`MET`'s ``GenEnsProd`` and ``EnsembleStat`` tools on REFC (:term:`composite
        reflectivity`) and RETOP (:term:`echo top`).  In rocoto, the tasks under this metatask that run
        ``GenEnsProd`` are named ``run_MET_GenEnsProd_vx_{field_group}``, and the ones that run `EnsembleStat``
@@ -998,18 +998,17 @@ about metatasks.
        is included in ``VX_FIELD_GROUPS``, and the ones for ``RETOP`` are included only if ``DO_ENSEMBLE`` is
        set to ``True`` in ``config.yaml`` and ``'RETOP'`` is included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GenEnsProd_EnsembleStat_NDAS` (``verify_ens.yaml``)
+   * - :bolditalic:`metatask_GenEnsProd_EnsembleStat_SFC_UPA` (``verify_ens.yaml``)
      - Set of tasks that run :term:`MET`'s ``GenEnsProd`` and ``EnsembleStat`` tools on surface fields (represented
-       by the verification field group ``ADPSFC``) and upper-air fields (represented by the verification field
-       group ``ADPUPA``).  In rocoto, the tasks under this metatask that run ``GenEnsProd`` are named
-       ``run_MET_GenEnsProd_vx_{field_group}``, and the ones that run `EnsembleStat`` are named
-       ``run_MET_EnsembleStat_vx_{field_group}``, where ``{field_group}`` is the field group (in this case either
-       ``ADPSFC`` or ``ADPUPA``) for which the tasks are being run.  The tasks for ``ADPSFC`` are included in the
-       workflow only if ``DO_ENSEMBLE`` is set to ``True`` in ``config.yaml`` and ``'ADPSFC'`` is included in
-       ``VX_FIELD_GROUPS``, and the ones for ``ADPUPA`` are included only if ``DO_ENSEMBLE`` is set to ``True``
-       in ``config.yaml`` and ``'ADPUPA'`` is included in ``VX_FIELD_GROUPS``.
+       by the verification field group ``SFC``) and upper-air fields (represented by the verification field group
+       ``UPA``).  In rocoto, the tasks under this metatask that run ``GenEnsProd`` are named ``run_MET_GenEnsProd_vx_{field_group}``,
+       and the ones that run `EnsembleStat`` are named ``run_MET_EnsembleStat_vx_{field_group}``, where ``{field_group}``
+       is the field group (in this case either ``SFC`` or ``UPA``) for which the tasks are being run.  The tasks for
+       ``SFC`` are included in the workflow only if ``DO_ENSEMBLE`` is set to ``True`` in ``config.yaml`` and ``'SFC'``
+       is included in ``VX_FIELD_GROUPS``, and the ones for ``UPA`` are included only if ``DO_ENSEMBLE`` is set to
+       ``True`` in ``config.yaml`` and ``'UPA'`` is included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GridStat_CCPA_ensmeanprob_all_accums` (``verify_ens.yaml``)
+   * - :bolditalic:`metatask_GridStat_ensmeanprob_APCP_all_accums` (``verify_ens.yaml``)
      - Set of tasks that run grid-to-grid verification of the ensemble mean of APCP and grid-to-grid probabilistic
        verification of the ensemble of APCP forecasts as a whole.  In rocoto, the tasks under this metatask for
        ensemble mean verification are named ``run_MET_GridStat_vx_ensmean_APCP{accum_intvl}h``, and the ones for
@@ -1018,7 +1017,7 @@ about metatasks.
        tasks are being run.  This metatask is included in the workflow only if ``DO_ENSEMBLE`` is set to ``True``
        in ``config.yaml`` and ``'APCP'`` is included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GridStat_NOHRSC_ensmeanprob_all_accums` (``verify_ens.yaml``)
+   * - :bolditalic:`metatask_GridStat_ensmeanprob_ASNOW_all_accums` (``verify_ens.yaml``)
      - Set of tasks that run grid-to-grid verification of the ensemble mean of ASNOW and grid-to-grid probabilistic
        verification of the ensemble of ASNOW forecasts as a whole.  In rocoto, the tasks under this metatask for
        ensemble mean verification are named ``run_MET_GridStat_vx_ensmean_ASNOW{accum_intvl}h``, and the ones for
@@ -1027,7 +1026,7 @@ about metatasks.
        tasks are being run.  These tasks will be included in the workflow only if ``DO_ENSEMBLE`` is set to ``True``
        in ``config.yaml`` and ``'ASNOW'`` is included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_GridStat_MRMS_ensprob` (``verify_ens.yaml``)
+   * - :bolditalic:`metatask_GridStat_ensprob_REFC_RETOP` (``verify_ens.yaml``)
      - Set of tasks that run grid-to-grid probabilistic verification of the ensemble of :term:`composite reflectivity`
        (represented by the verification field group ``REFC``) and :term:`echo top` (represented by the field group
        ``RETOP``).  (Note that there is no grid-to-grid verification of the ensemble mean of these quantities.)
@@ -1037,17 +1036,17 @@ about metatasks.
        in ``config.yaml`` and ``'REFC'`` is included in ``VX_FIELD_GROUPS``, and the one for ``RETOP`` is included 
        only if ``DO_ENSEMBLE`` is set to ``True`` in ``config.yaml`` and ``'RETOP'`` is included in ``VX_FIELD_GROUPS``.
 
-   * - :bolditalic:`metatask_PointStat_NDAS_ensmeanprob` (``verify_ens.yaml``)
+   * - :bolditalic:`metatask_PointStat_ensmeanprob_SFC_UPA` (``verify_ens.yaml``)
      - Set of tasks that run grid-to-grid verification of the ensemble mean of surface fields (represented by the
-       verification field group ``ADPSFC``) and upper-air fields (represented by the verification field group
-       ``ADPUPA``) as well as grid-to-grid probabilistic verification of the ensemble of the surface and upper-air
-       field forecasts as a whole.  In rocoto, the tasks under this metatask for ensemble mean verification are
-       named ``run_MET_PointStat_vx_ensmean_{field_group}``, and the ones for ensemble probabilistic verification
-       are named ``run_MET_PointStat_vx_ensprob_{field_group}``, where ``{field_group}`` is the field group (in
-       this case either ``ADPSFC`` or ``ADPUPA``) on which the task is being run.  The tasks for ``ADPSFC`` are
-       included in the workflow only if ``DO_ENSEMBLE`` is set to ``True`` in ``config.yaml`` and ``'ADPSFC'``
-       is included in ``VX_FIELD_GROUPS``, and the ones for ``ADPUPA`` are included only if ``DO_ENSEMBLE`` is set
-       to ``True`` in ``config.yaml`` and ``'ADPUPA'`` is included in ``VX_FIELD_GROUPS``.
+       verification field group ``SFC``) and upper-air fields (represented by the verification field group ``UPA``)
+       as well as grid-to-grid probabilistic verification of the ensemble of the surface and upper-air field
+       forecasts as a whole.  In rocoto, the tasks under this metatask for ensemble mean verification are named
+       ``run_MET_PointStat_vx_ensmean_{field_group}``, and the ones for ensemble probabilistic verification are
+       named ``run_MET_PointStat_vx_ensprob_{field_group}``, where ``{field_group}`` is the field group (in this
+       case either ``SFC`` or ``UPA``) on which the task is being run.  The tasks for ``SFC`` are included in the
+       workflow only if ``DO_ENSEMBLE`` is set to ``True`` in ``config.yaml`` and ``'SFC'`` is included in
+       ``VX_FIELD_GROUPS``, and the ones for ``UPA`` are included only if ``DO_ENSEMBLE`` is set to ``True`` in
+       ``config.yaml`` and ``'UPA'`` is included in ``VX_FIELD_GROUPS``.
 
 
 .. _Run:

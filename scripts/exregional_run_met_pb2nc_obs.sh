@@ -118,7 +118,7 @@ FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
   obtype="${OBTYPE}" \
-  field="$VAR" \
+  field_group="ADP${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH}" \
   outvarname_grid_or_point="grid_or_point" \
   outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
@@ -140,7 +140,7 @@ OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_FN_TEMPLATES[1]} )
 
 OUTPUT_BASE="${vx_output_basedir}"
 OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_obs"
-OUTPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_ADPSFCandADPUPA_FN_TEMPLATE_PB2NC_OUTPUT} )
+OUTPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_SFCandUPA_FN_TEMPLATE_PB2NC_OUTPUT} )
 STAGING_DIR="${OUTPUT_BASE}/stage/${MetplusToolName}_obs"
 #
 #-----------------------------------------------------------------------
