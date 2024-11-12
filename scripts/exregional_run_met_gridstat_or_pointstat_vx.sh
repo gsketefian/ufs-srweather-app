@@ -388,6 +388,13 @@ settings="\
 ${vx_config_dict:-}
 "
 
+#echo ""
+#echo "RRRRRRRRRRRRRRR"
+#echo "settings = "
+#echo ${settings}
+#echo
+#echo "SSSSSSSSSSSSSSSS"
+
 # Render the template to create a METplus configuration file
 tmpfile=$( $READLINK -f "$(mktemp ./met_plus_settings.XXXXXX.yaml)")
 printf "%s" "$settings" > "$tmpfile"
