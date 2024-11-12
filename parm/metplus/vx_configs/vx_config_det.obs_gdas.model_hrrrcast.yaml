@@ -43,7 +43,7 @@
 #
 SFC:
 #    TMP:
-    T2M|TMP:
+    T2M%%TMP:
         Z2: []
 #    UGRD:
 #        Z10: ['ge2.572']
