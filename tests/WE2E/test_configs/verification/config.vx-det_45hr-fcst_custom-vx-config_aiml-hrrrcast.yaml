@@ -42,7 +42,7 @@ verification:
   CCPA_OBS_DIR: "{{ workflow.EXPTDIR }}/obs_data/ccpa"
   NOHRSC_OBS_DIR: "{{ workflow.EXPTDIR }}/obs_data/nohrsc"
   MRMS_OBS_DIR: "{{ workflow.EXPTDIR }}/obs_data/mrms"
-  NDAS_OBS_DIR: "/scratch2/BMC/fv3lam/Gerard.Ketefian/obs_for_ai_tess/gdas"
+  NDAS_OBS_DIR: "/scratch2/BMC/fv3lam/Gerard.Ketefian/obs_for_ai_tests/gdas"
   # Do not remove raw obs files to be able to verify that only the necessary
   # raw files are fetched from HPSS (if it's necessary to fetch obs files).
   REMOVE_RAW_OBS_CCPA: false
