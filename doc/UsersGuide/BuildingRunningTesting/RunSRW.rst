@@ -846,7 +846,7 @@ that attempt is successful, the workflow will move on to subsequent tasks.  Thus
    
    * Users who do not have the obs files available on their systems and do not have access to NOAA HPSS
      need to download :term:`CCPA`, :term:`NOHRSC`, :term:`MRMS`, and/or :term:`NDAS` files manually
-     from collections of publicly available data such as the ones listed `here <https://dtcenter.org/nwp-containers-online-tutorial/publicly-available-data-sets>`__. 
+     from collections of publicly available data. 
      Then, as above, they must set ``*_OBS_DIR`` and ``OBS_*_FN_TEMPLATES[1,3,...]`` to match those
      staging locations and file names.
    
