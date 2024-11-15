@@ -50,8 +50,6 @@ verification:
   REMOVE_RAW_OBS_NDAS: false
   REMOVE_RAW_OBS_NOHRSC: false
   #
-  #OBS_NDAS_FN_TEMPLATES: [ 'SFCandUPA', '{valid?fmt=%Y%m%d}/gdas.t{valid?fmt=%H}z.prepbufr.nr' ]
-  #
   VX_FCST_MODEL_NAME: 'hrrrcast'
   VX_CONFIG_DET_FN: 'vx_configs/vx_config_det.obs_gdas_or_ndas.model_hrrrcast.yaml'
   VX_FCST_INPUT_BASEDIR: '/scratch2/BMC/fv3lam/Gerard.Ketefian/forecasts_for_ai_tests'
