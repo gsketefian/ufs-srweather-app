@@ -38,7 +38,7 @@ numfig = True
 
 nitpick_ignore = [('py:class', 'obj'),('py:class', 
                    'yaml.dumper.Dumper'),('py:class', 
-                   'xml.etree.ElementTree'),]
+                   'xml.etree.ElementTree'),('py:class', 'Basemap'),]
 
 # -- General configuration ---------------------------------------------------
 
@@ -46,7 +46,6 @@ nitpick_ignore = [('py:class', 'obj'),('py:class',
 extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autodoc',
-    'sphinxcontrib.autoyaml',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.extlinks',
@@ -254,7 +253,7 @@ epub_exclude_files = ['search.html']
 # -- Options for autodoc extension ---------------------------------------
 
 autodoc_mock_imports = ["f90nml","cartopy","mpl_toolkits.basemap","fill_jinja_template",
-   "matplotlib","numpy","uwtools","mpl_toolkits",
+   "matplotlib","numpy","uwtools","mpl_toolkits","metplus",
    ]
 
 logger = logging.getLogger(__name__)
@@ -308,12 +307,14 @@ extlinks = {'github-docs': ('https://docs.github.com/en/%s', '%s'),
             'srw-repo': ('https://github.com/ufs-community/ufs-srweather-app/%s', '%s'),
             'srw-wiki': ('https://github.com/ufs-community/ufs-srweather-app/wiki/%s','%s'),
             'uw': ('https://uwtools.readthedocs.io/en/main/%s', '%s'),
+            'fire-ug': ('https://fire-behavior.readthedocs.io/en/latest/%s', '%s'),
             }
 
-# -- Options for autoyaml extension ---------------------------------------
+# Define environment variables that need to exist when running the top-level code in python
+# files (outside of functions, classes, etc.).
+#
+# METPLUS_ROOT just needs to exist in the environment; its value is not important since for
+# the purpose of building the documentation, METplus is loaded by including "metplus" in
+# the autodoc_mock_imports list above, not via use of the METPLUS_ROOT environment variable.
+os.environ["METPLUS_ROOT"] = ""
 
-autoyaml_root = "../ush"
-autoyaml_doc_delimiter = "###" # Character(s) which start a documentation comment.
-autoyaml_comment = "#" #Comment start character(s).
-autoyaml_level = 6
-#autoyaml_safe_loader = False

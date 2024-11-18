@@ -43,9 +43,6 @@ def set_leadhrs(date_init, lhr_min, lhr_max, lhr_intvl, base_dir, time_lag, fn_t
 
         # Evaluate the METplus timestring template for the current lead hour
         fn = eval_metplus_timestr_tmpl(date_init, lhr, time_lag, fn_template, verbose=False)
-#        print(f"")
-#        print(f"CCCCCCCCCCCCCCCCCCCC")
-#        print(f"{fn = }")
 
         # Get the full path and check if the file exists
         fp = os.path.join(base_dir, fn)
@@ -70,9 +67,6 @@ def set_leadhrs(date_init, lhr_min, lhr_max, lhr_intvl, base_dir, time_lag, fn_t
 
 if __name__ == "__main__":
 
-#    print(f"")
-#    print(f"AAAAAAAAAAAAAAAAAAAA")
-
     parser = argparse.ArgumentParser(
         description="Print a list of forecast hours in bash-readable comma-separated format such that there is a corresponding file (can be observations or forecast files) for each list entry.",
     )
@@ -90,10 +84,6 @@ if __name__ == "__main__":
                         help="Flag to skip file check and just return the list of lead hours") 
 
     args = parser.parse_args()
-
-#    print(f"")
-#    print(f"BBBBBBBBBBBBBBBBBBBBB")
-#    print(f"{args = }")
 
     #Consistency checks
     if not args.skip_check_files and not args.date_init:

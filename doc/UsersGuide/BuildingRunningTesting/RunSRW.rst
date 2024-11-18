@@ -817,23 +817,25 @@ summer period for which ``ASNOW`` is not relevant.
 
 Staging Observation Files
 ``````````````````````````````````
-The taskgroup in ``verify_pre.yaml`` defines a set of workflow tasks named ``get_obs_*`` --- where the ``*``
-represents any one of the supported obs types :term:`CCPA`, :term:`NOHRSC`, :term:`MRMS`, and :term:`NDAS` ---
-that will first check for the existence of the obs files required for VX at the locations on disk specified
+The taskgroup in ``verify_pre.yaml`` defines a set of workflow tasks named ``get_obs_*``, where the ``*``
+represents any one of the supported obs types: :term:`CCPA`, :term:`NOHRSC`, :term:`MRMS`, and :term:`NDAS`. These ``get_obs_*`` tasks 
+will first check on disk for the existence of the obs files required for VX using the locations specified
 by the variables ``*_OBS_DIR`` and ``OBS_*_FN_TEMPLATES[1,3,...]`` in the ``verification:`` section of
-``config.yaml``.  The ``*_OBS_DIR``  are the base directories in which the obs files are or should be
+``config.yaml``. The ``*_OBS_DIR``  are the base directories in which the obs files are or should be
 staged, and the ``OBS_*_FN_TEMPLATES[1,3,...]`` are the file name templates (with METplus time strings
-used for templating; see example below).  The ``[1,3,...]`` in ``OBS_*_FN_TEMPLATES[1,3,...]`` refer
-to the second, fourth, etc elements of ``OBS_*_FN_TEMPLATES`` and correspond to the various sets of files
-that the obs type contains.  (The first, third, etc elements, i.e. ``OBS_*_FN_TEMPLATES[0,2,...]``,
-indicate the VX field groups for which the respective sets of obs files are used to verify and should
-not be changed.) Note that ``OBS_*_FN_TEMPLATES[1,3,...]`` may include leading subdirectories and are
-relative to the obs type's ``*_OBS_DIR``.  Thus, the templates for the full paths to the obs files are
-given by
+used for templating; see example below). Thus, the templates for the full paths to the obs files are
+given by:
 
 .. code-block:: console
-
+   
    {*_OBS_DIR}/{OBS_*_FN_TEMPLATES[1,3,...]}
+
+The contents of the ``OBS_*_FN_TEMPLATES`` list come in pairs, where the first element 
+of each pair (with even-numbered indices ``[0,2,...]``) refers to the field group, 
+while the second element (with odd-numbered indices ``[1,3,...]``) refers to the 
+corresponding sets of files that the obs type contains. Note that ``OBS_*_FN_TEMPLATES
+[1,3,...]`` may include leading subdirectories and are
+relative to the obs type's ``*_OBS_DIR``.
 
 If the obs files exist at the locations specified by ``{*_OBS_DIR}/{OBS_*_FN_TEMPLATES[1,3,...]}``, then the ``get_obs_*`` tasks will
 succeed, and the workflow will move on to subsequent tasks.  If one or more obs files do not exist, the
@@ -846,7 +848,7 @@ that attempt is successful, the workflow will move on to subsequent tasks.  Thus
    
    * Users who do not have the obs files available on their systems and do not have access to NOAA HPSS
      need to download :term:`CCPA`, :term:`NOHRSC`, :term:`MRMS`, and/or :term:`NDAS` files manually
-     from collections of publicly available data such as the ones listed `here <https://dtcenter.org/nwp-containers-online-tutorial/publicly-available-data-sets>`__. 
+     from collections of publicly available data. 
      Then, as above, they must set ``*_OBS_DIR`` and ``OBS_*_FN_TEMPLATES[1,3,...]`` to match those
      staging locations and file names.
    
