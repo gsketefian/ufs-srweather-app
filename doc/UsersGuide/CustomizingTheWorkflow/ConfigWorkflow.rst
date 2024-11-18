@@ -2071,10 +2071,10 @@ Non-default parameters for the Community Fire Behavior Model (CFBM) in SRW are s
    Directory where fire input file (geo_em.d01.nc) can be found
 
 ``DT_FIRE``: (Default: 0.5)
-   The fire behavior component?s integration timestep in seconds
+   The fire behavior component's integration timestep in seconds
 
 ``OUTPUT_DT_FIRE``: (Default: 300)
-   The fire behavior component?s output timestep in seconds
+   The fire behavior component's output timestep in seconds
 
 ``FIRE_NUM_TASKS``: (Default: 0)
    Number of MPI tasks assigned to the FIRE_BEHAVIOR component. Currently only 1 task is supported.
