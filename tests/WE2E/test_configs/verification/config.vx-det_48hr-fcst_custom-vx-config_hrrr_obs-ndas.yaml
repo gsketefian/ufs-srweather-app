@@ -15,9 +15,9 @@ platform:
 workflow:
   PREEXISTING_DIR_METHOD: rename
   PREDEF_GRID_NAME: RRFS_CONUS_25km
-  DATE_FIRST_CYCL: '2024040401'
-  DATE_LAST_CYCL: '2024040401'
-  FCST_LEN_HRS: 45
+  DATE_FIRST_CYCL: '2024040400'
+  DATE_LAST_CYCL: '2024040400'
+  FCST_LEN_HRS: 48
 
 rocoto:
   tasks:
@@ -50,11 +50,11 @@ verification:
   REMOVE_RAW_OBS_NDAS: false
   REMOVE_RAW_OBS_NOHRSC: false
   #
-  VX_FCST_MODEL_NAME: 'hrrrcast'
-  VX_CONFIG_DET_FN: 'vx_configs/vx_config_det.obs_gdas_or_ndas.model_hrrrcast.yaml'
+  VX_FCST_MODEL_NAME: 'hrrr'
+  VX_CONFIG_DET_FN: 'vx_configs/vx_config_det.obs_gdas_or_ndas.model_hrrr.yaml'
   VX_FCST_INPUT_BASEDIR: '/scratch2/BMC/fv3lam/Gerard.Ketefian/forecasts_for_ai_tests'
   FCST_SUBDIR_TEMPLATE: '{{- verification.VX_FCST_MODEL_NAME }}.{init?fmt=%Y%m%d}/{init?fmt=%H}'
-  FCST_FN_TEMPLATE: 'proc_graphhrrr_time_{lead?fmt=%1H}.nc'
+  FCST_FN_TEMPLATE: 'hrrr.t{init?fmt=%H}z.wrfprsf{lead?fmt=%H}.grib2'
   FCST_FN_TEMPLATE_PCPCOMBINE_OUTPUT: '{{- verification.VX_FCST_MODEL_NAME }}.t00z.prslev.f{lead?fmt=%HHH}_a${ACCUM_HH}h.nc'
   #
   VX_FCST_OUTPUT_INTVL_HRS: 1
