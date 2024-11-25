@@ -71,36 +71,40 @@ task_get_obs_ndas:
   partition: '{% if platform.get("PARTITION_HPSS") %}&PARTITION_HPSS;{% else %}None{% endif %}'
   walltime: 02:00:00
 
-task_run_MET_Pb2nc_obs_NDAS:
-  <<: *default_task_verify_pre
-  attrs:
-    cycledefs: cycledefs_obs_days_inst
-    maxtries: '2'
-  command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PB2NC_OBS"'
-  envars:
-    <<: *default_vars
-    FIELD_GROUP: 'SFC'
-    ACCUM_HH: '01'
-    FCST_OR_OBS: OBS
-    OBTYPE: NDAS
-    OBS_DIR: '&NDAS_OBS_DIR;'
-    METPLUSTOOLNAME: 'PB2NC'
-  dependency:
-    and:
-      datadep:
-        text: "&NDAS_OBS_DIR;"
-      or:
-        not:
-          taskvalid:
-            attrs:
-              task: get_obs_ndas
-        taskdep:
-          attrs:
-            task: get_obs_ndas
+#task_run_MET_Pb2nc_obs_NDAS:
+#  <<: *default_task_verify_pre
+#  attrs:
+#    cycledefs: cycledefs_obs_days_inst
+#    maxtries: '2'
+#  command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PB2NC_OBS"'
+#  envars:
+#    <<: *default_vars
+#    FIELD_GROUP: 'SFC'
+#    ACCUM_HH: '01'
+#    FCST_OR_OBS: OBS
+#    OBTYPE: NDAS
+#    OBS_DIR: '&NDAS_OBS_DIR;'
+#    METPLUSTOOLNAME: 'PB2NC'
+#  dependency:
+#    and:
+#      datadep:
+#        text: "&NDAS_OBS_DIR;"
+#      or:
+#        not:
+#          taskvalid:
+#            attrs:
+#              task: get_obs_ndas
+#        taskdep:
+#          attrs:
+#            task: get_obs_ndas
 
 metatask_PcpCombine_APCP_all_accums_obs_CCPA:
   var:
-    ACCUM_HH: '{% for ah in verification.VX_APCP_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+    ACCUM_HH: '{%- for ah in verification.VX_APCP_ACCUMS_HRS %}
+                 {%- if workflow.FCST_LEN_HRS >= ah %}
+                   {{- "%02d " % ah }}
+                 {%- endif %}
+               {%- endfor %}'
   task_run_MET_PcpCombine_APCP#ACCUM_HH#h_obs_CCPA:
     <<: *default_task_verify_pre
     attrs:
@@ -142,7 +146,11 @@ metatask_PcpCombine_APCP_all_accums_obs_CCPA:
 
 metatask_PcpCombine_ASNOW_all_accums_obs_NOHRSC:
   var:
-    ACCUM_HH: '{% for ah in verification.VX_ASNOW_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+    ACCUM_HH: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
+                 {%- if workflow.FCST_LEN_HRS >= ah %}
+                   {{- "%02d " % ah }}
+                 {%- endif %}
+               {%- endfor %}'
   task_run_MET_PcpCombine_ASNOW#ACCUM_HH#h_obs_NOHRSC:
     <<: *default_task_verify_pre
     attrs:
@@ -184,7 +192,13 @@ metatask_PcpCombine_ASNOW_all_accums_obs_NOHRSC:
 
 metatask_check_post_output_all_mems:
   var:
-    mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
+    mem: '{%- if global.DO_ENSEMBLE %}
+            {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
+              {{- "%03d "%m }}
+            {%- endfor %}
+          {%- else %}
+            {{- "000"|string }}
+          {%- endif %}'
   task_check_post_output_mem#mem#:
     <<: *default_task_verify_pre
     attrs:
@@ -268,10 +282,20 @@ metatask_check_post_output_all_mems:
 
 metatask_PcpCombine_APCP_all_accums_all_mems:
   var:
-    ACCUM_HH: '{% for ah in verification.VX_APCP_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+    ACCUM_HH: '{%- for ah in verification.VX_APCP_ACCUMS_HRS %}
+                 {%- if workflow.FCST_LEN_HRS >= ah %}
+                   {{- "%02d " % ah }}
+                 {%- endif %}
+               {%- endfor %}'
   metatask_PcpCombine_APCP#ACCUM_HH#h_all_mems:
     var:
-      mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
+      mem: '{%- if global.DO_ENSEMBLE %}
+              {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
+                {{- "%03d "%m }}
+              {%- endfor %}
+            {%- else %}
+              {{- "000"|string }}
+            {%- endif %}'
     task_run_MET_PcpCombine_APCP#ACCUM_HH#h_fcst_mem#mem#:
       <<: *default_task_verify_pre
       attrs:
@@ -296,10 +320,20 @@ metatask_PcpCombine_APCP_all_accums_all_mems:
 
 metatask_PcpCombine_ASNOW_all_accums_all_mems:
   var:
-    ACCUM_HH: '{% for ah in verification.VX_ASNOW_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+    ACCUM_HH: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
+                 {%- if workflow.FCST_LEN_HRS >= ah %}
+                   {{- "%02d " % ah }}
+                 {%- endif %}
+               {%- endfor %}'
   metatask_PcpCombine_ASNOW#ACCUM_HH#h_all_mems:
     var:
-      mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
+      mem: '{%- if global.DO_ENSEMBLE %}
+              {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
+                {{- "%03d "%m }}
+              {%- endfor %}
+            {%- else %}
+              {{- "000"|string }}
+            {%- endif %}'
     task_run_MET_PcpCombine_ASNOW#ACCUM_HH#h_fcst_mem#mem#:
       <<: *default_task_verify_pre
       attrs:

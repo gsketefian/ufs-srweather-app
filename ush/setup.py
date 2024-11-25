@@ -804,6 +804,61 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         #
         # -----------------------------------------------------------------------
         #
+        #
+        #
+        # -----------------------------------------------------------------------
+        #
+        vx_config = expt_config["verification"]
+        vx_verify_against_benchmark_fcst = vx_config["VX_VERIFY_AGAINST_BENCHMARK_FCST"]
+    
+        if vx_verify_against_benchmark_fcst:
+            valid_gridtogrid_field_groups = [ "APCP", "REFC", "RETOP", "SFC", "UPA" ]
+        else:
+            valid_gridtogrid_field_groups = [ "APCP", "REFC", "RETOP" ]
+    
+        vx_gridtogrid_field_groups = []
+        vx_gridtopoint_field_groups = []
+        for fg in vx_field_groups:
+            if fg in valid_gridtogrid_field_groups:
+                vx_gridtogrid_field_groups.append(fg)
+            else:
+                vx_gridtopoint_field_groups.append(fg)
+    
+        vx_config['VX_GRIDTOGRID_FIELD_GROUPS'] = vx_gridtogrid_field_groups
+        vx_config['VX_GRIDTOPOINT_FIELD_GROUPS'] = vx_gridtopoint_field_groups
+        expt_config["verification"] = vx_config
+    
+        print(f"")
+        print(f"PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
+        print(f"{vx_verify_against_benchmark_fcst = }")
+        print(f"{vx_gridtogrid_field_groups = }")
+        print(f"{vx_gridtopoint_field_groups = }")
+        #bbbbbbbbbbb
+
+        wflow_metatasks = rocoto_config['tasks']
+
+        if not vx_gridtogrid_field_groups:
+            metatasks_to_remove \
+            = ['metatask_GridStat_REFC_RETOP_all_mems',
+               'metatask_GenEnsProd_EnsembleStat_REFC_RETOP',
+               'metatask_GridStat_REFC_RETOP_ensprob']
+            for metatask in metatasks_to_remove:
+                if metatask in wflow_metatasks.keys():
+                    wflow_metatasks.pop(metatask)
+
+        if not vx_gridtopoint_field_groups:
+            metatasks_to_remove \
+            = ['metatask_PointStat_SFC_UPA_all_mems',
+               'metatask_GenEnsProd_EnsembleStat_SFC_UPA',
+               'metatask_PointStat_SFC_UPA_ensmeanprob']
+            for metatask in metatasks_to_remove:
+                if metatask in wflow_metatasks.keys():
+                    wflow_metatasks.pop(metatask)
+
+        rocoto_config['tasks'] = wflow_metatasks
+        #
+        # -----------------------------------------------------------------------
+        #
         # If there are at least some field groups to verify, then make sure that
         # the base directories in which retrieved obs files will be placed are
         # distinct for the different obs types.
@@ -831,6 +886,7 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
                 msg = msg1 + '    '.join(msg2.splitlines(True)) + msg3
                 logging.error(msg)
                 raise ValueError(msg)
+
     #
     # -----------------------------------------------------------------------
     #

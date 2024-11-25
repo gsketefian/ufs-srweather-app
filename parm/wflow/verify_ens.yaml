@@ -23,7 +23,11 @@ default_task_verify_ens: &default_task_verify_ens
 
 metatask_GenEnsProd_EnsembleStat_APCP_all_accums:
   var:
-    ACCUM_HH: '{% for ah in verification.VX_APCP_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+    ACCUM_HH: '{%- for ah in verification.VX_APCP_ACCUMS_HRS %}
+                 {%- if workflow.FCST_LEN_HRS >= ah %}
+                   {{- "%02d " % ah }}
+                 {%- endif %}
+               {%- endfor %}'
   task_run_MET_GenEnsProd_vx_APCP#ACCUM_HH#h: &task_GenEnsProd_CCPA
     <<: *default_task_verify_ens
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GENENSPROD_OR_ENSEMBLESTAT"'
@@ -57,7 +61,11 @@ metatask_GenEnsProd_EnsembleStat_APCP_all_accums:
 
 metatask_GenEnsProd_EnsembleStat_ASNOW_all_accums:
   var:
-    ACCUM_HH: '{% for ah in verification.VX_ASNOW_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+    ACCUM_HH: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
+                 {%- if workflow.FCST_LEN_HRS >= ah %}
+                   {{- "%02d " % ah }}
+                 {%- endif %}
+               {%- endfor %}'
   task_run_MET_GenEnsProd_vx_ASNOW#ACCUM_HH#h: &task_GenEnsProd_NOHRSC
     <<: *default_task_verify_ens
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GENENSPROD_OR_ENSEMBLESTAT"'
@@ -92,7 +100,11 @@ metatask_GenEnsProd_EnsembleStat_ASNOW_all_accums:
 
 metatask_GenEnsProd_EnsembleStat_REFC_RETOP:
   var:
-    FIELD_GROUP: '{% for var in verification.VX_FIELD_GROUPS %}{% if var in ["REFC", "RETOP"] %}{{ "%s " % var }}{% endif %}{% endfor %}'
+    FIELD_GROUP: '{%- for var in verification.VX_FIELD_GROUPS %}
+                    {%- if var in ["REFC", "RETOP"] %}
+                      {{- "%s " % var }}
+                    {%- endif %}
+                  {%- endfor %}'
   task_run_MET_GenEnsProd_vx_#FIELD_GROUP#: &task_GenEnsProd_MRMS
     <<: *default_task_verify_ens
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GENENSPROD_OR_ENSEMBLESTAT"'
@@ -106,10 +118,9 @@ metatask_GenEnsProd_EnsembleStat_REFC_RETOP:
       FCST_LEVEL: 'L0'
       FCST_THRESH: 'all'
     dependency:
-      and:
-        metataskdep_check_post_output: &check_post_output
-          attrs:
-            metatask: check_post_output_all_mems
+      metataskdep_check_post_output: &check_post_output
+        attrs:
+          metatask: check_post_output_all_mems
   task_run_MET_EnsembleStat_vx_#FIELD_GROUP#:
     <<: *task_GenEnsProd_MRMS
     envars:
@@ -144,7 +155,11 @@ metatask_GenEnsProd_EnsembleStat_REFC_RETOP:
 
 metatask_GenEnsProd_EnsembleStat_SFC_UPA:
   var:
-    FIELD_GROUP: '{% for var in verification.VX_FIELD_GROUPS %}{% if var in ["SFC", "UPA"] %}{{ "%s " % var }}{% endif %}{% endfor %}'
+    FIELD_GROUP: '{%- for var in verification.VX_FIELD_GROUPS %}
+                    {%- if var in ["SFC", "UPA"] %}
+                      {{- "%s " % var }}
+                    {%- endif %}
+                  {%- endfor %}'
   task_run_MET_GenEnsProd_vx_#FIELD_GROUP#: &task_GenEnsProd_NDAS
     <<: *default_task_verify_ens
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GENENSPROD_OR_ENSEMBLESTAT"'
@@ -168,26 +183,26 @@ metatask_GenEnsProd_EnsembleStat_SFC_UPA:
       METPLUSTOOLNAME: 'ENSEMBLESTAT'
     walltime: 01:00:00
     dependency:
-      and:
-        datadep_all_pb2nc_obs_ndas_complete: &all_pb2nc_obs_ndas_complete
-          attrs:
-            age: 00:00:00:30
-          # Check that the flag files that indicate that the Pb2NC tasks are
-          # complete are all present before launching any EnsembleStat task.
-          text: '{%- set num_obs_days = workflow.OBS_DAYS_ALL_CYCLES_INST|length %}
-                 {%- set indent = "      " %}
-                 {%- set indent_p2 = indent + "  " %}
-                 {%- for n in range(0, num_obs_days) %}
-                   {%- set yyyymmdd = workflow.OBS_DAYS_ALL_CYCLES_INST[n] %}
-                   {%- if n == 0 %}
-                     {{- workflow.WFLOW_FLAG_FILES_DIR ~ "/run_met_pb2nc_obs_ndas_" ~ yyyymmdd ~ "_complete.txt" }}
-                   {%- else %}
-                     {{- indent ~ "</datadep>\n" }}
-                     {{- indent ~ "<datadep age=\"00:00:00:30\">\n" }}
-                     {{- indent_p2 ~ workflow.WFLOW_FLAG_FILES_DIR ~ "/run_met_pb2nc_obs_ndas_" ~ yyyymmdd ~ "_complete.txt" }}
-                   {%- endif %}
-                   {%- if n != num_obs_days-1 %} {{- "\n" }} {%- endif %}
-                 {%- endfor %}'
+#      and:
+#        datadep_all_pb2nc_obs_ndas_complete: &all_pb2nc_obs_ndas_complete
+#          attrs:
+#            age: 00:00:00:30
+#          # Check that the flag files that indicate that the Pb2NC tasks are
+#          # complete are all present before launching any EnsembleStat task.
+#          text: '{%- set num_obs_days = workflow.OBS_DAYS_ALL_CYCLES_INST|length %}
+#                 {%- set indent = "      " %}
+#                 {%- set indent_p2 = indent + "  " %}
+#                 {%- for n in range(0, num_obs_days) %}
+#                   {%- set yyyymmdd = workflow.OBS_DAYS_ALL_CYCLES_INST[n] %}
+#                   {%- if n == 0 %}
+#                     {{- workflow.WFLOW_FLAG_FILES_DIR ~ "/run_met_pb2nc_obs_ndas_" ~ yyyymmdd ~ "_complete.txt" }}
+#                   {%- else %}
+#                     {{- indent ~ "</datadep>\n" }}
+#                     {{- indent ~ "<datadep age=\"00:00:00:30\">\n" }}
+#                     {{- indent_p2 ~ workflow.WFLOW_FLAG_FILES_DIR ~ "/run_met_pb2nc_obs_ndas_" ~ yyyymmdd ~ "_complete.txt" }}
+#                   {%- endif %}
+#                   {%- if n != num_obs_days-1 %} {{- "\n" }} {%- endif %}
+#                 {%- endfor %}'
         taskdep_genensprod:
           attrs:
             task: run_MET_GenEnsProd_vx_#FIELD_GROUP#
@@ -198,7 +213,11 @@ metatask_GridStat_APCP_all_accums_ensmeanprob:
     statlc: mean prob
   metatask_GridStat_APCP_all_accums_ens#statlc#:
     var:
-      ACCUM_HH: '{% for ah in verification.VX_APCP_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+      ACCUM_HH: '{%- for ah in verification.VX_APCP_ACCUMS_HRS %}
+                   {%- if workflow.FCST_LEN_HRS >= ah %}
+                     {{- "%02d " % ah }}
+                   {%- endif %}
+                 {%- endfor %}'
     task_run_MET_GridStat_vx_APCP#ACCUM_HH#h_ens#statlc#:
       <<: *default_task_verify_ens
       command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX_ENS#stat#"'
@@ -225,7 +244,11 @@ metatask_GridStat_ASNOW_all_accums_ensmeanprob:
     statlc: mean prob
   metatask_GridStat_ASNOW_all_accums_ens#statlc#:
     var:
-      ACCUM_HH: '{% for ah in verification.VX_ASNOW_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+      ACCUM_HH: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
+                   {%- if workflow.FCST_LEN_HRS >= ah %}
+                     {{- "%02d " % ah }}
+                   {%- endif %}
+                 {%- endfor %}'
     task_run_MET_GridStat_vx_ASNOW#ACCUM_HH#h_ens#statlc#:
       <<: *default_task_verify_ens
       command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX_ENS#stat#"'
@@ -248,7 +271,11 @@ metatask_GridStat_ASNOW_all_accums_ensmeanprob:
 
 metatask_GridStat_REFC_RETOP_ensprob:
   var:
-    FIELD_GROUP: '{% for var in verification.VX_FIELD_GROUPS %}{% if var in ["REFC", "RETOP"] %}{{ "%s " % var }}{% endif %}{% endfor %}'
+    FIELD_GROUP: '{%- for var in verification.VX_FIELD_GROUPS %}
+                    {%- if var in ["REFC", "RETOP"] %}
+                      {{- "%s " % var }}
+                    {%- endif %}
+                  {%- endfor %}'
   task_run_MET_GridStat_vx_#FIELD_GROUP#_ensprob:
     <<: *default_task_verify_ens
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX_ENSPROB"'
@@ -275,7 +302,11 @@ metatask_PointStat_SFC_UPA_ensmeanprob:
     statlc: mean prob
   metatask_PointStat_SFC_UPA_ens#statlc#:
     var:
-      FIELD_GROUP: '{% for var in verification.VX_FIELD_GROUPS %}{% if var in ["SFC", "UPA"] %}{{ "%s " % var }}{% endif %}{% endfor %}'
+      FIELD_GROUP: '{%- for var in verification.VX_FIELD_GROUPS %}
+                      {%- if var in ["SFC", "UPA"] %}
+                        {{- "%s " % var }}
+                      {%- endif %}
+                    {%- endfor %}'
     task_run_MET_PointStat_vx_#FIELD_GROUP#_ens#statlc#:
       <<: *default_task_verify_ens
       command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX_ENS#stat#"'
@@ -290,8 +321,8 @@ metatask_PointStat_SFC_UPA_ensmeanprob:
         FCST_THRESH: 'all'
       dependency:
         and:
-          datadep_all_pb2nc_obs_ndas_complete:
-            <<: *all_pb2nc_obs_ndas_complete
+#          datadep_all_pb2nc_obs_ndas_complete:
+#            <<: *all_pb2nc_obs_ndas_complete
           taskdep_genensprod:
             attrs:
               task: run_MET_GenEnsProd_vx_#FIELD_GROUP#

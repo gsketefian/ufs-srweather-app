@@ -3,6 +3,18 @@
 #
 rocoto:
   entities:
+    ACCUM_HH_APCP: '{%- for ah in verification.VX_APCP_ACCUMS_HRS %}
+                      {%- if workflow.FCST_LEN_HRS >= ah %}
+                        {{- "%02d " % ah }}
+                      {%- endif %}
+                    {%- endfor %}'
+    OBS_AVAIL_INTVL_HRS_CCPA: '{{- verification.CCPA_OBS_AVAIL_INTVL_HRS }}'
+    ACCUM_HH_ASNOW: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
+                       {%- if workflow.FCST_LEN_HRS >= ah %}
+                         {{- "%02d " % ah }}
+                       {%- endif %}
+                     {%- endfor %}'
+    OBS_AVAIL_INTVL_HRS_NOHRSC: '{{- verification.NOHRSC_OBS_AVAIL_INTVL_HRS }}'
     ACCOUNT: '{{ user.ACCOUNT }}'
     CCPA_OBS_DIR: '{{ verification.CCPA_OBS_DIR }}'
     COLDSTART: '{{ workflow.COLDSTART }}'

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+from pprint import pprint
 from eval_metplus_timestr_tmpl import eval_metplus_timestr_tmpl
 
 def set_leadhrs(date_init, lhr_min, lhr_max, lhr_intvl, base_dir, time_lag, fn_template, num_missing_files_max,
@@ -28,8 +29,13 @@ def set_leadhrs(date_init, lhr_min, lhr_max, lhr_intvl, base_dir, time_lag, fn_t
         A list of forecast hours where files were found
     """
 
+#    print(f"")
+#    print(f"KKKKKKKKKKKKKK")
+#    print(f"{verbose = }")
+
     # Step 1: Generate lead hours without filtering for missing files
     lhrs_list = list(range(lhr_min, lhr_max + 1, lhr_intvl))
+#    print(f"{lhrs_list = }")
     if verbose:
         print(f"Initial set of lead hours (relative to {date_init}): {lhrs_list}")
 
@@ -84,6 +90,12 @@ if __name__ == "__main__":
                         help="Flag to skip file check and just return the list of lead hours") 
 
     args = parser.parse_args()
+
+#    print(f"")
+#    print(f"UUUUUUUUUUUUUUU")
+#    print(f"args = ")
+#    pprint(args)
+#    print(f"VVVVVVVVVVVVVVV")
 
     #Consistency checks
     if not args.skip_check_files and not args.date_init:

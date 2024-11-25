@@ -41,6 +41,20 @@
 # it means the name of the field in the forecast data is RETOP while its
 # name in the observations is EchoTop18.
 #
+REFC:
+    REFC:
+#        L0%%Z500: ['ge20', 'ge30', 'ge40', 'ge50']
+        L0: ['ge20', 'ge30', 'ge40', 'ge50']
+#
+#    TMP:
+#        '"(11,*,*)"%%P1000': &adpupa_tmp_threshes
+#                             []
+
+#RETOP:
+#    RETOP:
+##        L0%%Z500: ['ge20', 'ge30', 'ge40', 'ge50']
+#        L0: ['ge20', 'ge30', 'ge40', 'ge50']
+
 SFC:
 #    TMP:
     T2M%%TMP:
@@ -51,5 +65,118 @@ SFC:
 #        Z10: ['ge2.572']
 #    WIND:
 #        Z10: ['ge2.572', 'ge2.572&&lt5.144', 'ge5.144', 'ge10.288', 'ge15.433']
-#    PRES%%PRMSL:
+#    PRES%%PRES:
 #        Z0: []
+#
+# We'd like to verify (GraphHRRR netCDF -> HRRR GRIB):
+#
+# TMP -> t
+# UGRD -> u
+# VGRD -> v
+# VVEL -> w
+# SPFH -> q
+# HGT -> gh
+#
+# REFC -> refc
+# T2m -> t (surface)
+#
+
+UPA:
+    TMP:
+        '"(11,*,*)"%%P1000': &adpupa_tmp_threshes
+                             []
+        '"(10,*,*)"%%P975': *adpupa_tmp_threshes
+        '"(9,*,*)"%%P950': *adpupa_tmp_threshes
+        '"(8,*,*)"%%P925': *adpupa_tmp_threshes
+        '"(7,*,*)"%%P900': *adpupa_tmp_threshes
+        '"(6,*,*)"%%P875': *adpupa_tmp_threshes
+        '"(5,*,*)"%%P850': *adpupa_tmp_threshes
+        '"(4,*,*)"%%P825': *adpupa_tmp_threshes
+        '"(3,*,*)"%%P800': *adpupa_tmp_threshes
+        '"(2,*,*)"%%P475': *adpupa_tmp_threshes
+        '"(1,*,*)"%%P300': *adpupa_tmp_threshes
+        '"(0,*,*)"%%P200': *adpupa_tmp_threshes
+#    UGRD:
+#        '"(11,*,*)"%%P1000': &adpupa_ugrd_threshes
+#                             ['ge2.572']
+#        '"(10,*,*)"%%P975': *adpupa_ugrd_threshes
+#        '"(9,*,*)"%%P950': *adpupa_ugrd_threshes
+#        '"(8,*,*)"%%P925': *adpupa_ugrd_threshes
+#        '"(7,*,*)"%%P900': *adpupa_ugrd_threshes
+#        '"(6,*,*)"%%P875': *adpupa_ugrd_threshes
+#        '"(5,*,*)"%%P850': *adpupa_ugrd_threshes
+#        '"(4,*,*)"%%P825': *adpupa_ugrd_threshes
+#        '"(3,*,*)"%%P800': *adpupa_ugrd_threshes
+#        '"(2,*,*)"%%P475': *adpupa_ugrd_threshes
+#        '"(1,*,*)"%%P300': *adpupa_ugrd_threshes
+#        '"(0,*,*)"%%P200': *adpupa_ugrd_threshes
+#    VGRD:
+#        '"(11,*,*)"%%P1000': &adpupa_vgrd_threshes
+#                             ['ge2.572']
+#        '"(10,*,*)"%%P975': *adpupa_vgrd_threshes
+#        '"(9,*,*)"%%P950': *adpupa_vgrd_threshes
+#        '"(8,*,*)"%%P925': *adpupa_vgrd_threshes
+#        '"(7,*,*)"%%P900': *adpupa_vgrd_threshes
+#        '"(6,*,*)"%%P875': *adpupa_vgrd_threshes
+#        '"(5,*,*)"%%P850': *adpupa_vgrd_threshes
+#        '"(4,*,*)"%%P825': *adpupa_vgrd_threshes
+#        '"(3,*,*)"%%P800': *adpupa_vgrd_threshes
+#        '"(2,*,*)"%%P475': *adpupa_vgrd_threshes
+#        '"(1,*,*)"%%P300': *adpupa_vgrd_threshes
+#        '"(0,*,*)"%%P200': *adpupa_vgrd_threshes
+#    WIND:
+#        '"(11,*,*)"%%P1000': &adpupa_wind_threshes
+#                             ['ge2.572', 'ge2.572&&lt5.144', 'ge5.144', 'ge10.288', 'ge15.433', 'ge20.577', 'ge25.722']
+#        '"(10,*,*)"%%P975': *adpupa_wind_threshes
+#        '"(9,*,*)"%%P950': *adpupa_wind_threshes
+#        '"(8,*,*)"%%P925': *adpupa_wind_threshes
+#        '"(7,*,*)"%%P900': *adpupa_wind_threshes
+#        '"(6,*,*)"%%P875': *adpupa_wind_threshes
+#        '"(5,*,*)"%%P850': *adpupa_wind_threshes
+#        '"(4,*,*)"%%P825': *adpupa_wind_threshes
+#        '"(3,*,*)"%%P800': *adpupa_wind_threshes
+#        '"(2,*,*)"%%P475': *adpupa_wind_threshes
+#        '"(1,*,*)"%%P300': *adpupa_wind_threshes
+#        '"(0,*,*)"%%P200': *adpupa_wind_threshes
+    VVEL:
+        '"(11,*,*)"%%P1000': &adpupa_vvel_threshes
+                             ['ge0.1', 'ge0.5', 'ge1.0']
+        '"(10,*,*)"%%P975': *adpupa_vvel_threshes
+        '"(9,*,*)"%%P950': *adpupa_vvel_threshes
+        '"(8,*,*)"%%P925': *adpupa_vvel_threshes
+        '"(7,*,*)"%%P900': *adpupa_vvel_threshes
+        '"(6,*,*)"%%P875': *adpupa_vvel_threshes
+        '"(5,*,*)"%%P850': *adpupa_vvel_threshes
+        '"(4,*,*)"%%P825': *adpupa_vvel_threshes
+        '"(3,*,*)"%%P800': *adpupa_vvel_threshes
+        '"(2,*,*)"%%P475': *adpupa_vvel_threshes
+        '"(1,*,*)"%%P300': *adpupa_vvel_threshes
+        '"(0,*,*)"%%P200': *adpupa_vvel_threshes
+#    SPFH:
+#        '"(11,*,*)"%%P1000': &adpupa_spfh_threshes
+#                             []
+#        '"(10,*,*)"%%P975': *adpupa_spfh_threshes
+#        '"(9,*,*)"%%P950': *adpupa_spfh_threshes
+#        '"(8,*,*)"%%P925': *adpupa_spfh_threshes
+#        '"(7,*,*)"%%P900': *adpupa_spfh_threshes
+#        '"(6,*,*)"%%P875': *adpupa_spfh_threshes
+#        '"(5,*,*)"%%P850': *adpupa_spfh_threshes
+#        '"(4,*,*)"%%P825': *adpupa_spfh_threshes
+#        '"(3,*,*)"%%P800': *adpupa_spfh_threshes
+#        '"(2,*,*)"%%P475': *adpupa_spfh_threshes
+#        '"(1,*,*)"%%P300': *adpupa_spfh_threshes
+#        '"(0,*,*)"%%P200': *adpupa_spfh_threshes
+#    HGT:
+#        '"(11,*,*)"%%P1000': &adpupa_hgt_threshes
+#                             []
+#        '"(10,*,*)"%%P975': *adpupa_hgt_threshes
+#        '"(9,*,*)"%%P950': *adpupa_hgt_threshes
+#        '"(8,*,*)"%%P925': *adpupa_hgt_threshes
+#        '"(7,*,*)"%%P900': *adpupa_hgt_threshes
+#        '"(6,*,*)"%%P875': *adpupa_hgt_threshes
+#        '"(5,*,*)"%%P850': *adpupa_hgt_threshes
+#        '"(4,*,*)"%%P825': *adpupa_hgt_threshes
+#        '"(3,*,*)"%%P800': *adpupa_hgt_threshes
+#        '"(2,*,*)"%%P475': *adpupa_hgt_threshes
+#        '"(1,*,*)"%%P300': *adpupa_hgt_threshes
+#        '"(0,*,*)"%%P200': *adpupa_hgt_threshes

@@ -111,9 +111,9 @@ CDATE="${PDY}${cyc}"
 #
 #-----------------------------------------------------------------------
 #
-FIELDNAME_IN_OBS_INPUT=""
-FIELDNAME_IN_FCST_INPUT=""
-FIELDNAME_IN_MET_OUTPUT=""
+#FIELDNAME_IN_OBS_INPUT=""
+#FIELDNAME_IN_FCST_INPUT=""
+#FIELDNAME_IN_MET_OUTPUT=""
 FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
@@ -121,10 +121,11 @@ set_vx_params \
   field_group="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH}" \
   outvarname_grid_or_point="grid_or_point" \
-  outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
-  outvarname_fieldname_in_fcst_input="FIELDNAME_IN_FCST_INPUT" \
-  outvarname_fieldname_in_MET_output="FIELDNAME_IN_MET_OUTPUT" \
   outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
+
+#  outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
+#  outvarname_fieldname_in_fcst_input="FIELDNAME_IN_FCST_INPUT" \
+#  outvarname_fieldname_in_MET_output="FIELDNAME_IN_MET_OUTPUT" \
 #
 #-----------------------------------------------------------------------
 #
@@ -337,14 +338,15 @@ settings="\
 #
 # Field information.
 #
-  'fieldname_in_obs_input': '${FIELDNAME_IN_OBS_INPUT}'
-  'fieldname_in_fcst_input': '${FIELDNAME_IN_FCST_INPUT}'
-  'fieldname_in_met_output': '${FIELDNAME_IN_MET_OUTPUT}'
   'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
   'obtype': '${OBTYPE}'
   'accum_hh': '${ACCUM_HH:-}'
   'accum_no_pad': '${ACCUM_NO_PAD:-}'
 "
+
+#  'fieldname_in_obs_input': '${FIELDNAME_IN_OBS_INPUT}'
+#  'fieldname_in_fcst_input': '${FIELDNAME_IN_FCST_INPUT}'
+#  'fieldname_in_met_output': '${FIELDNAME_IN_MET_OUTPUT}'
 
 # Render the template to create a METplus configuration file
 tmpfile=$( $READLINK -f "$(mktemp ./met_plus_settings.XXXXXX.yaml)")

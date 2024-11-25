@@ -89,22 +89,68 @@ CDATE="${PDY}${cyc}"
 #
 #-----------------------------------------------------------------------
 #
-FIELDNAME_IN_OBS_INPUT=""
-FIELDNAME_IN_FCST_INPUT=""
-FIELDNAME_IN_MET_OUTPUT=""
+echo
+echo "FFFFFFFFFFFFFF"
+echo "OBS_DIR = |${OBS_DIR}|"
+#echo "ACCUM_HH = |${ACCUM_HH}|"
+#kjkjkjkjkj
+
+#FIELDNAME_IN_OBS_INPUT=""
+#FIELDNAME_IN_FCST_INPUT=""
+#FIELDNAME_IN_MET_OUTPUT=""
 FIELDNAME_IN_MET_FILEDIR_NAMES=""
+
+echo
+echo "GGGGGGGGGGGGGGG"
+echo "VX_VERIFY_AGAINST_BENCHMARK_FCST = |${VX_VERIFY_AGAINST_BENCHMARK_FCST}|"
+
+if [ $(boolify "${VX_VERIFY_AGAINST_BENCHMARK_FCST}") = "TRUE" ]; then
+
+  OBTYPE="${VX_BENCHMARK_FCST_MODEL_NAME}"
+  grid_or_point="grid"
+#  FIELDNAME_IN_OBS_INPUT=""
+#  FIELDNAME_IN_FCST_INPUT=""
+#  FIELDNAME_IN_MET_OUTPUT=""
+  FIELDNAME_IN_MET_FILEDIR_NAMES="${VX_BENCHMARK_FCST_MODEL_NAME}"
+
+else
+
+  case "${FIELD_GROUP}" in
+    "APCP")
+      OBTYPE="CCPA"
+      ;;
+    "ASNOW")
+      OBTYPE="NOHRSC"
+      ;;
+    "REFC")
+      OBTYPE="MRMS"
+      ;;
+    "RETOP")
+      OBTYPE="MRMS"
+      ;;
+    "SFC")
+      OBTYPE="NDAS"
+      ;;
+    "UPA")
+      OBTYPE="NDAS"
+      ;;
+  esac
 
 # Note that ACCUM_HH will not be defined for the REFC, RETOP, SFC, and
 # UPA field groups.
-set_vx_params \
-  obtype="${OBTYPE}" \
-  field_group="${FIELD_GROUP}" \
-  accum_hh="${ACCUM_HH:-}" \
-  outvarname_grid_or_point="grid_or_point" \
-  outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
-  outvarname_fieldname_in_fcst_input="FIELDNAME_IN_FCST_INPUT" \
-  outvarname_fieldname_in_MET_output="FIELDNAME_IN_MET_OUTPUT" \
-  outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
+  set_vx_params \
+    obtype="${OBTYPE}" \
+    field_group="${FIELD_GROUP}" \
+    accum_hh="${ACCUM_HH:-}" \
+    outvarname_grid_or_point="grid_or_point" \
+    outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
+
+#    outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
+#    outvarname_fieldname_in_fcst_input="FIELDNAME_IN_FCST_INPUT" \
+#    outvarname_fieldname_in_MET_output="FIELDNAME_IN_MET_OUTPUT" \
+
+fi
+
 #
 #-----------------------------------------------------------------------
 #
@@ -169,6 +215,10 @@ fi
 
 if [ "${grid_or_point}" = "grid" ]; then
 
+echo
+echo "AAAAAAAAAAA"
+echo "FIELDNAME_IN_MET_FILEDIR_NAMES = ${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+echo
   case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
     "APCP"*)
       OBS_INPUT_DIR="${vx_output_basedir}${slash_cdate_or_null}${slash_obs_or_null}/metprd/PcpCombine_obs"
@@ -194,12 +244,26 @@ if [ "${grid_or_point}" = "grid" ]; then
       FCST_INPUT_DIR="${vx_fcst_input_basedir}"
       FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
       ;;
+    "ADPSFC")
+      OBS_INPUT_DIR="${NDAS_OBS_DIR}"
+      OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_FN_TEMPLATES[1]}"
+      FCST_INPUT_DIR="${vx_fcst_input_basedir}"
+      FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
+      ;;
+    "ADPUPA")
+      OBS_INPUT_DIR="${NDAS_OBS_DIR}"
+      OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_FN_TEMPLATES[1]}"
+      FCST_INPUT_DIR="${vx_fcst_input_basedir}"
+      FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
+      ;;
   esac
 
 elif [ "${grid_or_point}" = "point" ]; then
 
   OBS_INPUT_DIR="${vx_output_basedir}/metprd/Pb2nc_obs"
   OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_SFCandUPA_FN_TEMPLATE_PB2NC_OUTPUT}"
+OBS_INPUT_DIR="${NDAS_OBS_DIR}"
+OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_FN_TEMPLATES[1]}"
   FCST_INPUT_DIR="${vx_fcst_input_basedir}"
   FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
 
@@ -232,6 +296,19 @@ case "$OBTYPE" in
 esac
 vx_hr_end="${FCST_LEN_HRS}"
 
+echo
+echo "AAAAAAAAAAAAAAAAA"
+#python3 $USHdir/set_leadhrs.py \
+#  --date_init="${CDATE}" \
+#  --lhr_min="${vx_hr_start}" \
+#  --lhr_max="${vx_hr_end}" \
+#  --lhr_intvl="${vx_intvl}" \
+#  --base_dir="${OBS_INPUT_DIR}" \
+#  --fn_template="${OBS_INPUT_FN_TEMPLATE}" \
+#  --num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}" \
+#  --time_lag="${time_lag%.*}" \
+#  --verbose
+
 VX_LEADHR_LIST=$( python3 $USHdir/set_leadhrs.py \
   --date_init="${CDATE}" \
   --lhr_min="${vx_hr_start}" \
@@ -240,8 +317,12 @@ VX_LEADHR_LIST=$( python3 $USHdir/set_leadhrs.py \
   --base_dir="${OBS_INPUT_DIR}" \
   --fn_template="${OBS_INPUT_FN_TEMPLATE}" \
   --num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}" \
-  --time_lag="${time_lag%.*}") || \
+  --time_lag="${time_lag%.*}" ) || \
   print_err_msg_exit "Call to set_leadhrs.py failed with return code: $?"
+#  --time_lag="${time_lag%.*}" \
+#  --verbose ) || \
+echo "PPPPPPPPPPPPPPP"
+#kiijijj
 #
 #-----------------------------------------------------------------------
 #
@@ -370,9 +451,6 @@ settings="\
 #
 # Field information.
 #
-'fieldname_in_obs_input': '${FIELDNAME_IN_OBS_INPUT}'
-'fieldname_in_fcst_input': '${FIELDNAME_IN_FCST_INPUT}'
-'fieldname_in_met_output': '${FIELDNAME_IN_MET_OUTPUT}'
 'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
 'obtype': '${OBTYPE}'
 'accum_hh': '${ACCUM_HH:-}'
@@ -387,6 +465,10 @@ settings="\
 'vx_config_dict': 
 ${vx_config_dict:-}
 "
+
+#'fieldname_in_obs_input': '${FIELDNAME_IN_OBS_INPUT}'
+#'fieldname_in_fcst_input': '${FIELDNAME_IN_FCST_INPUT}'
+#'fieldname_in_met_output': '${FIELDNAME_IN_MET_OUTPUT}'
 
 # Render the template to create a METplus configuration file
 tmpfile=$( $READLINK -f "$(mktemp ./met_plus_settings.XXXXXX.yaml)")
