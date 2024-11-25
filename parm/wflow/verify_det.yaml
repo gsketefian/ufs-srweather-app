@@ -23,10 +23,20 @@ default_task_verify_det: &default_task_verify_det
 
 metatask_GridStat_APCP_all_accums_all_mems:
   var:
-    ACCUM_HH: '{% for ah in verification.VX_APCP_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+    ACCUM_HH: '{%- for ah in verification.VX_APCP_ACCUMS_HRS %}
+                 {%- if workflow.FCST_LEN_HRS >= ah %}
+                   {{- "%02d " % ah }}
+                 {%- endif %}
+               {%- endfor %}'
   metatask_GridStat_APCP#ACCUM_HH#h_all_mems:
     var:
-      mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
+      mem: '{%- if global.DO_ENSEMBLE %}
+              {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
+                {{- "%03d "%m }}
+              {%- endfor %}
+            {%- else %}
+              {{- "000"|string }}
+            {%- endif %}'
     task_run_MET_GridStat_vx_APCP#ACCUM_HH#h_mem#mem#:
       <<: *default_task_verify_det
       attrs:
@@ -57,10 +67,20 @@ metatask_GridStat_APCP_all_accums_all_mems:
 
 metatask_GridStat_ASNOW_all_accums_all_mems:
   var:
-    ACCUM_HH: '{% for ah in verification.VX_ASNOW_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+    ACCUM_HH: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
+                 {%- if workflow.FCST_LEN_HRS >= ah %}
+                   {{- "%02d " % ah }}
+                 {%- endif %}
+               {%- endfor %}'
   metatask_GridStat_ASNOW#ACCUM_HH#h_all_mems:
     var:
-      mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
+      mem: '{%- if global.DO_ENSEMBLE %}
+              {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
+                {{- "%03d "%m }}
+              {%- endfor %}
+            {%- else %}
+              {{- "000"|string }}
+            {%- endif %}'
     task_run_MET_GridStat_vx_ASNOW#ACCUM_HH#h_mem#mem#:
       <<: *default_task_verify_det
       attrs:
@@ -91,10 +111,20 @@ metatask_GridStat_ASNOW_all_accums_all_mems:
 
 metatask_GridStat_REFC_RETOP_all_mems:
   var:
-    mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
+    mem: '{%- if global.DO_ENSEMBLE %}
+            {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
+              {{- "%03d "%m }}
+            {%- endfor %}
+          {%- else %}
+            {{- "000"|string }}
+          {%- endif %}'
   metatask_GridStat_REFC_RETOP_mem#mem#:
     var:
-      FIELD_GROUP: '{% for var in verification.VX_FIELD_GROUPS %}{% if var in ["REFC", "RETOP"] %}{{ "%s " % var }}{% endif %}{% endfor %}'
+      FIELD_GROUP: '{%- for var in verification.VX_FIELD_GROUPS %}
+                      {%- if var in ["REFC", "RETOP"] %}
+                        {{- "%s " % var }}
+                      {%- endif %}
+                    {%- endfor %}'
     task_run_MET_GridStat_vx_#FIELD_GROUP#_mem#mem#:
       <<: *default_task_verify_det
       command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX"'
@@ -138,10 +168,20 @@ metatask_GridStat_REFC_RETOP_all_mems:
 
 metatask_PointStat_SFC_UPA_all_mems:
   var:
-    mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
+    mem: '{%- if global.DO_ENSEMBLE %}
+            {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
+              {{- "%03d "%m }}
+            {%- endfor %}
+          {%- else %}
+            {{- "000"|string }}
+          {%- endif %}'
   metatask_PointStat_SFC_UPA_mem#mem#:
     var:
-      FIELD_GROUP: '{% for var in verification.VX_FIELD_GROUPS %}{% if var in ["SFC", "UPA"] %}{{ "%s " % var }}{% endif %}{% endfor %}'
+      FIELD_GROUP: '{%- for var in verification.VX_FIELD_GROUPS %}
+                      {%- if var in ["SFC", "UPA"] %}
+                        {{- "%s " % var }}
+                      {%- endif %}
+                    {%- endfor %}'
     task_run_MET_PointStat_vx_#FIELD_GROUP#_mem#mem#:
       <<: *default_task_verify_det
       command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX"'
