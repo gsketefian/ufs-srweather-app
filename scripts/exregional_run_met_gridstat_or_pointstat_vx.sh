@@ -89,9 +89,6 @@ CDATE="${PDY}${cyc}"
 #
 #-----------------------------------------------------------------------
 #
-FIELDNAME_IN_OBS_INPUT=""
-FIELDNAME_IN_FCST_INPUT=""
-FIELDNAME_IN_MET_OUTPUT=""
 FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 # Note that ACCUM_HH will not be defined for the REFC, RETOP, SFC, and
@@ -101,9 +98,6 @@ set_vx_params \
   field_group="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH:-}" \
   outvarname_grid_or_point="grid_or_point" \
-  outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
-  outvarname_fieldname_in_fcst_input="FIELDNAME_IN_FCST_INPUT" \
-  outvarname_fieldname_in_MET_output="FIELDNAME_IN_MET_OUTPUT" \
   outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
 #
 #-----------------------------------------------------------------------
@@ -240,7 +234,7 @@ VX_LEADHR_LIST=$( python3 $USHdir/set_leadhrs.py \
   --base_dir="${OBS_INPUT_DIR}" \
   --fn_template="${OBS_INPUT_FN_TEMPLATE}" \
   --num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}" \
-  --time_lag="${time_lag%.*}") || \
+  --time_lag="${time_lag%.*}" ) || \
   print_err_msg_exit "Call to set_leadhrs.py failed with return code: $?"
 #
 #-----------------------------------------------------------------------
@@ -370,9 +364,6 @@ settings="\
 #
 # Field information.
 #
-'fieldname_in_obs_input': '${FIELDNAME_IN_OBS_INPUT}'
-'fieldname_in_fcst_input': '${FIELDNAME_IN_FCST_INPUT}'
-'fieldname_in_met_output': '${FIELDNAME_IN_MET_OUTPUT}'
 'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
 'obtype': '${OBTYPE}'
 'accum_hh': '${ACCUM_HH:-}'
