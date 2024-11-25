@@ -489,7 +489,7 @@ def get_obs(config, obtype, yyyymmdd_task):
             # Call METplus subroutine to evaluate the template for the full path to
             # the file containing METplus timestrings at the current time.
             fn = sts.do_string_sub(tmpl=fp_proc_tmpl,init=yyyymmdd_task,valid=yyyymmddhh,
-                                   lead=leadtime.total_seconds())
+                                   lead=int(leadtime.total_seconds()))
             all_fp_proc_dict[fg].append(fn)
 
     # Check whether any obs files already exist on disk in their processed
