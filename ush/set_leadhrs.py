@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+from pprint import pprint
 from eval_metplus_timestr_tmpl import eval_metplus_timestr_tmpl
 
 def set_leadhrs(date_init, lhr_min, lhr_max, lhr_intvl, base_dir, time_lag, fn_template, num_missing_files_max,
