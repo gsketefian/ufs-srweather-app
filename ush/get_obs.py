@@ -16,15 +16,15 @@ from python_utils import (
     load_yaml_config,
 )
 from mrms_pull_topofhour import mrms_pull_topofhour
-#try:
-#    sys.path.append(os.environ['METPLUS_ROOT'])
-#except:
-#    print("\nERROR ERROR ERROR\n")
-#    print("Environment variable METPLUS_ROOT must be set to use this script\n")
-#    raise
-#from metplus.util import string_template_substitution as sts
-#from string_template_substitution import string_template_substitution as sts
-import string_template_substitution as sts
+try:
+    sys.path.append(os.environ['METPLUS_ROOT'])
+except:
+    print("\nERROR ERROR ERROR\n")
+    print("Environment variable METPLUS_ROOT must be set to use this script\n")
+    raise
+from metplus.util import string_template_substitution as sts
+from string_template_substitution import string_template_substitution as sts
+#import string_template_substitution as sts
 
 
 def get_obs_arcv_hr(obtype, arcv_intvl_hrs, hod):
@@ -490,19 +490,8 @@ def get_obs(config, obtype, yyyymmdd_task):
             leadtime = yyyymmddhh - yyyymmdd_task
             # Call METplus subroutine to evaluate the template for the full path to
             # the file containing METplus timestrings at the current time.
-            print(f"")
-            print(f"AAAAAAAAAAAAAAA")
-            print(f"{fp_proc_tmpl = }")
-            print(f"{yyyymmdd_task = }")
-            print(f"{yyyymmddhh = }")
-            print(f"{leadtime = }")
-            print(f"{type(leadtime) = }")
-            print(f"{leadtime.total_seconds() = }")
             fn = sts.do_string_sub(tmpl=fp_proc_tmpl,init=yyyymmdd_task,valid=yyyymmddhh,
                                    lead=int(leadtime.total_seconds()))
-#                                   lead=leadtime.total_seconds())
-#                                   lead=leadtime)
-            print(f"{fn = }")
             all_fp_proc_dict[fg].append(fn)
 
     # Check whether any obs files already exist on disk in their processed
