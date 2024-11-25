@@ -23,8 +23,6 @@ except:
     print("Environment variable METPLUS_ROOT must be set to use this script\n")
     raise
 from metplus.util import string_template_substitution as sts
-from string_template_substitution import string_template_substitution as sts
-#import string_template_substitution as sts
 
 
 def get_obs_arcv_hr(obtype, arcv_intvl_hrs, hod):
