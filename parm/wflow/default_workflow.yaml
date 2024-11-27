@@ -27,7 +27,12 @@ rocoto:
     RUN: '{{ nco.RUN_default }}'
     SCRIPTSdir: '{{ user.SCRIPTSdir }}'
     SENDCOM: '{{ nco.SENDCOM_default }}'
-    SLASH_ENSMEM_SUBDIR: '{% if global.DO_ENSEMBLE  %}{{ "/mem#mem#" }}{% else %}{{ "/" }}{% endif %}'
+    ENSMEM_INDICES: '{%- for mem_indx in global.ENSMEM_INDS %}
+                       {{- mem_indx ~ " " }}
+                     {%- endfor %}'
+    ENSMEM_NAMES: '{%- for mem_name in global.ENSMEM_NAMES %}
+                     {{- mem_name ~ " " }}
+                   {%- endfor %}'
     USHdir: '{{ user.USHdir }}'
     WARMSTART_CYCLE_DIR: '{{ workflow.WARMSTART_CYCLE_DIR }}'
     WORKFLOW_ID: '{{ workflow.WORKFLOW_ID }}'
