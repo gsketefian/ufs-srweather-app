@@ -27,6 +27,10 @@ rocoto:
     RUN: '{{ nco.RUN_default }}'
     SCRIPTSdir: '{{ user.SCRIPTSdir }}'
     SENDCOM: '{{ nco.SENDCOM_default }}'
+    SLASH_ENSMEM_SUBDIR: '{{- "/" }}
+                          {%- if global.DO_ENSEMBLE %}
+                            {{- "#mem_name#" }}
+                          {%- endif %}'
     ENSMEM_INDICES: '{%- for mem_indx in global.ENSMEM_INDS %}
                        {{- mem_indx ~ " " }}
                      {%- endfor %}'
@@ -43,7 +47,7 @@ rocoto:
     DATAROOT: '{{ nco.PTMP }}/&envir;/tmp'
     DCOMROOT: '{{ nco.PTMP }}/&envir;/dcom'
     COMIN_DIR: '{% if user.RUN_ENVIR == "nco" %}&COMROOT;/&NET;/&model_ver;/&RUN;.@Y@m@d/@H{% else %}{{ workflow.EXPTDIR }}/@Y@m@d@H{% endif %}'
-    FCST_DIR: '{% if user.RUN_ENVIR == "nco" %}&DATAROOT;/run_fcst_mem#mem#_@Y@m@d@H{% else %}{{ workflow.EXPTDIR }}/@Y@m@d@H{% endif %}'
+    FCST_DIR: '{% if user.RUN_ENVIR == "nco" %}&DATAROOT;/run_fcst_#mem_name#_@Y@m@d@H{% else %}{{ workflow.EXPTDIR }}/@Y@m@d@H{% endif %}'
     LOGDIR: '{% if user.RUN_ENVIR == "nco" %}&COMROOT;/output/logs/@Y@m@d{% else %}{{ workflow.EXPTDIR }}/log{% endif %}'
   attrs:
     cyclethrottle: "200"

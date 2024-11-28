@@ -11,7 +11,7 @@ default_task_post: &default_task
     cyc: !cycstr '@H'
     fhr: '#fhr#'
     SLASH_ENSMEM_SUBDIR: '&SLASH_ENSMEM_SUBDIR;'
-    ENSMEM_INDX: '#mem#'
+    ENSMEM_INDX: '#mem_indx#'
     nprocs: '{{ parent.nnodes * parent.ppn }}'
   join: !cycstr '&LOGDIR;/{{ jobname }}_@Y@m@d@H&LOGEXT;'
   native: '{{ platform.SCHED_NATIVE_CMD }}'
@@ -24,18 +24,19 @@ default_task_post: &default_task
 
 metatask_run_ens_post:
   var:
-    mem: '{% if global.DO_ENSEMBLE %}{%- for m in range(1, global.NUM_ENS_MEMBERS+1) -%}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
-  metatask_run_post_mem#mem#_all_fhrs:
+    mem_indx: '&ENSMEM_INDICES;'
+    mem_name: '&ENSMEM_NAMES;'
+  metatask_run_post_#mem_name#_all_fhrs:
     var:
       fhr: '{% for h in range(0, workflow.LONG_FCST_LEN+1) %}{{ " %03d" % h }}{% endfor %}'
       cycledef: '{% for h in range(0, workflow.LONG_FCST_LEN+1) %}{% if h <= workflow.FCST_LEN_CYCL|min %}forecast {% else %}long_forecast {% endif %}{% endfor %}'
-    task_run_post_mem#mem#_f#fhr#:
+    task_run_post_#mem_name#_f#fhr#:
       <<: *default_task
       dependency:
         or:
           taskdep:
             attrs:
-              task: run_fcst_mem#mem#
+              task: run_fcst_#mem_name#
           and:
             datadep_dyn:
               text: !cycstr '&FCST_DIR;&SLASH_ENSMEM_SUBDIR;/dynf#fhr#.nc'
@@ -52,7 +53,7 @@ metatask_run_ens_post:
     metatask_sub_hourly_post:
       var:
         fmn: '{% for min in range(0, 60, task_run_post.DT_SUBHOURLY_POST_MNTS) %}{{ " %02d" % min }}{% endfor %}'
-      task_run_post_mem#mem#_f#fhr##fmn#: &subhourly_run_post_task
+      task_run_post_#mem_name#_f#fhr##fmn#: &subhourly_run_post_task
         <<: *default_task
         envars:
           <<: *default_vars
@@ -61,7 +62,7 @@ metatask_run_ens_post:
           or:
             taskdep:
               attrs:
-                task: run_fcst_mem#mem#
+                task: run_fcst_#mem_name#
             and:
               datadep_dyn:
                 text: !cycstr '&FCST_DIR;&SLASH_ENSMEM_SUBDIR;/dynf#fhr#:#fmn#:00.nc'
@@ -76,5 +77,5 @@ metatask_run_ens_post:
     var:
       fhr: '{{ " %03d" % workflow.FCST_LEN_HRS }}'
       fmn: '00'
-    task_run_post_mem#mem#_f#fhr##fmn#:
+    task_run_post_#mem_name#_f#fhr##fmn#:
       <<: *subhourly_run_post_task

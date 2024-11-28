@@ -8,7 +8,7 @@
 # Run-time environment variables:
 #
 #    CDATE
-#    ENSMEM_INDX
+#    ENSMEM_NAME
 #    GLOBAL_VAR_DEFNS_FP
 #
 # Experiment variables
