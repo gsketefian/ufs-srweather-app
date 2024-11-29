@@ -1,11 +1,12 @@
 metatask_run_prdgen:
   var:
-    mem: '{% if global.DO_ENSEMBLE  %}{%- for m in range(1, global.NUM_ENS_MEMBERS+1) -%}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
-  metatask_run_prdgen_hrs_mem#mem#:
+    mem_indx: '&ENSMEM_INDICES;'
+    mem_name: '&ENSMEM_NAMES;'
+  metatask_run_prdgen_hrs_#mem_name#:
     var:
       fhr: '{% for h in range(0, workflow.LONG_FCST_LEN+1) %}{{ " %03d" % h }}{% endfor %}'
       cycledef: '{% for h in range(0, workflow.LONG_FCST_LEN+1) %}{% if h <= workflow.FCST_LEN_HRS %}forecast {% else %}long_forecast {% endif %}{% endfor %}'
-    task_run_prdgen_mem#mem#_f#fhr#:
+    task_run_prdgen_#mem_name#_f#fhr#:
       account: '&ACCOUNT;'
       attrs:
         cycledefs: '#cycledef#'
@@ -18,7 +19,7 @@ metatask_run_prdgen:
         cyc: !cycstr '@H'
         fhr: '#fhr#'
         SLASH_ENSMEM_SUBDIR: '&SLASH_ENSMEM_SUBDIR;'
-        ENSMEM_INDX: '#mem#'
+        ENSMEM_INDX: '#mem_indx#'
         nprocs: '{{ parent.nnodes * parent.ppn }}'
       join: !cycstr '&LOGDIR;/{{ jobname }}_@Y@m@d@H&LOGEXT;'
       native: '{{ platform.SCHED_NATIVE_CMD }}'
@@ -31,4 +32,4 @@ metatask_run_prdgen:
       dependency:
         taskdep:
           attrs:
-            task: run_post_mem#mem#_f#fhr#
+            task: run_post_#mem_name#_f#fhr#

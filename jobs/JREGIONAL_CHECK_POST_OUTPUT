@@ -8,7 +8,7 @@
 # Run-time environment variables:
 #
 #    CDATE
-#    ENSMEM_INDX
+#    ENSMEM_NAME
 #    GLOBAL_VAR_DEFNS_FP
 #
 # Experiment variables
@@ -94,10 +94,9 @@ Call to ex-script corresponding to J-job \"${scrfunc_fn}\" failed."
 #
 #-----------------------------------------------------------------------
 #
-ensmem_name="mem${ENSMEM_INDX}"
 cycle_dir="$EXPTDIR/$CDATE"
 mkdir -p "${cycle_dir}"
-touch "${cycle_dir}/post_files_exist_${ensmem_name}.txt"
+touch "${cycle_dir}/post_files_exist_${ENSMEM_NAME}.txt"
 #
 #-----------------------------------------------------------------------
 #

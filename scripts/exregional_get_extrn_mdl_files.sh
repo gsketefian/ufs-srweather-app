@@ -56,6 +56,8 @@
 #  global:
 #    DO_ENSEMBLE
 #    NUM_ENS_MEMBERS
+#    ENSMEM_BASENAME
+#    NDIGITS_IN_ENSMEM_NAMES
 #
 #-----------------------------------------------------------------------
 #
@@ -217,7 +219,7 @@ if [ $(boolify $SYMLINK_FIX_FILES) = "TRUE" ]; then
 fi
 
 if [ $(boolify $DO_ENSEMBLE) = "TRUE" ] ; then
-  mem_dir="/mem{mem:03d}"
+  mem_dir="/${ENSMEM_BASENAME}{mem:0${NDIGITS_IN_ENSMEM_NAMES}d}"
   member_list=(1 ${NUM_ENS_MEMBERS})
   additional_flags="$additional_flags \
   --members ${member_list[@]}"
@@ -287,7 +289,8 @@ if [ "${EXTRN_MDL_NAME}" = "GEFS" ]; then
         sorted_fn=( )
         for fcst_hr in "${all_fcst_hrs_array[@]}"; do
             # Read in filenames from EXTRN_MDL_FNS and sort them
-            base_path="${EXTRN_MDL_STAGING_DIR}/mem`printf %03d $num`"
+            ensmem_indx_fmt=$(printf "%0${NDIGITS_IN_ENSMEM_NAMES}d" $((10#${num})))
+            base_path="${EXTRN_MDL_STAGING_DIR}/${ENSMEM_BASENAME}${ensmem_indx_fmt}"
             filenames_array=`awk -F= '/EXTRN_MDL_FNS/{print $2}' $base_path/${EXTRN_DEFNS}`
             for filename in ${filenames_array[@]}; do
                 IFS='.' read -ra split_fn <<< "$filename"

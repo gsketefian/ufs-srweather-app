@@ -11,7 +11,7 @@ default_task: &default_task
     nprocs: '{{ parent.nnodes * parent.ppn }}'
     subcyc: !cycstr "@M"
     LOGDIR: !cycstr "&LOGDIR;"
-    ENSMEM_INDX: '#mem#'
+    ENSMEM_INDX: '#mem_indx#'
   native: '{{ platform.SCHED_NATIVE_CMD }}'
   nodes: '{{ nnodes }}:ppn={{ ppn }}'
   partition: '{% if platform.get("PARTITION_DEFAULT") %}&PARTITION_DEFAULT;{% else %}None{% endif %}'
@@ -82,8 +82,9 @@ task_get_extrn_lbcs:
 
 metatask_run_ensemble:
   var:
-    mem: '{% if global.DO_ENSEMBLE %}{%- for m in range(1, global.NUM_ENS_MEMBERS+1) -%}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
-  task_make_ics_mem#mem#:
+    mem_indx: '&ENSMEM_INDICES;'
+    mem_name: '&ENSMEM_NAMES;'
+  task_make_ics_#mem_name#:
     <<: *default_task
     command: '&LOAD_MODULES_RUN_TASK; "make_ics" "&JOBSdir;/JREGIONAL_MAKE_ICS"'
     envars:
@@ -122,7 +123,7 @@ metatask_run_ensemble:
             left: staged_sfc_climo
             right: '{% if not rocoto.get("tasks", {}).get("task_make_sfc_climo") %}staged_sfc_climo{% endif %}'
 
-  task_make_lbcs_mem#mem#:
+  task_make_lbcs_#mem_name#:
     <<: *default_task
     command: '&LOAD_MODULES_RUN_TASK; "make_lbcs" "&JOBSdir;/JREGIONAL_MAKE_LBCS"'
     envars:
@@ -140,7 +141,7 @@ metatask_run_ensemble:
           attrs:
             task: get_extrn_lbcs
 
-  task_run_fcst_mem#mem#:
+  task_run_fcst_#mem_name#:
     <<: *default_task
     command: '&LOAD_MODULES_RUN_TASK; "run_fcst" "&JOBSdir;/JREGIONAL_RUN_FCST"'
     envars:
@@ -157,10 +158,10 @@ metatask_run_ensemble:
       and:
         taskdep_make_ics:
           attrs:
-            task: make_ics_mem#mem#
+            task: make_ics_#mem_name#
         taskdep_make_lbcs:
           attrs:
-            task: make_lbcs_mem#mem#
+            task: make_lbcs_#mem_name#
         or_nexus_emission:
           not:
             taskvalid:

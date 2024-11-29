@@ -9,7 +9,7 @@
 #
 #    ACCUM_HH
 #    CDATE
-#    ENSMEM_INDX
+#    ENSMEM_NAME
 #    GLOBAL_VAR_DEFNS_FP
 #    METPLUS_ROOT (used by ush/set_leadhrs.py)
 #
@@ -30,7 +30,6 @@
 #    FCST_SUBDIR_TEMPLATE
 #    NUM_MISSING_FCST_FILES_MAX
 #    VX_FCST_INPUT_BASEDIR
-#    VX_NDIGITS_ENSMEM_NAMES
 #
 #  constants:
 #    SECS_PER_HOUR
@@ -110,8 +109,7 @@ time_lag=$( bc -l <<< "${ENS_TIME_LAG_HRS[$i]}*${SECS_PER_HOUR}" )
 #
 #-----------------------------------------------------------------------
 #
-ensmem_indx=$(printf "%0${VX_NDIGITS_ENSMEM_NAMES}d" $(( 10#${ENSMEM_INDX})))
-ensmem_name="mem${ensmem_indx}"
+ensmem_name="${ENSMEM_NAME}"
 FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE} )
 
 FHR_LIST=$( python3 $USHdir/set_leadhrs.py \

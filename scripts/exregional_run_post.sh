@@ -11,7 +11,7 @@
 #    COMOUT
 #    DATA_FHR
 #    DBNROOT
-#    ENSMEM_INDX
+#    ENSMEM_NAME
 #    GLOBAL_VAR_DEFNS_FP
 #    NET
 #    PDY
@@ -226,7 +226,7 @@ fi
 # Set the names of the forecast model's write-component output files.
 #
 if [ "${RUN_ENVIR}" = "nco" ]; then
-    DATAFCST=$DATAROOT/run_fcst_mem${ENSMEM_INDX}.${share_pid}
+    DATAFCST=$DATAROOT/run_fcst_${ENSMEM_NAME}.${share_pid}
 else
     DATAFCST=$DATA
 fi

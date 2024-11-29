@@ -163,11 +163,11 @@ OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_INPUT_FN_TEMPLATE} )
 # tasks).  This will be exported to the environment and read by the
 # METplus configuration files.
 #
+ensmem_names=($(echo ${ENSMEM_NAMES_STR}))
 FCST_INPUT_FN_TEMPLATE=""
 for (( i=0; i<${NUM_ENS_MEMBERS}; i++ )); do
 
-  ensmem_indx=$(printf "%0${VX_NDIGITS_ENSMEM_NAMES}d" "$((i+1))")
-  ensmem_name="mem${ensmem_indx}"
+  ensmem_name="${ensmem_names[$i]}"
 
   if [ "${RUN_ENVIR}" = "nco" ]; then
     cdate_ensmem_subdir_or_null=""
