@@ -25,7 +25,7 @@ default_task_verify_det: &default_task_verify_det
 #metatask_abcd:
 #{%- endfor %}
 
-metatask_GridStat_APCP_all_accums_all_mems:
+abcd_metatask_GridStat_APCP_all_accums_all_mems:
   var:
 #    FIELD_GROUP: 'APCP ASNOW'
 #    OBTYPE: 'CCPA NOHRSC'
@@ -79,7 +79,7 @@ metatask_GridStat_APCP_all_accums_all_mems:
               attrs:
                 task: run_MET_PcpCombine_#FIELD_GROUP##ACCUM_HH#h_fcst_mem#mem#
 
-metatask_GridStat_ASNOW_all_accums_all_mems:
+abcd_metatask_GridStat_ASNOW_all_accums_all_mems:
   var:
 #    FIELD_GROUP: 'APCP ASNOW'
 #    OBTYPE: 'CCPA NOHRSC'
@@ -133,6 +133,11 @@ metatask_GridStat_ASNOW_all_accums_all_mems:
               attrs:
                 task: run_MET_PcpCombine_#FIELD_GROUP##ACCUM_HH#h_fcst_mem#mem#
 
+my_dependencies: &my_deps
+  datadep_all_get_obs_mrms_complete:
+    attrs:
+      age: 00:01:00:00
+
 #AAAAAAAAAA#
 
 #metatask_GridStat_APCP_all_accums_all_mems:
@@ -144,14 +149,9 @@ metatask_GridStat_ASNOW_all_accums_all_mems:
 #               {%- endfor %}'
 #  metatask_GridStat_APCP#ACCUM_HH#h_all_mems:
 #    var:
-#      mem: '{%- if global.DO_ENSEMBLE %}
-#              {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
-#                {{- "%03d "%m }}
-#              {%- endfor %}
-#            {%- else %}
-#              {{- "000"|string }}
-#            {%- endif %}'
-#    task_run_MET_GridStat_vx_APCP#ACCUM_HH#h_mem#mem#:
+#      mem_indx: '&ENSMEM_INDICES;'
+#      mem_name: '&ENSMEM_NAMES;'
+#    task_run_MET_GridStat_vx_APCP#ACCUM_HH#h_#mem_name#:
 #      <<: *default_task_verify_det
 #      attrs:
 #        <<: *default_attrs
@@ -164,8 +164,8 @@ metatask_GridStat_ASNOW_all_accums_all_mems:
 #        ACCUM_HH: '#ACCUM_HH#'
 #        METPLUSTOOLNAME: 'GRIDSTAT'
 #        #OBTYPE: 'CCPA'
-#        ENSMEM_INDX: "#mem#"
-#        SLASH_ENSMEM_SUBDIR_OR_NULL: '{% if global.DO_ENSEMBLE %}{{ "/mem#mem#" }}{% endif %}'
+#        ENSMEM_INDX: "#mem_indx#"
+#        ENSMEM_NAME: "#mem_name#"
 #        OBS_AVAIL_INTVL_HRS: '{{- verification.CCPA_OBS_AVAIL_INTVL_HRS }}'
 #        FCST_LEVEL: 'A#ACCUM_HH#'
 #        FCST_THRESH: 'all'
@@ -177,8 +177,8 @@ metatask_GridStat_ASNOW_all_accums_all_mems:
 #              task: run_MET_PcpCombine_APCP#ACCUM_HH#h_obs_CCPA
 #          taskdep_pcpcombine_fcst:
 #            attrs:
-#              task: run_MET_PcpCombine_APCP#ACCUM_HH#h_fcst_mem#mem#
-
+#              task: run_MET_PcpCombine_APCP#ACCUM_HH#h_fcst_#mem_name#
+#
 #metatask_GridStat_ASNOW_all_accums_all_mems:
 #  var:
 #    ACCUM_HH: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
@@ -188,14 +188,9 @@ metatask_GridStat_ASNOW_all_accums_all_mems:
 #               {%- endfor %}'
 #  metatask_GridStat_ASNOW#ACCUM_HH#h_all_mems:
 #    var:
-#      mem: '{%- if global.DO_ENSEMBLE %}
-#              {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
-#                {{- "%03d "%m }}
-#              {%- endfor %}
-#            {%- else %}
-#              {{- "000"|string }}
-#            {%- endif %}'
-#    task_run_MET_GridStat_vx_ASNOW#ACCUM_HH#h_mem#mem#:
+#      mem_indx: '&ENSMEM_INDICES;'
+#      mem_name: '&ENSMEM_NAMES;'
+#    task_run_MET_GridStat_vx_ASNOW#ACCUM_HH#h_#mem_name#:
 #      <<: *default_task_verify_det
 #      attrs:
 #        <<: *default_attrs
@@ -208,8 +203,8 @@ metatask_GridStat_ASNOW_all_accums_all_mems:
 #        ACCUM_HH: '#ACCUM_HH#'
 #        METPLUSTOOLNAME: 'GRIDSTAT'
 #        #OBTYPE: 'NOHRSC'
-#        ENSMEM_INDX: "#mem#"
-#        SLASH_ENSMEM_SUBDIR_OR_NULL: '{% if global.DO_ENSEMBLE %}{{ "/mem#mem#" }}{% endif %}'
+#        ENSMEM_INDX: "#mem_indx#"
+#        ENSMEM_NAME: "#mem_name#"
 #        OBS_AVAIL_INTVL_HRS: '{{- verification.NOHRSC_OBS_AVAIL_INTVL_HRS }}'
 #        FCST_LEVEL: 'A#ACCUM_HH#'
 #        FCST_THRESH: 'all'
@@ -221,9 +216,9 @@ metatask_GridStat_ASNOW_all_accums_all_mems:
 #              task: run_MET_PcpCombine_ASNOW#ACCUM_HH#h_obs_NOHRSC
 #          taskdep_pcpcombine_fcst:
 #            attrs:
-#              task: run_MET_PcpCombine_ASNOW#ACCUM_HH#h_fcst_mem#mem#
+#              task: run_MET_PcpCombine_ASNOW#ACCUM_HH#h_fcst_#mem_name#
 
-metatask_GridStat_REFC_all_accums_all_mems:
+abcd_metatask_GridStat_REFC_all_accums_all_mems:
   var:
 #    FIELD_GROUP: 'APCP ASNOW'
 #    OBTYPE: 'CCPA NOHRSC'
@@ -280,21 +275,16 @@ metatask_GridStat_REFC_all_accums_all_mems:
 
 metatask_GridStat_REFC_RETOP_all_mems:
   var:
-    mem: '{%- if global.DO_ENSEMBLE %}
-            {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
-              {{- "%03d "%m }}
-            {%- endfor %}
-          {%- else %}
-            {{- "000"|string }}
-          {%- endif %}'
-  metatask_GridStat_REFC_RETOP_mem#mem#:
+    mem_indx: '&ENSMEM_INDICES;'
+    mem_name: '&ENSMEM_NAMES;'
+  metatask_GridStat_REFC_RETOP_#mem_name#:
     var:
       FIELD_GROUP: '{%- for var in verification.VX_GRIDTOGRID_FIELD_GROUPS %}
                       {%- if var in ["REFC", "RETOP", "SFC", "UPA"] %}
                         {{- "%s " % var }}
                       {%- endif %}
                     {%- endfor %}'
-    task_run_MET_GridStat_vx_#FIELD_GROUP#_mem#mem#:
+    task_run_MET_GridStat_vx_#FIELD_GROUP#_#mem_name#:
       <<: *default_task_verify_det
       command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX"'
       envars:
@@ -303,8 +293,8 @@ metatask_GridStat_REFC_RETOP_all_mems:
         FIELD_GROUP: '#FIELD_GROUP#'
         METPLUSTOOLNAME: 'GRIDSTAT'
         #OBTYPE: 'MRMS'
-        ENSMEM_INDX: "#mem#"
-        SLASH_ENSMEM_SUBDIR_OR_NULL: '{% if global.DO_ENSEMBLE %}{{ "/mem#mem#" }}{% endif %}'
+        ENSMEM_INDX: "#mem_indx#"
+        ENSMEM_NAME: "#mem_name#"
         OBS_AVAIL_INTVL_HRS: '{{- verification.MRMS_OBS_AVAIL_INTVL_HRS }}'
         #FCST_LEVEL: 'L0'
         FCST_LEVEL: 'all'
@@ -334,31 +324,20 @@ metatask_GridStat_REFC_RETOP_all_mems:
           datadep_post_files_exist:
             attrs:
               age: 00:00:00:30
-            text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_mem#mem#.txt'
-
-my_dependencies: &my_deps
-  datadep_all_get_obs_mrms_complete:
-    attrs:
-      age: 00:01:00:00
-
+            text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_#mem_name#.txt'
 
 metatask_PointStat_SFC_UPA_all_mems:
   var:
-    mem: '{%- if global.DO_ENSEMBLE %}
-            {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
-              {{- "%03d "%m }}
-            {%- endfor %}
-          {%- else %}
-            {{- "000"|string }}
-          {%- endif %}'
-  metatask_PointStat_SFC_UPA_mem#mem#:
+    mem_indx: '&ENSMEM_INDICES;'
+    mem_name: '&ENSMEM_NAMES;'
+  metatask_PointStat_SFC_UPA_#mem_name#:
     var:
       FIELD_GROUP: '{%- for var in verification.VX_GRIDTOPOINT_FIELD_GROUPS %}
                       {%- if var in ["SFC", "UPA"] %}
                         {{- "%s " % var }}
                       {%- endif %}
                     {%- endfor %}'
-    task_run_MET_PointStat_vx_#FIELD_GROUP#_mem#mem#:
+    task_run_MET_PointStat_vx_#FIELD_GROUP#_#mem_name#:
       <<: *default_task_verify_det
       command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX"'
       envars:
@@ -367,8 +346,8 @@ metatask_PointStat_SFC_UPA_all_mems:
         FIELD_GROUP: '#FIELD_GROUP#'
         METPLUSTOOLNAME: 'POINTSTAT'
         #OBTYPE: 'NDAS'
-        ENSMEM_INDX: "#mem#"
-        SLASH_ENSMEM_SUBDIR_OR_NULL: '{% if global.DO_ENSEMBLE %}{{ "/mem#mem#" }}{% endif %}'
+        ENSMEM_INDX: "#mem_indx#"
+        ENSMEM_NAME: "#mem_name#"
         OBS_AVAIL_INTVL_HRS: '{{- verification.NDAS_OBS_AVAIL_INTVL_HRS }}'
         FCST_LEVEL: 'all'
         FCST_THRESH: 'all'
@@ -397,4 +376,4 @@ metatask_PointStat_SFC_UPA_all_mems:
           datadep_post_files_exist:
             attrs:
               age: 00:00:00:30
-            text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_mem#mem#.txt'
+            text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_#mem_name#.txt'

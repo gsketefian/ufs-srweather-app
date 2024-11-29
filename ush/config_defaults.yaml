@@ -2210,17 +2210,23 @@ global:
   #
   # NUM_ENS_MEMBERS:
   # The number of ensemble members to run if DO_ENSEMBLE is set to true.
-  # This variable also controls the naming of the ensemble member directories.
-  # For example, if this is set to 8, the member directories will be named 
-  # mem1, mem2, ..., mem8. Not used if DO_ENSEMBLE is set to false.
+  # Not used if DO_ENSEMBLE is set to false.
   #
-  # ENSMEM_NAMES:
-  # A list of names for the ensemble member names following the format
-  # mem001, mem002, etc.
+  # ENSMEM_BASENAME:
+  # The "base" part of the forecast ensemble member names (i.e. the part of
+  # the names common to all members) that are needed in constructing the 
+  # names of directories, files, and other objects that are member-specific.
+  # For example, if this is set to "ens_" and NDIGITS_IN_ENSMEM_NAMES is
+  # set to its default value of 3, the members will have names "ens_001",
+  # "ens_002", etc.
   #
-  # FV3_NML_ENSMEM_FPS:
-  # Paths to the ensemble member corresponding namelists in the
-  # experiment directory
+  # NDIGITS_IN_ENSMEM_NAMES:
+  # Number of digits to assume/use in the forecast ensemble member names
+  # For example, if this is set to 3 and NDIGITS_IN_ENSMEM_NAMES is set
+  # to its default value of "mem", the name of the fourth ensemble member
+  # will be "mem004", while if it's set to 2, the name will be "mem04". 
+  # Set this to 0 to disable zero-padding of the member indices, e.g., to
+  # get "mem1", "mem2", ..., "mem10", mem11", ...
   #
   # ENS_TIME_LAG_HRS:
   # Time lag (in hours) to use for each ensemble member. For a deterministic
@@ -2231,8 +2237,8 @@ global:
   #
   DO_ENSEMBLE: false
   NUM_ENS_MEMBERS: 0
-  ENSMEM_NAMES: '{% for m in range(NUM_ENS_MEMBERS) %}{{ "mem%03d, " % m }}{% endfor %}'
-  FV3_NML_ENSMEM_FPS: '{% for mem in ENSMEM_NAMES %}{{ [EXPTDIR, "%s_%s" % FV3_NML_FN, mem]|path_join }}{% endfor %}'
+  ENSMEM_BASENAME: 'mem'
+  NDIGITS_IN_ENSMEM_NAMES: 3
   ENS_TIME_LAG_HRS: '[ {% for m in range([1,NUM_ENS_MEMBERS]|max) %} 0, {% endfor %} ]'
   #
   #-----------------------------------------------------------------------
@@ -2677,18 +2683,6 @@ verification:
                                        {%- endif %}
                                        {{- ".prslev.f{lead?fmt=%HHH}.${POST_OUTPUT_DOMAIN_NAME}_${FIELD_GROUP}_a${ACCUM_HH}h.nc" }}'
   #
-  # VX_NDIGITS_ENSMEM_NAMES:
-  # Number of digits to assume/use in the forecast ensemble member identifier
-  # string used in directory and file names and other instances in which the
-  # ensemble member needs to be identified.  For example, if this is set to
-  # 3, the identifier for ensemble member 4 will be "mem004", while if it's
-  # set to 2, the identifier will be "mem04".  This is useful when verifying
-  # staged forecast files from a forecasting model/system other than the
-  # SRW that uses a different number of digits in the ensemble member 
-  # identifier string.
-  #
-  VX_NDIGITS_ENSMEM_NAMES: 3
-  #
   # NUM_MISSING_FCST_FILES_MAX:
   # For verification tasks that need forecast data, this specifies the
   # maximum number of post-processed forecast files that may be missing. 
@@ -2852,10 +2846,10 @@ fire:
   # Directory where fire input file (geo_em.d01.nc) can be found
   #
   # DT_FIRE
-  # The fire behavior component’s integration timestep
+  # The fire behavior component's integration timestep
   #
   # OUTPUT_DT_FIRE
-  # The fire behavior component’s output timestep
+  # The fire behavior component's output timestep
   # 
   # FIRE_NUM_TASKS
   # Number of MPI tasks assigned to the FIRE_BEHAVIOR component.

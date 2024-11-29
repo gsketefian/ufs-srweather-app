@@ -886,7 +886,6 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
                 msg = msg1 + '    '.join(msg2.splitlines(True)) + msg3
                 logging.error(msg)
                 raise ValueError(msg)
-
     #
     # -----------------------------------------------------------------------
     #
@@ -1581,7 +1580,37 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
               Please set DO_ENSEMBLE to True or remove ensemble vx tasks from the
               workflow.""")])
         raise Exception(msg)
+    #
+    # -----------------------------------------------------------------------
+    #
+    # Set new ensemble-related parameters and save them in the experiment
+    # configuration dictionary.
+    #
+    # -----------------------------------------------------------------------
+    #
+    # The ensemble member indices.
+    num_ens_members = global_sect["NUM_ENS_MEMBERS"]
+    ensmem_inds = [i for i in range(1,num_ens_members+1)]
+    global_sect["ENSMEM_INDS"] = ensmem_inds
 
+    # Formatted counterparts of the ensemble member indices.  These are strings.
+    ndigits_ensmem_names = global_sect['NDIGITS_IN_ENSMEM_NAMES']
+    fmt_str = "0" + f"{ndigits_ensmem_names}" + "d" 
+    ensmem_inds_fmt = [f"{i:{fmt_str}}" for i in ensmem_inds]
+    global_sect["ENSMEM_INDS_FMT"] = ensmem_inds_fmt
+
+    # Names of the ensemble members.
+    ensmem_basename = global_sect["ENSMEM_BASENAME"]
+    ensmem_names = [ensmem_basename + mem_indx_fmt for mem_indx_fmt in ensmem_inds_fmt]
+    global_sect["ENSMEM_NAMES"] = ensmem_names
+
+    # Full paths to the namelist file of each ensemble member.
+    exptdir = workflow_config["EXPTDIR"]
+    fv3_nml_fn = workflow_config["FV3_NML_FN"]
+    fv3_nml_ensmem_fps = [os.path.join(exptdir, '_'.join([fv3_nml_fn, mem_names])) for mem_names in ensmem_names]
+    global_sect["FV3_NML_ENSMEM_FPS"] = fv3_nml_ensmem_fps
+
+    expt_config["global"] = global_sect
     #
     # -----------------------------------------------------------------------
     # NOTE: currently this is executed no matter what, should it be dependent on the logic described below??

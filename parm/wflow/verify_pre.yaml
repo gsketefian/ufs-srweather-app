@@ -192,14 +192,9 @@ metatask_PcpCombine_ASNOW_all_accums_obs_NOHRSC:
 
 metatask_check_post_output_all_mems:
   var:
-    mem: '{%- if global.DO_ENSEMBLE %}
-            {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
-              {{- "%03d "%m }}
-            {%- endfor %}
-          {%- else %}
-            {{- "000"|string }}
-          {%- endif %}'
-  task_check_post_output_mem#mem#:
+    mem_indx: '&ENSMEM_INDICES;'
+    mem_name: '&ENSMEM_NAMES;'
+  task_check_post_output_#mem_name#:
     <<: *default_task_verify_pre
     attrs:
       cycledefs: forecast
@@ -207,7 +202,8 @@ metatask_check_post_output_all_mems:
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_CHECK_POST_OUTPUT"'
     envars:
       <<: *default_vars
-      ENSMEM_INDX: '#mem#'
+      ENSMEM_INDX: '#mem_indx#'
+      ENSMEM_NAME: '#mem_name#'
     dependency:
       # This "or" checks that the necessary stand-alone post tasks or forecast
       # tasks with inline post have run to generate the post files that are 
@@ -218,38 +214,35 @@ metatask_check_post_output_all_mems:
         # so, to ensure that the stand-alone post metatask for the current member
         # has completed for all forecast hours.
         and_standalone_post:
-          # This "or" is to check whether a stand-alane post task exists [either for
-          # mem000 (if running a deterministic forecast) or for mem001 (if running
-          # an ensemble forecast)].  Checking for forecast hour 000 is sufficient.  
-          # If so, it implies post is being run stand-alone.
-          or_post_task_exists: &post_task_exists
-            taskvalid_mem000:
-              attrs:
-                task: run_post_mem000_f000
-            taskvalid_mem001:
-              attrs:
-                task: run_post_mem001_f000
-          # We would like a dependency here on the run_post_#mem#_all_fhrs metatask,
+          # This checks whether a stand-alane post task exists for the first ensemble
+          # member (which will be member 0 for a deterministic forecast or member 1
+          # for an ensemble forecast).  Checking for forecast hour 000 is sufficient.
+          # If so, it implies post is being run stand-alone (as opposed to inline,
+          # i.e. from within the weather model).
+          taskvalid_first_ensmem: &post_task_exists
+            attrs:
+              task: '{{- "run_post_" ~ global.ENSMEM_NAMES[0] ~ "_f000" }}'
+          # We would like a dependency here on the run_post_#mem_name#_all_fhrs metatask,
           # but that is apparently not possible in rocoto with a metataskvalid/
           # metataskdep combination (currently, metataskvalid is not a defined
           # dependency type in ROCOTO); that approach only works for tasks.  Thus, 
           # here we use jinja directives to explicitly list all the tasks in the
-          # run_post_#mem#_all_fhrs metatask.
+          # run_post_#mem_name#_all_fhrs metatask.
           #or_post_metatask:
           #  not:
           #    metataskvalid:
           #      attrs:
-          #        metatask: run_post_mem#mem#_all_fhrs
+          #        metatask: run_post_#mem_name#_all_fhrs
           #  metataskdep:
           #    attrs:
-          #      metatask: run_post_mem#mem#_all_fhrs
+          #      metatask: run_post_#mem_name#_all_fhrs
           taskdep: 
             attrs:
               task: '{%- for h in range(0, workflow.LONG_FCST_LEN+1) %}
                        {%- if h > 0 %}
                          {{- "      <taskdep task=" }}
                        {%- endif %}
-                       {{- "\"run_post_mem#mem#_f%03d\"" % h }}
+                       {{- "\"run_post_#mem_name#_f%03d\"" % h }}
                        {%- if h < workflow.LONG_FCST_LEN %}
                          {{- "/>\n" }}
                        {%- endif %}
@@ -258,13 +251,13 @@ metatask_check_post_output_all_mems:
         # the weather model), and if so, to ensure that the forecast task for the
         # current member has completed.
         and_inline_post:
-          # This "not" is to check whether a stand-alone post task DOESN'T exist
-          # [either for mem000 (if running a deterministic forecast) or for mem001
-          # (if running an ensemble forecast)].  If so, it implies that either
-          # post is being run inline (as part of the weather model) or is not being
-          # run at all.
+          # This "not" is to check whether a stand-alone post task DOESN'T exist.
+          # If it does, it will either be for ensemble member 0 for a deterministic
+          # forecast or for member 1 for an ensemble forecast.  If such a post task
+          # doesn't exist, it implies that either post is being run inline (i.e. as
+          # part of the weather model) or is not being run at all.
           not: 
-            or_post_task_exists:
+            taskvalid_first_ensmem:
               <<: *post_task_exists
           # This "or" is to verify that either the forecast task for the current
           # member exists and has completed, or that it doesn't exist.
@@ -272,10 +265,10 @@ metatask_check_post_output_all_mems:
             and:
               taskvalid: &fcst_task_exists
                 attrs:
-                  task: run_fcst_mem#mem#
+                  task: run_fcst_#mem_name#
               taskdep:
                 attrs:
-                  task: run_fcst_mem#mem#
+                  task: run_fcst_#mem_name#
             not:
               taskvalid:
                 <<: *fcst_task_exists
@@ -289,14 +282,9 @@ metatask_PcpCombine_APCP_all_accums_all_mems:
                {%- endfor %}'
   metatask_PcpCombine_APCP#ACCUM_HH#h_all_mems:
     var:
-      mem: '{%- if global.DO_ENSEMBLE %}
-              {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
-                {{- "%03d "%m }}
-              {%- endfor %}
-            {%- else %}
-              {{- "000"|string }}
-            {%- endif %}'
-    task_run_MET_PcpCombine_APCP#ACCUM_HH#h_fcst_mem#mem#:
+      mem_indx: '&ENSMEM_INDICES;'
+      mem_name: '&ENSMEM_NAMES;'
+    task_run_MET_PcpCombine_APCP#ACCUM_HH#h_fcst_#mem_name#:
       <<: *default_task_verify_pre
       attrs:
         cycledefs: forecast
@@ -310,12 +298,13 @@ metatask_PcpCombine_APCP_all_accums_all_mems:
         OBTYPE: CCPA
         OBS_DIR: '&CCPA_OBS_DIR;'
         METPLUSTOOLNAME: 'PCPCOMBINE'
-        ENSMEM_INDX: "#mem#"
+        ENSMEM_INDX: "#mem_indx#"
+        ENSMEM_NAME: "#mem_name#"
       dependency:
         datadep:
           attrs:
             age: 00:00:00:30
-          text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_mem#mem#.txt'
+          text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_#mem_name#.txt'
       walltime: 00:30:00
 
 metatask_PcpCombine_ASNOW_all_accums_all_mems:
@@ -327,14 +316,9 @@ metatask_PcpCombine_ASNOW_all_accums_all_mems:
                {%- endfor %}'
   metatask_PcpCombine_ASNOW#ACCUM_HH#h_all_mems:
     var:
-      mem: '{%- if global.DO_ENSEMBLE %}
-              {%- for m in range(1, global.NUM_ENS_MEMBERS+1) %}
-                {{- "%03d "%m }}
-              {%- endfor %}
-            {%- else %}
-              {{- "000"|string }}
-            {%- endif %}'
-    task_run_MET_PcpCombine_ASNOW#ACCUM_HH#h_fcst_mem#mem#:
+      mem_indx: '&ENSMEM_INDICES;'
+      mem_name: '&ENSMEM_NAMES;'
+    task_run_MET_PcpCombine_ASNOW#ACCUM_HH#h_fcst_#mem_name#:
       <<: *default_task_verify_pre
       attrs:
         cycledefs: forecast
@@ -348,10 +332,11 @@ metatask_PcpCombine_ASNOW_all_accums_all_mems:
         OBTYPE: NOHRSC
         OBS_DIR: '&NOHRSC_OBS_DIR;'
         METPLUSTOOLNAME: 'PCPCOMBINE'
-        ENSMEM_INDX: "#mem#"
+        ENSMEM_INDX: "#mem_indx#"
+        ENSMEM_NAME: "#mem_name#"
       dependency:
         datadep:
           attrs:
             age: 00:00:00:30
-          text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_mem#mem#.txt'
+          text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_#mem_name#.txt'
       walltime: 00:30:00

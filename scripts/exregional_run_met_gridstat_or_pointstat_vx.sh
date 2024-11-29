@@ -173,8 +173,7 @@ time_lag=$( bc -l <<< "${ENS_TIME_LAG_HRS[$i]}*${SECS_PER_HOUR}" )
 vx_fcst_input_basedir=$( eval echo "${VX_FCST_INPUT_BASEDIR}" )
 vx_output_basedir=$( eval echo "${VX_OUTPUT_BASEDIR}" )
 
-ensmem_indx=$(printf "%0${VX_NDIGITS_ENSMEM_NAMES}d" $(( 10#${ENSMEM_INDX})))
-ensmem_name="mem${ensmem_indx}"
+ensmem_name="${ENSMEM_NAME}"
 if [ "${RUN_ENVIR}" = "nco" ]; then
   slash_cdate_or_null=""
   slash_ensmem_subdir_or_null=""

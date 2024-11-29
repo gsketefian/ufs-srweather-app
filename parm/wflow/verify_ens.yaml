@@ -28,10 +28,10 @@ metatask_GenEnsProd_EnsembleStat_APCP_all_accums:
                    {{- "%02d " % ah }}
                  {%- endif %}
                {%- endfor %}'
-  task_run_MET_GenEnsProd_vx_APCP#ACCUM_HH#h: &task_GenEnsProd_CCPA
+  task_run_MET_GenEnsProd_vx_APCP#ACCUM_HH#h: &task_GenEnsProd_APCP
     <<: *default_task_verify_ens
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GENENSPROD_OR_ENSEMBLESTAT"'
-    envars: &envars_GenEnsProd_CCPA
+    envars: &envars_GenEnsProd_APCP
       <<: *default_vars
       ACCUM_HH: '#ACCUM_HH#'
       OBS_DIR: '&CCPA_OBS_DIR;'
@@ -40,14 +40,15 @@ metatask_GenEnsProd_EnsembleStat_APCP_all_accums:
       OBTYPE: 'CCPA'
       FCST_LEVEL: 'A#ACCUM_HH#'
       FCST_THRESH: 'all'
+      ENSMEM_NAMES_STR: '&ENSMEM_NAMES;'
     dependency:
       metataskdep_pcpcombine_fcst:
         attrs:
           metatask: PcpCombine_APCP#ACCUM_HH#h_all_mems
   task_run_MET_EnsembleStat_vx_APCP#ACCUM_HH#h:
-    <<: *task_GenEnsProd_CCPA
+    <<: *task_GenEnsProd_APCP
     envars:
-      <<: *envars_GenEnsProd_CCPA
+      <<: *envars_GenEnsProd_APCP
       METPLUSTOOLNAME: 'ENSEMBLESTAT'
       FCST_THRESH: 'none'
     dependency:
@@ -66,10 +67,10 @@ metatask_GenEnsProd_EnsembleStat_ASNOW_all_accums:
                    {{- "%02d " % ah }}
                  {%- endif %}
                {%- endfor %}'
-  task_run_MET_GenEnsProd_vx_ASNOW#ACCUM_HH#h: &task_GenEnsProd_NOHRSC
+  task_run_MET_GenEnsProd_vx_ASNOW#ACCUM_HH#h: &task_GenEnsProd_ASNOW
     <<: *default_task_verify_ens
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GENENSPROD_OR_ENSEMBLESTAT"'
-    envars: &envars_GenEnsProd_NOHRSC
+    envars: &envars_GenEnsProd_ASNOW
       <<: *default_vars
       ACCUM_HH: '#ACCUM_HH#'
       OBS_DIR: '&NOHRSC_OBS_DIR;'
@@ -78,15 +79,16 @@ metatask_GenEnsProd_EnsembleStat_ASNOW_all_accums:
       OBTYPE: 'NOHRSC'
       FCST_LEVEL: 'A#ACCUM_HH#'
       FCST_THRESH: 'all'
+      ENSMEM_NAMES_STR: '&ENSMEM_NAMES;'
     dependency:
       and:
         metataskdep_pcpcombine_fcst:
           attrs:
             metatask: PcpCombine_ASNOW#ACCUM_HH#h_all_mems
   task_run_MET_EnsembleStat_vx_ASNOW#ACCUM_HH#h:
-    <<: *task_GenEnsProd_NOHRSC
+    <<: *task_GenEnsProd_ASNOW
     envars:
-      <<: *envars_GenEnsProd_NOHRSC
+      <<: *envars_GenEnsProd_ASNOW
       METPLUSTOOLNAME: 'ENSEMBLESTAT'
       FCST_THRESH: 'none'
     dependency:
@@ -105,10 +107,10 @@ metatask_GenEnsProd_EnsembleStat_REFC_RETOP:
                       {{- "%s " % var }}
                     {%- endif %}
                   {%- endfor %}'
-  task_run_MET_GenEnsProd_vx_#FIELD_GROUP#: &task_GenEnsProd_MRMS
+  task_run_MET_GenEnsProd_vx_#FIELD_GROUP#: &task_GenEnsProd_REFC_RETOP
     <<: *default_task_verify_ens
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GENENSPROD_OR_ENSEMBLESTAT"'
-    envars: &envars_GenEnsProd_MRMS
+    envars: &envars_GenEnsProd_REFC_RETOP
       <<: *default_vars
       ACCUM_HH: '01'
       OBS_DIR: '&MRMS_OBS_DIR;'
@@ -117,14 +119,15 @@ metatask_GenEnsProd_EnsembleStat_REFC_RETOP:
       OBTYPE: 'MRMS'
       FCST_LEVEL: 'L0'
       FCST_THRESH: 'all'
+      ENSMEM_NAMES_STR: '&ENSMEM_NAMES;'
     dependency:
       metataskdep_check_post_output: &check_post_output
         attrs:
           metatask: check_post_output_all_mems
   task_run_MET_EnsembleStat_vx_#FIELD_GROUP#:
-    <<: *task_GenEnsProd_MRMS
+    <<: *task_GenEnsProd_REFC_RETOP
     envars:
-      <<: *envars_GenEnsProd_MRMS
+      <<: *envars_GenEnsProd_REFC_RETOP
       METPLUSTOOLNAME: 'ENSEMBLESTAT'
       FCST_LEVEL: 'L0'
       FCST_THRESH: 'none'
@@ -160,10 +163,10 @@ metatask_GenEnsProd_EnsembleStat_SFC_UPA:
                       {{- "%s " % var }}
                     {%- endif %}
                   {%- endfor %}'
-  task_run_MET_GenEnsProd_vx_#FIELD_GROUP#: &task_GenEnsProd_NDAS
+  task_run_MET_GenEnsProd_vx_#FIELD_GROUP#: &task_GenEnsProd_SFC_UPA
     <<: *default_task_verify_ens
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GENENSPROD_OR_ENSEMBLESTAT"'
-    envars: &envars_GenEnsProd_NDAS
+    envars: &envars_GenEnsProd_SFC_UPA
       <<: *default_vars
       OBS_DIR: '&NDAS_OBS_DIR;'
       FIELD_GROUP: '#FIELD_GROUP#'
@@ -172,14 +175,15 @@ metatask_GenEnsProd_EnsembleStat_SFC_UPA:
       ACCUM_HH: '01'
       FCST_LEVEL: 'all'
       FCST_THRESH: 'all'
+      ENSMEM_NAMES_STR: '&ENSMEM_NAMES;'
     walltime: 04:15:00
     dependency:
       metataskdep_check_post_output:
          <<: *check_post_output
   task_run_MET_EnsembleStat_vx_#FIELD_GROUP#:
-    <<: *task_GenEnsProd_NDAS
+    <<: *task_GenEnsProd_SFC_UPA
     envars:
-      <<: *envars_GenEnsProd_NDAS
+      <<: *envars_GenEnsProd_SFC_UPA
       METPLUSTOOLNAME: 'ENSEMBLESTAT'
     walltime: 01:00:00
     dependency:
@@ -321,8 +325,8 @@ metatask_PointStat_SFC_UPA_ensmeanprob:
         FCST_THRESH: 'all'
       dependency:
         and:
-#          datadep_all_pb2nc_obs_ndas_complete:
-#            <<: *all_pb2nc_obs_ndas_complete
+          datadep_all_pb2nc_obs_ndas_complete:
+            <<: *all_pb2nc_obs_ndas_complete
           taskdep_genensprod:
             attrs:
               task: run_MET_GenEnsProd_vx_#FIELD_GROUP#
