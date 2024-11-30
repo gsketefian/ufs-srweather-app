@@ -54,9 +54,9 @@ function set_vx_params() {
 #-----------------------------------------------------------------------
 #
   local valid_args=( \
-        "obtype" \
         "field_group" \
         "accum_hh" \
+        "outvarname_obtype" \
         "outvarname_grid_or_point" \
         "outvarname_fieldname_in_MET_filedir_names" \
         )
@@ -78,7 +78,8 @@ function set_vx_params() {
 #
 #-----------------------------------------------------------------------
 #
-  local _grid_or_point_ \
+  local _obtype_ \
+        _grid_or_point_ \
         fieldname_in_MET_filedir_names
 #
 #-----------------------------------------------------------------------
@@ -87,12 +88,12 @@ function set_vx_params() {
 #
 #-----------------------------------------------------------------------
 #
-  if [ "${obtype}" = "CCPA" ] || [ "${obtype}" = "NOHRSC" ]; then
+  if [ "${field_group}" = "APCP" ] || [ "${field_group}" = "ASNOW" ]; then
     if [[ ! "${accum_hh}" =~ ^[0-9]{2}$ ]]; then
       print_err_msg_exit "\
-For the given observation type (obtype), the accumulation (accum_hh) must
+For the given field group (field_group), the accumulation (accum_hh) must
 be a 2-digit integer:
-  obtype = \"${obtype}\"
+  field_group = \"${field_group}\"
   accum_hh = \"${accum_hh}\""
     fi
   fi
@@ -101,7 +102,10 @@ be a 2-digit integer:
 #
 # Set the parameters.  Definitions:
 #
-# grid_or_point:
+# _obtype_:
+# The observation type corresponding to the specified field group.
+#
+# _grid_or_point_:
 # String that is set to either "grid" or "point" depending on whether
 # obs type containing the field group is gridded or point-based.
 #
@@ -112,117 +116,41 @@ be a 2-digit integer:
 #
 #-----------------------------------------------------------------------
 #
+  _obtype_=""
   _grid_or_point_=""
   fieldname_in_MET_filedir_names=""
 
-  case "${obtype}" in
+  case "${field_group}" in
 
-    "CCPA")
-
+    "APCP")
+      _obtype_="CCPA"
       _grid_or_point_="grid"
-      case "${field_group}" in
-
-        "APCP")
-          fieldname_in_MET_filedir_names="${field_group}${accum_hh}h"
-          ;;
-
-        *)
-          print_err_msg_exit "\
-A method for setting verification parameters has not been specified for
-this observation type (obtype) and field group (field_group) combination:
-  obtype = \"${obtype}\"
-  field_group = \"${field_group}\""
-          ;;
-
-      esac
+      fieldname_in_MET_filedir_names="${field_group}${accum_hh}h"
       ;;
 
-    "NOHRSC")
-
+    "ASNOW")
+      _obtype_="NOHRSC"
       _grid_or_point_="grid"
-      case "${field_group}" in
-
-        "ASNOW")
-          fieldname_in_MET_filedir_names="${field_group}${accum_hh}h"
-          ;;
-
-        *)
-          print_err_msg_exit "\
-A method for setting verification parameters has not been specified for
-this observation type (obtype) and field group (field_group) combination:
-  obtype = \"${obtype}\"
-  field_group = \"${field_group}\""
-          ;;
-
-      esac
+      fieldname_in_MET_filedir_names="${field_group}${accum_hh}h"
       ;;
 
-    "MRMS")
-
+    "REFC"|"RETOP")
+      _obtype_="MRMS"
       _grid_or_point_="grid"
-      case "${field_group}" in
-
-        "REFC")
-          fieldname_in_MET_filedir_names="${field_group}"
-          ;;
-
-        "RETOP")
-          fieldname_in_MET_filedir_names="${field_group}"
-          ;;
-
-# The following two cases shouldn't be included under MRMS, but really
-# the data type for these two field group should not be set to MRMS.  A
-# bigger fix is necessary.
-
-        "SFC")
-          fieldname_in_MET_filedir_names="ADP${field_group}"
-          ;;
-
-        "UPA")
-          fieldname_in_MET_filedir_names="ADP${field_group}"
-          ;;
-
-
-        *)
-          print_err_msg_exit "\
-A method for setting verification parameters has not been specified for
-this observation type (obtype) and field group (field_group) combination:
-  obtype = \"${obtype}\"
-  field_group = \"${field_group}\""
-          ;;
-
-      esac
+      fieldname_in_MET_filedir_names="${field_group}"
       ;;
 
-    "NDAS")
-
+    "SFC"|"UPA")
+      _obtype_="NDAS"
       _grid_or_point_="point"
-      case "${field_group}" in
-
-        "SFC")
-          fieldname_in_MET_filedir_names="ADP${field_group}"
-          ;;
-
-        "UPA")
-          fieldname_in_MET_filedir_names="ADP${field_group}"
-          ;;
-
-        *)
-          print_err_msg_exit "\
-A method for setting verification parameters has not been specified for
-this observation type (obtype) and field group (field_group) combination:
-  obtype = \"${obtype}\"
-  field_group = \"${field_group}\""
-          ;;
-
-      esac
+      fieldname_in_MET_filedir_names="ADP${field_group}"
       ;;
 
     *)
       print_err_msg_exit "\
 A method for setting verification parameters has not been specified for
-this observation type (obtype):
-  obtype = \"${obtype}\""
+this field group (field_group):
+  field_group = \"${field_group}\""
       ;;
 
   esac
@@ -233,6 +161,10 @@ this observation type (obtype):
 #
 #-----------------------------------------------------------------------
 #
+  if [ ! -z "${outvarname_obtype}" ]; then
+    printf -v ${outvarname_obtype} "%s" "${_obtype_}"
+  fi
+
   if [ ! -z "${outvarname_grid_or_point}" ]; then
     printf -v ${outvarname_grid_or_point} "%s" "${_grid_or_point_}"
   fi

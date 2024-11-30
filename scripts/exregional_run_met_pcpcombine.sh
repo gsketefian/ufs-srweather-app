@@ -94,9 +94,9 @@ CDATE="${PDY}${cyc}"
 FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
-  obtype="${OBTYPE}" \
   field_group="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH}" \
+  outvarname_obtype="obtype" \
   outvarname_grid_or_point="grid_or_point" \
   outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
 #
@@ -187,12 +187,12 @@ if [ "${FCST_OR_OBS}" = "FCST" ]; then
 elif [ "${FCST_OR_OBS}" = "OBS" ]; then
 
   OBS_INPUT_DIR="${OBS_DIR}"
-  fn_template=$(eval echo \${OBS_${OBTYPE}_FN_TEMPLATES[1]})
+  fn_template=$(eval echo \${OBS_${obtype}_FN_TEMPLATES[1]})
   OBS_INPUT_FN_TEMPLATE=$( eval echo ${fn_template} )
 
   OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}${slash_obs_or_null}"
   OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_obs"
-  fn_template=$(eval echo \${OBS_${OBTYPE}_${FIELD_GROUP}_FN_TEMPLATE_PCPCOMBINE_OUTPUT})
+  fn_template=$(eval echo \${OBS_${obtype}_${FIELD_GROUP}_FN_TEMPLATE_PCPCOMBINE_OUTPUT})
   OUTPUT_FN_TEMPLATE=$( eval echo ${fn_template} )
   STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 
@@ -317,7 +317,7 @@ metplus_config_tmpl_fn="${MetplusToolName}"
 if [ "${FCST_OR_OBS}" = "FCST" ]; then
   suffix="_${ensmem_name}"
 elif [ "${FCST_OR_OBS}" = "OBS" ]; then
-  suffix="_${OBTYPE}"
+  suffix="_${obtype}"
 fi
 metplus_config_fn="${metplus_config_tmpl_fn}_$(echo_lowercase ${FCST_OR_OBS})_${FIELDNAME_IN_MET_FILEDIR_NAMES}${suffix}"
 metplus_log_fn="${metplus_config_fn}_$CDATE"
@@ -378,7 +378,7 @@ settings="\
 # Field information.
 #
   'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
-  'obtype': '${OBTYPE}'
+  'obtype': '${obtype}'
   'FCST_OR_OBS': '${FCST_OR_OBS}'
   'input_accum_hh': '${input_accum_hh}'
   'output_accum_hh': '${ACCUM_HH:-}'
