@@ -92,9 +92,9 @@ CDATE="${PDY}${cyc}"
 FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
-  obtype="${OBTYPE}" \
   field_group="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH}" \
+  outvarname_obtype="obtype" \
   outvarname_grid_or_point="grid_or_point" \
   outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
 #
@@ -142,7 +142,7 @@ elif [ "${grid_or_point}" = "point" ]; then
 
 fi
 OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_INPUT_FN_TEMPLATE} )
-FCST_INPUT_FN_TEMPLATE=$( eval echo 'gen_ens_prod_${VX_FCST_MODEL_NAME}_${FIELDNAME_IN_MET_FILEDIR_NAMES}_${OBTYPE}_{lead?fmt=%H%M%S}L_{valid?fmt=%Y%m%d}_{valid?fmt=%H%M%S}V.nc' )
+FCST_INPUT_FN_TEMPLATE=$( eval echo 'gen_ens_prod_${VX_FCST_MODEL_NAME}_${FIELDNAME_IN_MET_FILEDIR_NAMES}_${obtype}_{lead?fmt=%H%M%S}L_{valid?fmt=%Y%m%d}_{valid?fmt=%H%M%S}V.nc' )
 
 OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}"
 OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_ensmean"
@@ -157,7 +157,7 @@ STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}_ensmean"
 #
 #-----------------------------------------------------------------------
 #
-case "$OBTYPE" in
+case "${obtype}" in
   "CCPA"|"NOHRSC")
     vx_intvl="$((10#${ACCUM_HH}))"
     vx_hr_start="${vx_intvl}"
@@ -317,7 +317,7 @@ settings="\
 # Field information.
 #
 'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
-'obtype': '${OBTYPE}'
+'obtype': '${obtype}'
 'accum_hh': '${ACCUM_HH:-}'
 'accum_no_pad': '${ACCUM_NO_PAD:-}'
 'metplus_templates_dir': '${METPLUS_CONF:-}'

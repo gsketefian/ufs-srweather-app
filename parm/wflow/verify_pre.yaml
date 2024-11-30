@@ -82,7 +82,6 @@ task_run_MET_Pb2nc_obs_NDAS:
     FIELD_GROUP: 'SFC'
     ACCUM_HH: '01'
     FCST_OR_OBS: OBS
-    OBTYPE: NDAS
     OBS_DIR: '&NDAS_OBS_DIR;'
     METPLUSTOOLNAME: 'PB2NC'
   dependency:
@@ -100,11 +99,7 @@ task_run_MET_Pb2nc_obs_NDAS:
 
 metatask_PcpCombine_APCP_all_accums_obs_CCPA:
   var:
-    ACCUM_HH: '{%- for ah in verification.VX_APCP_ACCUMS_HRS %}
-                 {%- if workflow.FCST_LEN_HRS >= ah %}
-                   {{- "%02d " % ah }}
-                 {%- endif %}
-               {%- endfor %}'
+    ACCUM_HH: '&ACCUM_HH_APCP;'
   task_run_MET_PcpCombine_APCP#ACCUM_HH#h_obs_CCPA:
     <<: *default_task_verify_pre
     attrs:
@@ -116,7 +111,6 @@ metatask_PcpCombine_APCP_all_accums_obs_CCPA:
       FIELD_GROUP: 'APCP'
       ACCUM_HH: '#ACCUM_HH#'
       FCST_OR_OBS: OBS
-      OBTYPE: CCPA
       OBS_DIR: '&CCPA_OBS_DIR;'
       OBS_AVAIL_INTVL_HRS: '{{- verification.CCPA_OBS_AVAIL_INTVL_HRS }}'
       METPLUSTOOLNAME: 'PCPCOMBINE'
@@ -146,11 +140,7 @@ metatask_PcpCombine_APCP_all_accums_obs_CCPA:
 
 metatask_PcpCombine_ASNOW_all_accums_obs_NOHRSC:
   var:
-    ACCUM_HH: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
-                 {%- if workflow.FCST_LEN_HRS >= ah %}
-                   {{- "%02d " % ah }}
-                 {%- endif %}
-               {%- endfor %}'
+    ACCUM_HH: '&ACCUM_HH_ASNOW;'
   task_run_MET_PcpCombine_ASNOW#ACCUM_HH#h_obs_NOHRSC:
     <<: *default_task_verify_pre
     attrs:
@@ -162,7 +152,6 @@ metatask_PcpCombine_ASNOW_all_accums_obs_NOHRSC:
       FIELD_GROUP: 'ASNOW'
       ACCUM_HH: '#ACCUM_HH#'
       FCST_OR_OBS: OBS
-      OBTYPE: NOHRSC
       OBS_DIR: '&NOHRSC_OBS_DIR;'
       OBS_AVAIL_INTVL_HRS: '{{- verification.NOHRSC_OBS_AVAIL_INTVL_HRS }}'
       METPLUSTOOLNAME: 'PCPCOMBINE'
@@ -275,11 +264,7 @@ metatask_check_post_output_all_mems:
 
 metatask_PcpCombine_APCP_all_accums_all_mems:
   var:
-    ACCUM_HH: '{%- for ah in verification.VX_APCP_ACCUMS_HRS %}
-                 {%- if workflow.FCST_LEN_HRS >= ah %}
-                   {{- "%02d " % ah }}
-                 {%- endif %}
-               {%- endfor %}'
+    ACCUM_HH: '&ACCUM_HH_APCP;'
   metatask_PcpCombine_APCP#ACCUM_HH#h_all_mems:
     var:
       mem_indx: '&ENSMEM_INDICES;'
@@ -295,7 +280,6 @@ metatask_PcpCombine_APCP_all_accums_all_mems:
         FIELD_GROUP: 'APCP'
         ACCUM_HH: '#ACCUM_HH#'
         FCST_OR_OBS: FCST
-        OBTYPE: CCPA
         OBS_DIR: '&CCPA_OBS_DIR;'
         METPLUSTOOLNAME: 'PCPCOMBINE'
         ENSMEM_INDX: "#mem_indx#"
@@ -309,11 +293,7 @@ metatask_PcpCombine_APCP_all_accums_all_mems:
 
 metatask_PcpCombine_ASNOW_all_accums_all_mems:
   var:
-    ACCUM_HH: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
-                 {%- if workflow.FCST_LEN_HRS >= ah %}
-                   {{- "%02d " % ah }}
-                 {%- endif %}
-               {%- endfor %}'
+    ACCUM_HH: '&ACCUM_HH_ASNOW;'
   metatask_PcpCombine_ASNOW#ACCUM_HH#h_all_mems:
     var:
       mem_indx: '&ENSMEM_INDICES;'
@@ -329,7 +309,6 @@ metatask_PcpCombine_ASNOW_all_accums_all_mems:
         FIELD_GROUP: 'ASNOW'
         ACCUM_HH: '#ACCUM_HH#'
         FCST_OR_OBS: FCST
-        OBTYPE: NOHRSC
         OBS_DIR: '&NOHRSC_OBS_DIR;'
         METPLUSTOOLNAME: 'PCPCOMBINE'
         ENSMEM_INDX: "#mem_indx#"

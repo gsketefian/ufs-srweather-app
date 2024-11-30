@@ -1533,9 +1533,14 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
     #
     # -----------------------------------------------------------------------
     #
+    if do_ensemble:
+        ensmem_indx_min = 1
+    else:
+        ensmem_indx_min = 0
+
     # The ensemble member indices.
     num_ens_members = global_sect["NUM_ENS_MEMBERS"]
-    ensmem_inds = [i for i in range(1,num_ens_members+1)]
+    ensmem_inds = [i for i in range(ensmem_indx_min,num_ens_members+1)]
     global_sect["ENSMEM_INDS"] = ensmem_inds
 
     # Formatted counterparts of the ensemble member indices.  These are strings.

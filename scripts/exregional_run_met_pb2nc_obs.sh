@@ -87,16 +87,6 @@ sec_since_ref_task=$(${DATE_UTIL} --date "${yyyymmdd_task} 0 hours" +%s)
 #
 #-----------------------------------------------------------------------
 #
-# Get the list of all the times in the current day at which to retrieve
-# obs.  This is an array with elements having format "YYYYMMDDHH".
-#
-#-----------------------------------------------------------------------
-#
-array_name="OBS_RETRIEVE_TIMES_${OBTYPE}_${yyyymmdd_task}"
-eval obs_retrieve_times_crnt_day=\( \${${array_name}[@]} \)
-#
-#-----------------------------------------------------------------------
-#
 # Get the cycle date and time in YYYYMMDDHH format.
 #
 #-----------------------------------------------------------------------
@@ -114,11 +104,21 @@ CDATE="${PDY}${cyc}"
 FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
-  obtype="${OBTYPE}" \
   field_group="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH}" \
+  outvarname_obtype="obtype" \
   outvarname_grid_or_point="grid_or_point" \
   outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
+#
+#-----------------------------------------------------------------------
+#
+# Get the list of all the times in the current day at which to retrieve
+# obs.  This is an array with elements having format "YYYYMMDDHH".
+#
+#-----------------------------------------------------------------------
+#
+array_name="OBS_RETRIEVE_TIMES_${obtype}_${yyyymmdd_task}"
+eval obs_retrieve_times_crnt_day=\( \${${array_name}[@]} \)
 #
 #-----------------------------------------------------------------------
 #
@@ -163,7 +163,7 @@ for yyyymmddhh in ${obs_retrieve_times_crnt_day[@]}; do
 
   if [[ -f "${fp}" ]]; then
     print_info_msg "
-Found ${OBTYPE} obs file corresponding to observation retrieval time (yyyymmddhh):
+Found ${obtype} obs file corresponding to observation retrieval time (yyyymmddhh):
   yyyymmddhh = \"${yyyymmddhh}\"
   fp = \"${fp}\"
 "
@@ -172,7 +172,7 @@ Found ${OBTYPE} obs file corresponding to observation retrieval time (yyyymmddhh
   else
     num_missing_files=$((num_missing_files+1))
     print_info_msg "
-${OBTYPE} obs file corresponding to observation retrieval time (yyyymmddhh)
+${obtype} obs file corresponding to observation retrieval time (yyyymmddhh)
 does not exist on disk:
   yyyymmddhh = \"${yyyymmddhh}\"
   fp = \"${fp}\"
@@ -186,7 +186,7 @@ done
 # exit.
 if [ "${num_missing_files}" -gt "${NUM_MISSING_OBS_FILES_MAX}" ]; then
   print_err_msg_exit "\
-The number of missing ${OBTYPE} obs files (num_missing_files) is greater
+The number of missing ${obtype} obs files (num_missing_files) is greater
 than the maximum allowed number (NUM_MISSING_FILES_MAX):
   num_missing_files = ${num_missing_files}
   NUM_MISSING_OBS_FILES_MAX = ${NUM_MISSING_OBS_FILES_MAX}"
@@ -332,7 +332,7 @@ settings="\
 # Field information.
 #
   'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
-  'obtype': '${OBTYPE}'
+  'obtype': '${obtype}'
   'accum_hh': '${ACCUM_HH:-}'
   'accum_no_pad': '${ACCUM_NO_PAD:-}'
 "
@@ -367,7 +367,7 @@ fi
 #-----------------------------------------------------------------------
 #
 print_info_msg "$VERBOSE" "
-Calling METplus to run MET's ${metplus_tool_name} tool on observations of type: ${OBTYPE}"
+Calling METplus to run MET's ${metplus_tool_name} tool on observations of type: ${obtype}"
 ${METPLUS_PATH}/ush/run_metplus.py \
   -c ${METPLUS_CONF}/common.conf \
   -c ${metplus_config_fp} || \

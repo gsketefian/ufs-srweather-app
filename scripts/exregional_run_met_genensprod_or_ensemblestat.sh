@@ -103,10 +103,10 @@ CDATE="${PDY}${cyc}"
 FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
-  obtype="${OBTYPE}" \
   field_group="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH}" \
   outvarname_grid_or_point="grid_or_point" \
+  outvarname_obtype="obtype" \
   outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
 #
 #-----------------------------------------------------------------------
@@ -213,7 +213,7 @@ STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
 #
 #-----------------------------------------------------------------------
 #
-case "$OBTYPE" in
+case "${obtype}" in
   "CCPA"|"NOHRSC")
     vx_intvl="$((10#${ACCUM_HH}))"
     vx_hr_start="${vx_intvl}"
@@ -374,7 +374,7 @@ settings="\
 # Field information.
 #
 'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
-'obtype': '${OBTYPE}'
+'obtype': '${obtype}'
 'accum_hh': '${ACCUM_HH:-}'
 'accum_no_pad': '${ACCUM_NO_PAD:-}'
 'metplus_templates_dir': '${METPLUS_CONF:-}'
