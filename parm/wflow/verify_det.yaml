@@ -142,11 +142,7 @@ my_dependencies: &my_deps
 
 #metatask_GridStat_APCP_all_accums_all_mems:
 #  var:
-#    ACCUM_HH: '{%- for ah in verification.VX_APCP_ACCUMS_HRS %}
-#                 {%- if workflow.FCST_LEN_HRS >= ah %}
-#                   {{- "%02d " % ah }}
-#                 {%- endif %}
-#               {%- endfor %}'
+#    ACCUM_HH: '&ACCUM_HH_APCP;'
 #  metatask_GridStat_APCP#ACCUM_HH#h_all_mems:
 #    var:
 #      mem_indx: '&ENSMEM_INDICES;'
@@ -163,10 +159,8 @@ my_dependencies: &my_deps
 #        FIELD_GROUP: 'APCP'
 #        ACCUM_HH: '#ACCUM_HH#'
 #        METPLUSTOOLNAME: 'GRIDSTAT'
-#        #OBTYPE: 'CCPA'
 #        ENSMEM_INDX: "#mem_indx#"
 #        ENSMEM_NAME: "#mem_name#"
-#        OBS_AVAIL_INTVL_HRS: '{{- verification.CCPA_OBS_AVAIL_INTVL_HRS }}'
 #        FCST_LEVEL: 'A#ACCUM_HH#'
 #        FCST_THRESH: 'all'
 #      walltime: 02:00:00
@@ -181,11 +175,7 @@ my_dependencies: &my_deps
 #
 #metatask_GridStat_ASNOW_all_accums_all_mems:
 #  var:
-#    ACCUM_HH: '{%- for ah in verification.VX_ASNOW_ACCUMS_HRS %}
-#                 {%- if workflow.FCST_LEN_HRS >= ah %}
-#                   {{- "%02d " % ah }}
-#                 {%- endif %}
-#               {%- endfor %}'
+#    ACCUM_HH: '&ACCUM_HH_ASNOW;'
 #  metatask_GridStat_ASNOW#ACCUM_HH#h_all_mems:
 #    var:
 #      mem_indx: '&ENSMEM_INDICES;'
@@ -202,10 +192,8 @@ my_dependencies: &my_deps
 #        FIELD_GROUP: 'ASNOW'
 #        ACCUM_HH: '#ACCUM_HH#'
 #        METPLUSTOOLNAME: 'GRIDSTAT'
-#        #OBTYPE: 'NOHRSC'
 #        ENSMEM_INDX: "#mem_indx#"
 #        ENSMEM_NAME: "#mem_name#"
-#        OBS_AVAIL_INTVL_HRS: '{{- verification.NOHRSC_OBS_AVAIL_INTVL_HRS }}'
 #        FCST_LEVEL: 'A#ACCUM_HH#'
 #        FCST_THRESH: 'all'
 #      walltime: 02:00:00
@@ -292,10 +280,8 @@ metatask_GridStat_REFC_RETOP_all_mems:
         OBS_DIR: '&MRMS_OBS_DIR;'
         FIELD_GROUP: '#FIELD_GROUP#'
         METPLUSTOOLNAME: 'GRIDSTAT'
-        #OBTYPE: 'MRMS'
         ENSMEM_INDX: "#mem_indx#"
         ENSMEM_NAME: "#mem_name#"
-        OBS_AVAIL_INTVL_HRS: '{{- verification.MRMS_OBS_AVAIL_INTVL_HRS }}'
         #FCST_LEVEL: 'L0'
         FCST_LEVEL: 'all'
         FCST_THRESH: 'all'
@@ -345,10 +331,8 @@ metatask_PointStat_SFC_UPA_all_mems:
         OBS_DIR: '&NDAS_OBS_DIR;'
         FIELD_GROUP: '#FIELD_GROUP#'
         METPLUSTOOLNAME: 'POINTSTAT'
-        #OBTYPE: 'NDAS'
         ENSMEM_INDX: "#mem_indx#"
         ENSMEM_NAME: "#mem_name#"
-        OBS_AVAIL_INTVL_HRS: '{{- verification.NDAS_OBS_AVAIL_INTVL_HRS }}'
         FCST_LEVEL: 'all'
         FCST_THRESH: 'all'
       walltime: 01:00:00
