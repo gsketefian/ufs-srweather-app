@@ -103,32 +103,11 @@ echo "VX_VERIFY_AGAINST_BENCHMARK_FCST = |${VX_VERIFY_AGAINST_BENCHMARK_FCST}|"
 
 if [ $(boolify "${VX_VERIFY_AGAINST_BENCHMARK_FCST}") = "TRUE" ]; then
 
-  OBTYPE="${VX_BENCHMARK_FCST_MODEL_NAME}"
+  obtype="${VX_BENCHMARK_FCST_MODEL_NAME}"
   grid_or_point="grid"
   FIELDNAME_IN_MET_FILEDIR_NAMES="${VX_BENCHMARK_FCST_MODEL_NAME}"
 
 else
-
-  case "${FIELD_GROUP}" in
-    "APCP")
-      OBTYPE="CCPA"
-      ;;
-    "ASNOW")
-      OBTYPE="NOHRSC"
-      ;;
-    "REFC")
-      OBTYPE="MRMS"
-      ;;
-    "RETOP")
-      OBTYPE="MRMS"
-      ;;
-    "SFC")
-      OBTYPE="NDAS"
-      ;;
-    "UPA")
-      OBTYPE="NDAS"
-      ;;
-  esac
 
 # Note that ACCUM_HH will not be defined for the REFC, RETOP, SFC, and
 # UPA field groups.
