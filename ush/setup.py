@@ -263,7 +263,7 @@ def load_config_for_setup(ushdir, default_config, user_config):
     # Flag that specifies whether the workflow will be running any vx tasks.
     do_vx = any([fn for fn in vx_taskgroup_fns if fn in taskgroups])
 
-    # Initialize variable containing the vx configuration.  This may be 
+    # Initialize variable containing the vx configuration.  This may be
     # modified within the if-statement below.
     vx_config = cfg_d["verification"]
 
@@ -660,10 +660,10 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         # -----------------------------------------------------------------------
         #
         vx_config = expt_config["verification"]
-    
+
         fcst_len_hrs = workflow_config.get("FCST_LEN_HRS")
         vx_fcst_output_intvl_hrs = vx_config.get("VX_FCST_OUTPUT_INTVL_HRS")
-    
+
         # To enable arithmetic with dates and times, convert various time
         # intervals from integer to datetime.timedelta objects.
         fcst_len_dt = datetime.timedelta(hours=fcst_len_hrs)
@@ -696,7 +696,7 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         fcst_output_times_all_cycles, obs_days_all_cycles, \
         = set_fcst_output_times_and_obs_days_all_cycles(
           cycle_start_times, fcst_len_dt, vx_fcst_output_intvl_dt)
-    
+
         workflow_config['OBS_DAYS_ALL_CYCLES_INST'] = obs_days_all_cycles['inst']
         workflow_config['OBS_DAYS_ALL_CYCLES_CUMUL'] = obs_days_all_cycles['cumul']
         #
@@ -711,7 +711,7 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         #
         cycledefs_obs_days_inst = set_rocoto_cycledefs_for_obs_days(obs_days_all_cycles['inst'])
         cycledefs_obs_days_cumul = set_rocoto_cycledefs_for_obs_days(obs_days_all_cycles['cumul'])
-    
+
         rocoto_config['cycledefs']['cycledefs_obs_days_inst'] = cycledefs_obs_days_inst
         rocoto_config['cycledefs']['cycledefs_obs_days_cumul'] = cycledefs_obs_days_cumul
         #
@@ -730,7 +730,7 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         = get_obs_retrieve_times_by_day(
           vx_config, cycle_start_times, fcst_len_dt,
           fcst_output_times_all_cycles, obs_days_all_cycles)
-    
+
         for obtype, obs_days_dict in obs_retrieve_times_by_day.items():
             for obs_day, obs_retrieve_times in obs_days_dict.items():
                 array_name = '_'.join(["OBS_RETRIEVE_TIMES", obtype, obs_day])
@@ -745,7 +745,7 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         #
         vx_field_groups_all_by_obtype = {}
         vx_metatasks_all_by_obtype = {}
-    
+
         vx_field_groups_all_by_obtype["CCPA"] = ["APCP"]
         vx_metatasks_all_by_obtype["CCPA"] \
         = ["task_get_obs_ccpa",
@@ -754,7 +754,7 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
            "metatask_GridStat_APCP_all_accums_all_mems",
            "metatask_GenEnsProd_EnsembleStat_APCP_all_accums",
            "metatask_GridStat_APCP_all_accums_ensmeanprob"]
-    
+
         vx_field_groups_all_by_obtype["NOHRSC"] = ["ASNOW"]
         vx_metatasks_all_by_obtype["NOHRSC"] \
         = ["task_get_obs_nohrsc",
@@ -763,14 +763,14 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
            "metatask_GridStat_ASNOW_all_accums_all_mems",
            "metatask_GenEnsProd_EnsembleStat_ASNOW_all_accums",
            "metatask_GridStat_ASNOW_all_accums_ensmeanprob"]
-    
+
         vx_field_groups_all_by_obtype["MRMS"] = ["REFC", "RETOP"]
         vx_metatasks_all_by_obtype["MRMS"] \
         = ["task_get_obs_mrms",
            "metatask_GridStat_REFC_RETOP_all_mems",
            "metatask_GenEnsProd_EnsembleStat_REFC_RETOP",
            "metatask_GridStat_REFC_RETOP_ensprob"]
-    
+
         vx_field_groups_all_by_obtype["NDAS"] = ["SFC", "UPA"]
         vx_metatasks_all_by_obtype["NDAS"] \
         = ["task_get_obs_ndas",
@@ -778,14 +778,14 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
            "metatask_PointStat_SFC_UPA_all_mems",
            "metatask_GenEnsProd_EnsembleStat_SFC_UPA",
            "metatask_PointStat_SFC_UPA_ensmeanprob"]
-    
+
         # If there are no field groups specified for verification, remove those
         # tasks that are common to all observation types.
         vx_field_groups = vx_config["VX_FIELD_GROUPS"]
         if not vx_field_groups:
             metatask = "metatask_check_post_output_all_mems"
             rocoto_config['tasks'].pop(metatask)
-    
+
         # If for a given obs type none of its field groups are specified for
         # verification, remove all vx metatasks for that obs type.
         for obtype in vx_field_groups_all_by_obtype:
@@ -810,12 +810,12 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         #
         vx_config = expt_config["verification"]
         vx_verify_against_benchmark_fcst = vx_config["VX_VERIFY_AGAINST_BENCHMARK_FCST"]
-    
+
         if vx_verify_against_benchmark_fcst:
             valid_gridtogrid_field_groups = [ "APCP", "REFC", "RETOP", "SFC", "UPA" ]
         else:
             valid_gridtogrid_field_groups = [ "APCP", "REFC", "RETOP" ]
-    
+
         vx_gridtogrid_field_groups = []
         vx_gridtopoint_field_groups = []
         for fg in vx_field_groups:
@@ -823,11 +823,11 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
                 vx_gridtogrid_field_groups.append(fg)
             else:
                 vx_gridtopoint_field_groups.append(fg)
-    
+
         vx_config['VX_GRIDTOGRID_FIELD_GROUPS'] = vx_gridtogrid_field_groups
         vx_config['VX_GRIDTOPOINT_FIELD_GROUPS'] = vx_gridtopoint_field_groups
         expt_config["verification"] = vx_config
-    
+
         print(f"")
         print(f"PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
         print(f"{vx_verify_against_benchmark_fcst = }")
@@ -1600,7 +1600,7 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
 
     # Formatted counterparts of the ensemble member indices.  These are strings.
     ndigits_ensmem_names = global_sect['NDIGITS_IN_ENSMEM_NAMES']
-    fmt_str = "0" + f"{ndigits_ensmem_names}" + "d" 
+    fmt_str = "0" + f"{ndigits_ensmem_names}" + "d"
     ensmem_inds_fmt = [f"{i:{fmt_str}}" for i in ensmem_inds]
     global_sect["ENSMEM_INDS_FMT"] = ensmem_inds_fmt
 
@@ -1788,7 +1788,7 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
     workflow_config["SDF_USES_THOMPSON_MP"] = has_tag_with_value(ccpp_suite_xml, "scheme", "mp_thompson")
 
     if workflow_config["SDF_USES_THOMPSON_MP"]:
-    
+
         logger.debug(f'Selected CCPP suite ({workflow_config["CCPP_PHYS_SUITE"]}) uses Thompson MP')
         logger.debug(f'Setting up links for additional fix files')
 
