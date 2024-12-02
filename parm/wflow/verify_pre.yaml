@@ -71,30 +71,30 @@ task_get_obs_ndas:
   partition: '{% if platform.get("PARTITION_HPSS") %}&PARTITION_HPSS;{% else %}None{% endif %}'
   walltime: 02:00:00
 
-#task_run_MET_Pb2nc_obs_NDAS:
-#  <<: *default_task_verify_pre
-#  attrs:
-#    cycledefs: cycledefs_obs_days_inst
-#    maxtries: '2'
-#  command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PB2NC_OBS"'
-#  envars:
-#    <<: *default_vars
-#    FIELD_GROUP: 'SFC'
-#    FCST_OR_OBS: OBS
-#    OBS_DIR: '&NDAS_OBS_DIR;'
-#    METPLUSTOOLNAME: 'PB2NC'
-#  dependency:
-#    and:
-#      datadep:
-#        text: "&NDAS_OBS_DIR;"
-#      or:
-#        not:
-#          taskvalid:
-#            attrs:
-#              task: get_obs_ndas
-#        taskdep:
-#          attrs:
-#            task: get_obs_ndas
+task_run_MET_Pb2nc_obs_NDAS:
+  <<: *default_task_verify_pre
+  attrs:
+    cycledefs: cycledefs_obs_days_inst
+    maxtries: '2'
+  command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PB2NC_OBS"'
+  envars:
+    <<: *default_vars
+    FIELD_GROUP: 'SFC'
+    FCST_OR_OBS: OBS
+    OBS_DIR: '&NDAS_OBS_DIR;'
+    METPLUSTOOLNAME: 'PB2NC'
+  dependency:
+    and:
+      datadep:
+        text: "&NDAS_OBS_DIR;"
+      or:
+        not:
+          taskvalid:
+            attrs:
+              task: get_obs_ndas
+        taskdep:
+          attrs:
+            task: get_obs_ndas
 
 metatask_PcpCombine_APCP_all_accums_obs_CCPA:
   var:

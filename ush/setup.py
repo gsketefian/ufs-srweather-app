@@ -743,119 +743,129 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         #
         # -----------------------------------------------------------------------
         #
-        vx_field_groups_all_by_obtype = {}
-        vx_metatasks_all_by_obtype = {}
+        vx_metatasks_all_possible_by_fg = {}
 
-        vx_field_groups_all_by_obtype["CCPA"] = ["APCP"]
-        vx_metatasks_all_by_obtype["CCPA"] \
-        = ["task_get_obs_ccpa",
+        vx_metatasks_all_possible_by_fg["APCP"] \
+        = ["metatask_check_post_output_all_mems",
+           "task_get_obs_ccpa",
            "metatask_PcpCombine_APCP_all_accums_obs_CCPA",
            "metatask_PcpCombine_APCP_all_accums_all_mems",
            "metatask_GridStat_APCP_all_accums_all_mems",
            "metatask_GenEnsProd_EnsembleStat_APCP_all_accums",
            "metatask_GridStat_APCP_all_accums_ensmeanprob"]
 
-        vx_field_groups_all_by_obtype["NOHRSC"] = ["ASNOW"]
-        vx_metatasks_all_by_obtype["NOHRSC"] \
-        = ["task_get_obs_nohrsc",
+        vx_metatasks_all_possible_by_fg["ASNOW"] \
+        = ["metatask_check_post_output_all_mems",
+           "task_get_obs_nohrsc",
            "metatask_PcpCombine_ASNOW_all_accums_obs_NOHRSC",
            "metatask_PcpCombine_ASNOW_all_accums_all_mems",
            "metatask_GridStat_ASNOW_all_accums_all_mems",
            "metatask_GenEnsProd_EnsembleStat_ASNOW_all_accums",
            "metatask_GridStat_ASNOW_all_accums_ensmeanprob"]
 
-        vx_field_groups_all_by_obtype["MRMS"] = ["REFC", "RETOP"]
-        vx_metatasks_all_by_obtype["MRMS"] \
-        = ["task_get_obs_mrms",
+        vx_metatasks_all_possible_by_fg["REFC"] \
+        = ["metatask_check_post_output_all_mems",
+           "task_get_obs_mrms",
            "metatask_GridStat_REFC_RETOP_all_mems",
            "metatask_GenEnsProd_EnsembleStat_REFC_RETOP",
            "metatask_GridStat_REFC_RETOP_ensprob"]
 
-        vx_field_groups_all_by_obtype["NDAS"] = ["SFC", "UPA"]
-        vx_metatasks_all_by_obtype["NDAS"] \
-        = ["task_get_obs_ndas",
+        vx_metatasks_all_possible_by_fg["RETOP"] \
+        = vx_metatasks_all_possible_by_fg["REFC"]
+
+        vx_metatasks_all_possible_by_fg["SFC"] \
+        = ["metatask_check_post_output_all_mems",
+           "task_get_obs_ndas",
            "task_run_MET_Pb2nc_obs_NDAS",
+           "metatask_GridStat_SFC_UPA_all_mems",
            "metatask_PointStat_SFC_UPA_all_mems",
            "metatask_GenEnsProd_EnsembleStat_SFC_UPA",
+           "metatask_GridStat_SFC_UPA_ensmeanprob",
            "metatask_PointStat_SFC_UPA_ensmeanprob"]
 
-        # If there are no field groups specified for verification, remove those
-        # tasks that are common to all observation types.
+        vx_metatasks_all_possible_by_fg["UPA"] \
+        = vx_metatasks_all_possible_by_fg["SFC"]
+        #
+        # -----------------------------------------------------------------------
+        #
+        # 
+        #
+        # -----------------------------------------------------------------------
+        #
+        vx_metatasks_all_possible \
+        = [metatask \
+           for fg, metatasks_for_fg in vx_metatasks_all_possible_by_fg.items() \
+           for metatask in metatasks_for_fg]
+        vx_metatasks_all_possible = set(vx_metatasks_all_possible)
+        #
+        # -----------------------------------------------------------------------
+        #
+        # Invert dictionary to get a new dictionary that, for each vx (meta)task
+        # (the keys), contains a list of its associated field groups (the values).
+        #
+        # -----------------------------------------------------------------------
+        #
+        vx_fieldgroups_by_metatask = {}
+        for metatask in sorted(list(vx_metatasks_all_possible)):
+            fg_list = []
+            for fg, metatasks in vx_metatasks_all_possible_by_fg.items():
+                if metatask in metatasks: fg_list.append(fg)
+            vx_fieldgroups_by_metatask[metatask] = fg_list
+        #
+        # -----------------------------------------------------------------------
+        #
+        # 
+        #
+        # -----------------------------------------------------------------------
+        #
         vx_field_groups = vx_config["VX_FIELD_GROUPS"]
-        if not vx_field_groups:
-            metatask = "metatask_check_post_output_all_mems"
-            rocoto_config['tasks'].pop(metatask)
+        vx_metatasks_to_include_by_fg \
+        = {fg: metatasks for fg, metatasks in vx_metatasks_all_possible_by_fg.items() \
+           if fg in vx_field_groups}
 
-        # If for a given obs type none of its field groups are specified for
-        # verification, remove all vx metatasks for that obs type.
-        for obtype in vx_field_groups_all_by_obtype:
-            vx_field_groups_crnt_obtype = list(set(vx_field_groups) & set(vx_field_groups_all_by_obtype[obtype]))
-            if not vx_field_groups_crnt_obtype:
-                for metatask in vx_metatasks_all_by_obtype[obtype]:
-                    if metatask in rocoto_config['tasks']:
-                        logging.info(dedent(
-                            f"""
-                            Removing verification (meta)task
-                              "{metatask}"
-                            from workflow since no field groups from observation type "{obtype}" are
-                            specified for verification."""
-                        ))
-                        rocoto_config['tasks'].pop(metatask)
-        #
-        # -----------------------------------------------------------------------
-        #
-        #
-        #
-        # -----------------------------------------------------------------------
-        #
+        # For the SFC and UPA field groups, whether we use grid-to-grid or grid-
+        # to-point verification depends on whether we are verifyfing against obs
+        # or another (benchmark) forecast.
         vx_config = expt_config["verification"]
         vx_verify_against_benchmark_fcst = vx_config["VX_VERIFY_AGAINST_BENCHMARK_FCST"]
-
         if vx_verify_against_benchmark_fcst:
-            valid_gridtogrid_field_groups = [ "APCP", "REFC", "RETOP", "SFC", "UPA" ]
+            vx_metatasks_to_exclude_from_SFC_UPA \
+            = ["task_get_obs_ndas",
+               "task_run_MET_Pb2nc_obs_NDAS",
+               "metatask_PointStat_SFC_UPA_all_mems",
+               "metatask_PointStat_SFC_UPA_ensmeanprob"]
         else:
-            valid_gridtogrid_field_groups = [ "APCP", "REFC", "RETOP" ]
+            vx_metatasks_to_exclude_from_SFC_UPA \
+            = ["metatask_GridStat_SFC_UPA_all_mems",
+               "metatask_GridStat_SFC_UPA_ensmeanprob"]
 
-        vx_gridtogrid_field_groups = []
-        vx_gridtopoint_field_groups = []
-        for fg in vx_field_groups:
-            if fg in valid_gridtogrid_field_groups:
-                vx_gridtogrid_field_groups.append(fg)
-            else:
-                vx_gridtopoint_field_groups.append(fg)
+        for fg in ['SFC', 'UPA']:
+            if fg in vx_metatasks_to_include_by_fg.copy():
+                vx_metatasks_to_include_by_fg[fg] \
+                = [metatask for metatask in vx_metatasks_to_include_by_fg[fg] \
+                   if metatask not in vx_metatasks_to_exclude_from_SFC_UPA]
 
-        vx_config['VX_GRIDTOGRID_FIELD_GROUPS'] = vx_gridtogrid_field_groups
-        vx_config['VX_GRIDTOPOINT_FIELD_GROUPS'] = vx_gridtopoint_field_groups
-        expt_config["verification"] = vx_config
+        vx_metatasks_to_include \
+        = [metatask \
+           for fg, metatasks_for_fg in vx_metatasks_to_include_by_fg.items() \
+           for metatask in metatasks_for_fg]
+        vx_metatasks_to_include = set(vx_metatasks_to_include)
 
-        print(f"")
-        print(f"PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
-        print(f"{vx_verify_against_benchmark_fcst = }")
-        print(f"{vx_gridtogrid_field_groups = }")
-        print(f"{vx_gridtopoint_field_groups = }")
-        #bbbbbbbbbbb
+        vx_metatasks_to_exclude = vx_metatasks_all_possible.difference(vx_metatasks_to_include)
 
-        wflow_metatasks = rocoto_config['tasks']
-
-        if not vx_gridtogrid_field_groups:
-            metatasks_to_remove \
-            = ['metatask_GridStat_REFC_RETOP_all_mems',
-               'metatask_GenEnsProd_EnsembleStat_REFC_RETOP',
-               'metatask_GridStat_REFC_RETOP_ensprob']
-            for metatask in metatasks_to_remove:
-                if metatask in wflow_metatasks.keys():
-                    wflow_metatasks.pop(metatask)
-
-        if not vx_gridtopoint_field_groups:
-            metatasks_to_remove \
-            = ['metatask_PointStat_SFC_UPA_all_mems',
-               'metatask_GenEnsProd_EnsembleStat_SFC_UPA',
-               'metatask_PointStat_SFC_UPA_ensmeanprob']
-            for metatask in metatasks_to_remove:
-                if metatask in wflow_metatasks.keys():
-                    wflow_metatasks.pop(metatask)
-
-        rocoto_config['tasks'] = wflow_metatasks
+        for metatask in vx_metatasks_to_exclude:
+            if metatask in rocoto_config['tasks']:
+                logging.info(dedent(
+                    f"""
+                    Removing verification (meta)task
+                        "{metatask}"
+                    from workflow since the list of field groups to verify, i.e.
+                        {vx_field_groups = }
+                    does not include any of the field groups associated with this (meta)task,
+                    which are
+                        {vx_fieldgroups_by_metatask[metatask]}"""
+                ))
+                rocoto_config['tasks'].pop(metatask)
         #
         # -----------------------------------------------------------------------
         #

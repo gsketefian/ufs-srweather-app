@@ -89,25 +89,18 @@ CDATE="${PDY}${cyc}"
 #
 #-----------------------------------------------------------------------
 #
-FIELDNAME_IN_MET_FILEDIR_NAMES=""
-
-if [ $(boolify "${VX_VERIFY_AGAINST_BENCHMARK_FCST}") = "TRUE" ]; then
-
-  obtype="${VX_BENCHMARK_FCST_MODEL_NAME}"
-  grid_or_point="grid"
-  FIELDNAME_IN_MET_FILEDIR_NAMES="${VX_BENCHMARK_FCST_MODEL_NAME}"
-
-else
-
 # Note that ACCUM_HH will not be defined for the REFC, RETOP, SFC, and
 # UPA field groups.
-  set_vx_params \
-    field_group="${FIELD_GROUP}" \
-    accum_hh="${ACCUM_HH:-}" \
-    outvarname_obtype="obtype" \
-    outvarname_grid_or_point="grid_or_point" \
-    outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
+set_vx_params \
+  field_group="${FIELD_GROUP}" \
+  accum_hh="${ACCUM_HH:-}" \
+  outvarname_obtype="obtype" \
+  outvarname_grid_or_point="grid_or_point" \
+  outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
 
+if [ $(boolify "${VX_VERIFY_AGAINST_BENCHMARK_FCST}") = "TRUE" ]; then
+  obtype="${VX_BENCHMARK_FCST_MODEL_NAME}"
+  grid_or_point="grid"
 fi
 #
 #-----------------------------------------------------------------------
@@ -215,8 +208,6 @@ elif [ "${grid_or_point}" = "point" ]; then
 
   OBS_INPUT_DIR="${vx_output_basedir}/metprd/Pb2nc_obs"
   OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_SFCandUPA_FN_TEMPLATE_PB2NC_OUTPUT}"
-OBS_INPUT_DIR="${NDAS_OBS_DIR}"
-OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_FN_TEMPLATES[1]}"
   FCST_INPUT_DIR="${vx_fcst_input_basedir}"
   FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
 
