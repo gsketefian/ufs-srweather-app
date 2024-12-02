@@ -80,7 +80,6 @@ task_get_obs_ndas:
 #  envars:
 #    <<: *default_vars
 #    FIELD_GROUP: 'SFC'
-#    ACCUM_HH: '01'
 #    FCST_OR_OBS: OBS
 #    OBS_DIR: '&NDAS_OBS_DIR;'
 #    METPLUSTOOLNAME: 'PB2NC'

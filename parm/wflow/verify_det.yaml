@@ -241,7 +241,6 @@ abcd_metatask_GridStat_REFC_all_accums_all_mems:
           #OBS_DIR: '&#OBTYPE#_OBS_DIR;'
           OBS_DIR: '#OBS_DIR#'
           FIELD_GROUP: '#FIELD_GROUP#'
-          ACCUM_HH: '#ACCUM_HH#'
           METPLUSTOOLNAME: 'GRIDSTAT'
           #OBTYPE: '#OBTYPE#'
           ENSMEM_INDX: "#mem#"
