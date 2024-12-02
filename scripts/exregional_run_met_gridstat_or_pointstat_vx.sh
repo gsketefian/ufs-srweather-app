@@ -89,17 +89,7 @@ CDATE="${PDY}${cyc}"
 #
 #-----------------------------------------------------------------------
 #
-echo
-echo "FFFFFFFFFFFFFF"
-echo "OBS_DIR = |${OBS_DIR}|"
-#echo "ACCUM_HH = |${ACCUM_HH}|"
-#kjkjkjkjkj
-
 FIELDNAME_IN_MET_FILEDIR_NAMES=""
-
-echo
-echo "GGGGGGGGGGGGGGG"
-echo "VX_VERIFY_AGAINST_BENCHMARK_FCST = |${VX_VERIFY_AGAINST_BENCHMARK_FCST}|"
 
 if [ $(boolify "${VX_VERIFY_AGAINST_BENCHMARK_FCST}") = "TRUE" ]; then
 
@@ -182,10 +172,6 @@ fi
 
 if [ "${grid_or_point}" = "grid" ]; then
 
-echo
-echo "AAAAAAAAAAA"
-echo "FIELDNAME_IN_MET_FILEDIR_NAMES = ${FIELDNAME_IN_MET_FILEDIR_NAMES}"
-echo
   case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
     "APCP"*)
       OBS_INPUT_DIR="${vx_output_basedir}${slash_cdate_or_null}${slash_obs_or_null}/metprd/PcpCombine_obs"
@@ -263,19 +249,6 @@ case "${obtype}" in
 esac
 vx_hr_end="${FCST_LEN_HRS}"
 
-echo
-echo "AAAAAAAAAAAAAAAAA"
-#python3 $USHdir/set_leadhrs.py \
-#  --date_init="${CDATE}" \
-#  --lhr_min="${vx_hr_start}" \
-#  --lhr_max="${vx_hr_end}" \
-#  --lhr_intvl="${vx_intvl}" \
-#  --base_dir="${OBS_INPUT_DIR}" \
-#  --fn_template="${OBS_INPUT_FN_TEMPLATE}" \
-#  --num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}" \
-#  --time_lag="${time_lag%.*}" \
-#  --verbose
-
 VX_LEADHR_LIST=$( python3 $USHdir/set_leadhrs.py \
   --date_init="${CDATE}" \
   --lhr_min="${vx_hr_start}" \
@@ -286,10 +259,6 @@ VX_LEADHR_LIST=$( python3 $USHdir/set_leadhrs.py \
   --num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}" \
   --time_lag="${time_lag%.*}" ) || \
   print_err_msg_exit "Call to set_leadhrs.py failed with return code: $?"
-#  --time_lag="${time_lag%.*}" \
-#  --verbose ) || \
-echo "PPPPPPPPPPPPPPP"
-#kiijijj
 #
 #-----------------------------------------------------------------------
 #
