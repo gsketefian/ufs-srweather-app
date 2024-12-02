@@ -105,7 +105,6 @@ metatask_GenEnsProd_EnsembleStat_REFC_RETOP:
     command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GENENSPROD_OR_ENSEMBLESTAT"'
     envars: &envars_GenEnsProd_REFC_RETOP
       <<: *default_vars
-      ACCUM_HH: '01'
       OBS_DIR: '&MRMS_OBS_DIR;'
       FIELD_GROUP: '#FIELD_GROUP#'
       METPLUSTOOLNAME: 'GENENSPROD'
@@ -164,7 +163,6 @@ metatask_GenEnsProd_EnsembleStat_SFC_UPA:
       OBS_DIR: '&NDAS_OBS_DIR;'
       FIELD_GROUP: '#FIELD_GROUP#'
       METPLUSTOOLNAME: 'GENENSPROD'
-      ACCUM_HH: '01'
       FCST_LEVEL: 'all'
       FCST_THRESH: 'all'
       ENSMEM_NAMES_STR: '&ENSMEM_NAMES;'
@@ -302,7 +300,6 @@ metatask_PointStat_SFC_UPA_ensmeanprob:
         OBS_DIR: '&NDAS_OBS_DIR;'
         FIELD_GROUP: '#FIELD_GROUP#'
         METPLUSTOOLNAME: 'POINTSTAT'
-        ACCUM_HH: '01'
         FCST_LEVEL: 'all'
         FCST_THRESH: 'all'
       dependency:

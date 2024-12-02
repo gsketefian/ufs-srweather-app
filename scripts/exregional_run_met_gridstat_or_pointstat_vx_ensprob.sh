@@ -94,7 +94,7 @@ FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
   field_group="${FIELD_GROUP}" \
-  accum_hh="${ACCUM_HH}" \
+  accum_hh="${ACCUM_HH:-}" \
   outvarname_obtype="obtype" \
   outvarname_grid_or_point="grid_or_point" \
   outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
@@ -207,7 +207,7 @@ fi
 #
 #-----------------------------------------------------------------------
 #
-ACCUM_NO_PAD=$( printf "%0d" "${ACCUM_HH}" )
+ACCUM_NO_PAD=$( printf "%0d" "${ACCUM_HH:-}" )
 #
 #-----------------------------------------------------------------------
 #
