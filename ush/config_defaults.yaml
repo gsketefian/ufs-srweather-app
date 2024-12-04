@@ -2413,8 +2413,21 @@ verification:
   # be performed.  Used only if VX_VERIFY_AGAINST_BENCHMARK_FCST is set to
   # True.
   #
+  # VX_BENCHMARK_FCST_BASEDIR:
+  # Base directory in which the benchmark forecast(s) that will be treated
+  # as the truth in the verification are located.  Used only if
+  # VX_VERIFY_AGAINST_BENCHMARK_FCST is set to True.
+  #
+  # VX_BENCHMARK_FCST_FN_TEMPLATE:
+  # File name templates for the benchmark forecast(s).  These are meant to
+  # be used in METplus configuration files and thus contain METplus time
+  # formatting strings.  Used only if VX_VERIFY_AGAINST_BENCHMARK_FCST is
+  # set to True.
+  #
   VX_VERIFY_AGAINST_BENCHMARK_FCST: False
-  VX_BENCHMARK_FCST_MODEL_NAME: 'no_model'
+  VX_BENCHMARK_FCST_MODEL_NAME: ''
+  VX_BENCHMARK_FCST_BASEDIR: ''
+  VX_BENCHMARK_FCST_FN_TEMPLATE: ''
   #
   # METplus-Specific Parameters
   # -------------------------------

@@ -846,7 +846,8 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         # verifying against a benchmark forecast, we drop any tasks involving the
         # NDAS obs type since in that case, NDAS obs are not needed.
         vx_config = expt_config["verification"]
-        if vx_config["VX_VERIFY_AGAINST_BENCHMARK_FCST"]:
+        vx_verify_against_benchmark_fcst = vx_config["VX_VERIFY_AGAINST_BENCHMARK_FCST"]
+        if vx_verify_against_benchmark_fcst:
             vx_metatasks_to_exclude_from_SFC_UPA \
             = ["task_get_obs_ndas",
                "task_run_MET_Pb2nc_obs_NDAS",
@@ -896,33 +897,64 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         #
         # -----------------------------------------------------------------------
         #
-        # If there are at least some field groups to verify, then make sure that
-        # the base directories in which retrieved obs files will be placed are
-        # distinct for the different obs types.
+        # If there are at least some field groups to verify, then, depending on
+        # whether we're verifying against obs or benchmark forecasts, perform
+        # some checks or do some resetting of the obs base directory and/or the
+        # obs file template variables in the configuration dictionaries.
         #
         # -----------------------------------------------------------------------
         #
         if vx_field_groups:
+
             obtypes_all = ['CCPA', 'NOHRSC', 'MRMS', 'NDAS']
             obs_basedir_var_names = [f'{obtype}_OBS_DIR' for obtype in obtypes_all]
-            obs_basedirs_dict = {key: vx_config[key] for key in obs_basedir_var_names}
-            obs_basedirs_orig = list(obs_basedirs_dict.values())
-            obs_basedirs_uniq = list(set(obs_basedirs_orig))
-            if len(obs_basedirs_orig) != len(obs_basedirs_uniq):
-                msg1 = dedent(f"""
-                    The base directories for the obs files must be distinct, but at least two
-                    are identical:""")
-                msg2 = ''
-                for obs_basedir_var_name, obs_dir in obs_basedirs_dict.items():
-                    msg2 = msg2 + dedent(f"""
-                        {obs_basedir_var_name} = {obs_dir}""")
-                msg3 = dedent(f"""
-                    Modify these in the SRW App's user configuration file to make them distinct
-                    and rerun.
-                    """)
-                msg = msg1 + '    '.join(msg2.splitlines(True)) + msg3
-                logging.error(msg)
-                raise ValueError(msg)
+
+            # If veryfing against benchmark forecast(s), set all the base directories
+            # for observations and the obs file name template(s) to the base directory
+            # and file name template(s) of the benchmark forecast, respectively.
+            if vx_verify_against_benchmark_fcst:
+
+                # Modify obs base directories.
+                for obs_basedir_var_name in obs_basedir_var_names:
+                    vx_config[obs_basedir_var_name] = vx_config['VX_BENCHMARK_FCST_BASEDIR']
+                    rocoto_config['entities'][obs_basedir_var_name] = vx_config['VX_BENCHMARK_FCST_BASEDIR']
+
+                # Modify obs file name template variables.
+                obs_fn_templates_var_names = [f'OBS_{obtype}_FN_TEMPLATES' for obtype in obtypes_all]
+                for obs_fn_templates_var_name in obs_fn_templates_var_names:
+                    num_elems = len(vx_config[obs_fn_templates_var_name])
+                    for i in range(0,num_elems,2):
+                        vx_config[obs_fn_templates_var_name][i+1] = vx_config['VX_BENCHMARK_FCST_FN_TEMPLATE']
+
+                # Save any changes to the verification configuration dictionary back in
+                # the overall experiment configuration dictionary.
+                expt_config["verification"] = vx_config
+
+            # If in the verification we are using obs as truth (i.e. we are not
+            # verifying against benchmark forecast(s)), make sure that the base
+            # directories in which retrieved obs files will be placed are distinct
+            # for the different obs types.  This is to prevent overwriting of one
+            # type of obs file by another.
+            else:
+
+                obs_basedirs_dict = {key: vx_config[key] for key in obs_basedir_var_names}
+                obs_basedirs_orig = list(obs_basedirs_dict.values())
+                obs_basedirs_uniq = list(set(obs_basedirs_orig))
+                if len(obs_basedirs_orig) != len(obs_basedirs_uniq):
+                    msg1 = dedent(f"""
+                        The base directories for the obs files must be distinct, but at least two
+                        are identical:""")
+                    msg2 = ''
+                    for obs_basedir_var_name, obs_dir in obs_basedirs_dict.items():
+                        msg2 = msg2 + dedent(f"""
+                            {obs_basedir_var_name} = {obs_dir}""")
+                    msg3 = dedent(f"""
+                        Modify these in the SRW App's user configuration file to make them distinct
+                        and rerun.
+                        """)
+                    msg = msg1 + '    '.join(msg2.splitlines(True)) + msg3
+                    logging.error(msg)
+                    raise ValueError(msg)
     #
     # -----------------------------------------------------------------------
     #
