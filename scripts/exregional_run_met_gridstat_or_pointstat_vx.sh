@@ -192,13 +192,13 @@ if [ "${grid_or_point}" = "grid" ]; then
       FCST_INPUT_DIR="${vx_fcst_input_basedir}"
       FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
       ;;
-    "ADPSFC")
+    "SFC")
       OBS_INPUT_DIR="${NDAS_OBS_DIR}"
       OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_FN_TEMPLATES[1]}"
       FCST_INPUT_DIR="${vx_fcst_input_basedir}"
       FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
       ;;
-    "ADPUPA")
+    "UPA")
       OBS_INPUT_DIR="${NDAS_OBS_DIR}"
       OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_FN_TEMPLATES[1]}"
       FCST_INPUT_DIR="${vx_fcst_input_basedir}"
