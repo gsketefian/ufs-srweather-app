@@ -89,6 +89,8 @@ CDATE="${PDY}${cyc}"
 #
 #-----------------------------------------------------------------------
 #
+FIELDGROUP_IN_MET_FILEDIR_NAMES=""
+
 # Note that ACCUM_HH will not be defined for the REFC, RETOP, SFC, and
 # UPA field groups.
 set_vx_params \
