@@ -1,0 +1,37 @@
+metadata:
+  description: |-
+    This test is to ensure that the workflow running in community mode
+    can successfully run the MET ensemble verification tasks using
+    staged observation and forecast files (i.e. with other tasks such as
+    pre-processing, forecast, and post-processing deactivated) and with
+    a non-default naming convention for the (staged) ensemble member
+    directories.
+
+user:
+  RUN_ENVIR: community
+
+workflow:
+  PREDEF_GRID_NAME: RRFS_CONUS_25km
+  DATE_FIRST_CYCL: '2019061500'
+  DATE_LAST_CYCL: '2019061500'
+  FCST_LEN_HRS: 6
+  PREEXISTING_DIR_METHOD: rename
+
+nco:
+  NET_default: rrfs
+
+rocoto:
+  tasks:
+    taskgroups: '{{ ["parm/wflow/verify_pre.yaml", "parm/wflow/verify_det.yaml", "parm/wflow/verify_ens.yaml"]|include }}'
+
+global:
+  DO_ENSEMBLE: true
+  NUM_ENS_MEMBERS: 12
+  ENSMEM_BASENAME: 'ens_'
+  NDIGITS_IN_ENSMEM_NAMES: 0
+
+verification:
+  VX_FCST_MODEL_NAME: FV3_GFS_v15p2_CONUS_25km
+  #VX_FCST_INPUT_BASEDIR: '{{ platform.get("TEST_VX_FCST_INPUT_BASEDIR") }}'
+  VX_FCST_INPUT_BASEDIR: '/scratch2/BMC/fv3lam/Gerard.Ketefian/forecasts_for_ens_ndigits/RRFS_CONUS_25km'
+
