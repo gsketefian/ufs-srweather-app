@@ -281,6 +281,34 @@ metatask_GridStat_REFC_RETOP_ensprob:
           attrs:
             task: run_MET_GenEnsProd_vx_#FIELD_GROUP#
 
+
+metatask_GridStat_SFC_UPA_ensmeanprob:
+  var:
+    stat: MEAN PROB
+    statlc: mean prob
+  metatask_GridStat_SFC_UPA_ens#statlc#:
+    var:
+      FIELD_GROUP: '{%- for var in verification.VX_FIELD_GROUPS %}
+                      {%- if var in ["SFC", "UPA"] %}
+                        {{- "%s " % var }}
+                      {%- endif %}
+                    {%- endfor %}'
+    task_run_MET_GridStat_vx_#FIELD_GROUP#_ens#statlc#:
+      <<: *default_task_verify_ens
+      command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX_ENS#stat#"'
+      envars:
+        <<: *default_vars
+        OBS_DIR: '&NDAS_OBS_DIR;'
+        FIELD_GROUP: '#FIELD_GROUP#'
+        METPLUSTOOLNAME: 'GRIDSTAT'
+        FCST_LEVEL: 'all'
+        FCST_THRESH: 'all'
+      dependency:
+        taskdep_genensprod:
+          attrs:
+            task: run_MET_GenEnsProd_vx_#FIELD_GROUP#
+
+
 metatask_PointStat_SFC_UPA_ensmeanprob:
   var:
     stat: MEAN PROB

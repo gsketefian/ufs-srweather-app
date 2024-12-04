@@ -739,68 +739,160 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         #
         # -----------------------------------------------------------------------
         #
-        # Remove all verification (meta)tasks for which no fields are specified.
+        # Remove all verification (meta)tasks for which no fields are specified
+        # or which do not make sense to include in the workflow, e.g. because the
+        # vx will be performed against a benchmark forecast, not obs (or vice-
+        # versa).
         #
         # -----------------------------------------------------------------------
         #
-        vx_field_groups_all_by_obtype = {}
-        vx_metatasks_all_by_obtype = {}
 
-        vx_field_groups_all_by_obtype["CCPA"] = ["APCP"]
-        vx_metatasks_all_by_obtype["CCPA"] \
-        = ["task_get_obs_ccpa",
+        # Construct a dictionary that, for each valid field group (the dictionary
+        # keys), contains a list of all possible top-level verification tasks and
+        # metatasks (the values) that may be included in the experiment's workflow.  
+        vx_metatasks_all_possible_by_fg = {}
+
+        vx_metatasks_all_possible_by_fg["APCP"] \
+        = ["metatask_check_post_output_all_mems",
+           "task_get_obs_ccpa",
            "metatask_PcpCombine_APCP_all_accums_obs_CCPA",
            "metatask_PcpCombine_APCP_all_accums_all_mems",
            "metatask_GridStat_APCP_all_accums_all_mems",
            "metatask_GenEnsProd_EnsembleStat_APCP_all_accums",
            "metatask_GridStat_APCP_all_accums_ensmeanprob"]
 
-        vx_field_groups_all_by_obtype["NOHRSC"] = ["ASNOW"]
-        vx_metatasks_all_by_obtype["NOHRSC"] \
-        = ["task_get_obs_nohrsc",
+        vx_metatasks_all_possible_by_fg["ASNOW"] \
+        = ["metatask_check_post_output_all_mems",
+           "task_get_obs_nohrsc",
            "metatask_PcpCombine_ASNOW_all_accums_obs_NOHRSC",
            "metatask_PcpCombine_ASNOW_all_accums_all_mems",
            "metatask_GridStat_ASNOW_all_accums_all_mems",
            "metatask_GenEnsProd_EnsembleStat_ASNOW_all_accums",
            "metatask_GridStat_ASNOW_all_accums_ensmeanprob"]
 
-        vx_field_groups_all_by_obtype["MRMS"] = ["REFC", "RETOP"]
-        vx_metatasks_all_by_obtype["MRMS"] \
-        = ["task_get_obs_mrms",
+        vx_metatasks_all_possible_by_fg["REFC"] \
+        = ["metatask_check_post_output_all_mems",
+           "task_get_obs_mrms",
            "metatask_GridStat_REFC_RETOP_all_mems",
            "metatask_GenEnsProd_EnsembleStat_REFC_RETOP",
            "metatask_GridStat_REFC_RETOP_ensprob"]
 
-        vx_field_groups_all_by_obtype["NDAS"] = ["SFC", "UPA"]
-        vx_metatasks_all_by_obtype["NDAS"] \
-        = ["task_get_obs_ndas",
+        vx_metatasks_all_possible_by_fg["RETOP"] \
+        = vx_metatasks_all_possible_by_fg["REFC"]
+
+        vx_metatasks_all_possible_by_fg["SFC"] \
+        = ["metatask_check_post_output_all_mems",
+           "task_get_obs_ndas",
            "task_run_MET_Pb2nc_obs_NDAS",
+           "metatask_GridStat_SFC_UPA_all_mems",
            "metatask_PointStat_SFC_UPA_all_mems",
            "metatask_GenEnsProd_EnsembleStat_SFC_UPA",
+           "metatask_GridStat_SFC_UPA_ensmeanprob",
            "metatask_PointStat_SFC_UPA_ensmeanprob"]
 
-        # If there are no field groups specified for verification, remove those
-        # tasks that are common to all observation types.
-        vx_field_groups = vx_config["VX_FIELD_GROUPS"]
-        if not vx_field_groups:
-            metatask = "metatask_check_post_output_all_mems"
-            rocoto_config['tasks'].pop(metatask)
+        vx_metatasks_all_possible_by_fg["UPA"] \
+        = vx_metatasks_all_possible_by_fg["SFC"]
 
-        # If for a given obs type none of its field groups are specified for
-        # verification, remove all vx metatasks for that obs type.
-        for obtype in vx_field_groups_all_by_obtype:
-            vx_field_groups_crnt_obtype = list(set(vx_field_groups) & set(vx_field_groups_all_by_obtype[obtype]))
-            if not vx_field_groups_crnt_obtype:
-                for metatask in vx_metatasks_all_by_obtype[obtype]:
-                    if metatask in rocoto_config['tasks']:
-                        logging.info(dedent(
-                            f"""
-                            Removing verification (meta)task
-                              "{metatask}"
-                            from workflow since no field groups from observation type "{obtype}" are
-                            specified for verification."""
-                        ))
-                        rocoto_config['tasks'].pop(metatask)
+        # Create a set containing all possible top-level vx tasks and metatasks.
+        # This will be needed below in constructing the set of all (meta)tasks
+        # to exclude from the workflow.  We generate this by simply collecting
+        # all the (meta)tasks in the lists in the dictionary constructed above
+        # and keeping only the unique ones.
+        vx_metatasks_all_possible \
+        = [metatask \
+           for fg, metatasks_for_fg in vx_metatasks_all_possible_by_fg.items() \
+           for metatask in metatasks_for_fg]
+        vx_metatasks_all_possible = set(vx_metatasks_all_possible)
+
+        # Invert the dictionary constructed above that contains all possible top-
+        # level vx tasks and/or metatask for each valid field group to obtain a
+        # new dictionary that, for each possible/valid vx (meta)task (the keys),
+        # contains a list of the field groups for which it is needed (the values).
+        # This dictionary is needed below in generating an informational message
+        # when a (meta)task is being excluded from the workflow.
+        vx_fieldgroups_all_possible_by_metatask = {}
+        for metatask in sorted(list(vx_metatasks_all_possible)):
+            fg_list = []
+            for fg, metatasks in vx_metatasks_all_possible_by_fg.items():
+                if metatask in metatasks: fg_list.append(fg)
+            vx_fieldgroups_all_possible_by_metatask[metatask] = fg_list
+
+        # Construct a dictionary that is identical to the one above containing
+        # a list of all possible vx (meta)tasks for each valid field group (the
+        # keys) except that it does not contain key-value pairs for those field
+        # groups for which verification will not be performed, i.e. which are not
+        # included in the list VX_FIELD_GROUPS in the SRW App configuration file.
+        # This is needed below in constructing the list of all vx (meta)tasks to
+        # be included in the workflow.
+        vx_field_groups = vx_config["VX_FIELD_GROUPS"]
+        vx_metatasks_to_include_by_fg \
+        = {fg: metatasks for fg, metatasks in vx_metatasks_all_possible_by_fg.items() \
+           if fg in vx_field_groups}
+
+        # For the SFC and UPA field groups, whether we use grid-to-grid or grid-
+        # to-point verification depends on whether we are verifyfing against obs
+        # or another (benchmark) forecast, which is specified by the SRW config
+        # flag VX_VERIFY_AGAINST_BENCHMARK_FCST.  If this is set to True, then
+        # the fields in the SFC and UPA field groups (in fact, all fields) will
+        # be given on a grid (that of the benchmark forecast), so grid-to-grid
+        # verification will be used for these field groups.  On the other hand,
+        # if VX_VERIFY_AGAINST_BENCHMARK_FCST is set to False, then obs will be
+        # used to verify the SFC and UPA field groups.  Since obs are not given
+        # on a grid, in this case only grid-to-point verification can be used for
+        # these field groups.  Thus, depending on what VX_VERIFY_AGAINST_BENCHMARK_FCST
+        # is set to, we either drop the PointStat metatasks or the GridStat metatasks
+        # from the lists of (meta)tasks for the SFC and UPA field groups in the
+        # dictionary of (meta)tasks to include in the workflow.  In addition, if
+        # verifying against a benchmark forecast, we drop any tasks involving the
+        # NDAS obs type since in that case, NDAS obs are not needed.
+        vx_config = expt_config["verification"]
+        if vx_config["VX_VERIFY_AGAINST_BENCHMARK_FCST"]:
+            vx_metatasks_to_exclude_from_SFC_UPA \
+            = ["task_get_obs_ndas",
+               "task_run_MET_Pb2nc_obs_NDAS",
+               "metatask_PointStat_SFC_UPA_all_mems",
+               "metatask_PointStat_SFC_UPA_ensmeanprob"]
+        else:
+            vx_metatasks_to_exclude_from_SFC_UPA \
+            = ["metatask_GridStat_SFC_UPA_all_mems",
+               "metatask_GridStat_SFC_UPA_ensmeanprob"]
+
+        for fg in ['SFC', 'UPA']:
+            if fg in vx_metatasks_to_include_by_fg.copy():
+                vx_metatasks_to_include_by_fg[fg] \
+                = [metatask for metatask in vx_metatasks_to_include_by_fg[fg] \
+                   if metatask not in vx_metatasks_to_exclude_from_SFC_UPA]
+
+        # Generate a set containing all the top-level vx (meta)tasks to include
+        # in the workflow from the lists in the dictionary of vx (meta)tasks to
+        # include constructed above.  This will be used below to generate a set
+        # of vx (meta)tasks to exclude from the worklow.
+        vx_metatasks_to_include \
+        = [metatask \
+           for fg, metatasks_for_fg in vx_metatasks_to_include_by_fg.items() \
+           for metatask in metatasks_for_fg]
+        vx_metatasks_to_include = set(vx_metatasks_to_include)
+
+        # Construct set of all top-level vx (meta)tasks to exclude from the SRW
+        # workflow.  
+        vx_metatasks_to_exclude = vx_metatasks_all_possible.difference(vx_metatasks_to_include)
+
+        # Drop from the rocoto configuration dictionary portion of the SRW config
+        # dictionary any top-level (meta)tasks that are in the set of (meta)tasks
+        # to exclude.
+        for metatask in vx_metatasks_to_exclude:
+            if metatask in rocoto_config['tasks']:
+                logging.info(dedent(
+                    f"""
+                    Removing verification (meta)task
+                        "{metatask}"
+                    from workflow since the list of field groups to verify, i.e.
+                        {vx_field_groups = }
+                    does not include any of the field groups associated with this (meta)task,
+                    which are
+                        {vx_fieldgroups_all_possible_by_metatask[metatask]}"""
+                ))
+                rocoto_config['tasks'].pop(metatask)
         #
         # -----------------------------------------------------------------------
         #

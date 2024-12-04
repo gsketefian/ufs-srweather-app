@@ -2404,6 +2404,18 @@ verification:
   #
   VX_OUTPUT_BASEDIR: '{% if user.RUN_ENVIR == "nco" %}$COMOUT/metout{% else %}{{ workflow.EXPTDIR }}{% endif %}'
   #
+  # VX_VERIFY_AGAINST_BENCHMARK_FCST:
+  # Flag that specifies whether the verification will use a benchmark
+  # forecast as the truth instead of obs.
+  #
+  # VX_BENCHMARK_FCST_MODEL_NAME:
+  # The name of the benchmark forecast against which the verification will
+  # be performed.  Used only if VX_VERIFY_AGAINST_BENCHMARK_FCST is set to
+  # True.
+  #
+  VX_VERIFY_AGAINST_BENCHMARK_FCST: False
+  VX_BENCHMARK_FCST_MODEL_NAME: 'no_model'
+  #
   # METplus-Specific Parameters
   # -------------------------------
   #

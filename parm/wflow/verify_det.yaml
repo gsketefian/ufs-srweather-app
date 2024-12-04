@@ -21,6 +21,7 @@ default_task_verify_det: &default_task_verify_det
   queue: '&QUEUE_DEFAULT;'
   walltime: 00:30:00
 
+
 metatask_GridStat_APCP_all_accums_all_mems:
   var:
     ACCUM_HH: '&ACCUM_HH_APCP;'
@@ -54,6 +55,7 @@ metatask_GridStat_APCP_all_accums_all_mems:
             attrs:
               task: run_MET_PcpCombine_APCP#ACCUM_HH#h_fcst_#mem_name#
 
+
 metatask_GridStat_ASNOW_all_accums_all_mems:
   var:
     ACCUM_HH: '&ACCUM_HH_ASNOW;'
@@ -86,6 +88,7 @@ metatask_GridStat_ASNOW_all_accums_all_mems:
           taskdep_pcpcombine_fcst:
             attrs:
               task: run_MET_PcpCombine_ASNOW#ACCUM_HH#h_fcst_#mem_name#
+
 
 metatask_GridStat_REFC_RETOP_all_mems:
   var:
@@ -136,6 +139,38 @@ metatask_GridStat_REFC_RETOP_all_mems:
             attrs:
               age: 00:00:00:30
             text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_#mem_name#.txt'
+
+
+metatask_GridStat_SFC_UPA_all_mems:
+  var:
+    mem_indx: '&ENSMEM_INDICES;'
+    mem_name: '&ENSMEM_NAMES;'
+  metatask_GridStat_SFC_UPA_#mem_name#:
+    var:
+      FIELD_GROUP: '{%- for var in verification.VX_FIELD_GROUPS %}
+                      {%- if var in ["SFC", "UPA"] %}
+                        {{- "%s " % var }}
+                      {%- endif %}
+                    {%- endfor %}'
+    task_run_MET_GridStat_vx_#FIELD_GROUP#_#mem_name#:
+      <<: *default_task_verify_det
+      command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_GRIDSTAT_OR_POINTSTAT_VX"'
+      envars:
+        <<: *default_vars
+        OBS_DIR: '&NDAS_OBS_DIR;'
+        FIELD_GROUP: '#FIELD_GROUP#'
+        METPLUSTOOLNAME: 'GRIDSTAT'
+        ENSMEM_INDX: "#mem_indx#"
+        ENSMEM_NAME: "#mem_name#"
+        FCST_LEVEL: 'all'
+        FCST_THRESH: 'all'
+      walltime: 02:00:00
+      dependency:
+        datadep_post_files_exist:
+          attrs:
+            age: 00:00:00:30
+          text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_#mem_name#.txt'
+
 
 metatask_PointStat_SFC_UPA_all_mems:
   var:
