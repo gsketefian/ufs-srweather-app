@@ -90,14 +90,14 @@ CDATE="${PDY}${cyc}"
 #
 #-----------------------------------------------------------------------
 #
-FIELDNAME_IN_MET_FILEDIR_NAMES=""
+FIELDGROUP_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
   field_group="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH:-}" \
   outvarname_obtype="obtype" \
   outvarname_grid_or_point="grid_or_point" \
-  outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
+  outvarname_fieldgroup_in_MET_filedir_names="FIELDGROUP_IN_MET_FILEDIR_NAMES"
 #
 #-----------------------------------------------------------------------
 #
@@ -115,7 +115,7 @@ fi
 
 if [ "${grid_or_point}" = "grid" ]; then
 
-  case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
+  case "${FIELDGROUP_IN_MET_FILEDIR_NAMES}" in
     "APCP"*)
       OBS_INPUT_DIR="${vx_output_basedir}${slash_cdate_or_null}/obs/metprd/PcpCombine_obs"
       OBS_INPUT_FN_TEMPLATE="${OBS_CCPA_APCP_FN_TEMPLATE_PCPCOMBINE_OUTPUT}"
@@ -142,11 +142,11 @@ elif [ "${grid_or_point}" = "point" ]; then
 fi
 OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_INPUT_FN_TEMPLATE} )
 FCST_INPUT_DIR="${vx_output_basedir}${slash_cdate_or_null}/metprd/GenEnsProd"
-FCST_INPUT_FN_TEMPLATE=$( eval echo 'gen_ens_prod_${VX_FCST_MODEL_NAME}_${FIELDNAME_IN_MET_FILEDIR_NAMES}_${obtype}_{lead?fmt=%H%M%S}L_{valid?fmt=%Y%m%d}_{valid?fmt=%H%M%S}V.nc' )
+FCST_INPUT_FN_TEMPLATE=$( eval echo 'gen_ens_prod_${VX_FCST_MODEL_NAME}_${FIELDGROUP_IN_MET_FILEDIR_NAMES}_${obtype}_{lead?fmt=%H%M%S}L_{valid?fmt=%Y%m%d}_{valid?fmt=%H%M%S}V.nc' )
 
 OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}"
 OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_ensprob"
-STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}_ensprob"
+STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDGROUP_IN_MET_FILEDIR_NAMES}_ensprob"
 #
 #-----------------------------------------------------------------------
 #
@@ -243,7 +243,7 @@ fi
 # First, set the base file names.
 #
 metplus_config_tmpl_bn="${MetplusToolName}_ensprob"
-metplus_config_bn="${MetplusToolName}_${FIELDNAME_IN_MET_FILEDIR_NAMES}_ensprob"
+metplus_config_bn="${MetplusToolName}_${FIELDGROUP_IN_MET_FILEDIR_NAMES}_ensprob"
 metplus_log_bn="${metplus_config_bn}_$CDATE"
 #
 # Add prefixes and suffixes (extensions) to the base file names.
@@ -316,7 +316,7 @@ settings="\
 #
 # Field information.
 #
-'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
+'fieldgroup_in_met_filedir_names': '${FIELDGROUP_IN_MET_FILEDIR_NAMES}'
 'obtype': '${obtype}'
 'accum_hh': '${ACCUM_HH:-}'
 'accum_no_pad': '${ACCUM_NO_PAD:-}'
@@ -361,7 +361,7 @@ fi
 #-----------------------------------------------------------------------
 #
 print_info_msg "$VERBOSE" "
-Calling METplus to run MET's ${metplus_tool_name} tool for field(s): ${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+Calling METplus to run MET's ${metplus_tool_name} tool for field group: ${FIELDGROUP_IN_MET_FILEDIR_NAMES}"
 ${METPLUS_PATH}/ush/run_metplus.py \
   -c ${METPLUS_CONF}/common.conf \
   -c ${metplus_config_fp} || \

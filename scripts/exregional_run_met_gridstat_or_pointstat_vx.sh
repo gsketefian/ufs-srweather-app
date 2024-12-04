@@ -98,7 +98,12 @@ set_vx_params \
   accum_hh="${ACCUM_HH:-}" \
   outvarname_obtype="obtype" \
   outvarname_grid_or_point="grid_or_point" \
-  outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
+  outvarname_fieldgroup_in_MET_filedir_names="FIELDGROUP_IN_MET_FILEDIR_NAMES"
+
+if [ $(boolify "${VX_VERIFY_AGAINST_BENCHMARK_FCST}") = "TRUE" ]; then
+  obtype="${VX_BENCHMARK_FCST_MODEL_NAME}"
+  grid_or_point="grid"
+fi
 #
 #-----------------------------------------------------------------------
 #
@@ -162,7 +167,7 @@ fi
 
 if [ "${grid_or_point}" = "grid" ]; then
 
-  case "${FIELDNAME_IN_MET_FILEDIR_NAMES}" in
+  case "${FIELDGROUP_IN_MET_FILEDIR_NAMES}" in
     "APCP"*)
       OBS_INPUT_DIR="${vx_output_basedir}${slash_cdate_or_null}${slash_obs_or_null}/metprd/PcpCombine_obs"
       OBS_INPUT_FN_TEMPLATE="${OBS_CCPA_APCP_FN_TEMPLATE_PCPCOMBINE_OUTPUT}"
@@ -187,6 +192,18 @@ if [ "${grid_or_point}" = "grid" ]; then
       FCST_INPUT_DIR="${vx_fcst_input_basedir}"
       FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
       ;;
+    "SFC")
+      OBS_INPUT_DIR="${NDAS_OBS_DIR}"
+      OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_FN_TEMPLATES[1]}"
+      FCST_INPUT_DIR="${vx_fcst_input_basedir}"
+      FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
+      ;;
+    "UPA")
+      OBS_INPUT_DIR="${NDAS_OBS_DIR}"
+      OBS_INPUT_FN_TEMPLATE="${OBS_NDAS_FN_TEMPLATES[1]}"
+      FCST_INPUT_DIR="${vx_fcst_input_basedir}"
+      FCST_INPUT_FN_TEMPLATE="${FCST_SUBDIR_TEMPLATE:+${FCST_SUBDIR_TEMPLATE}/}${FCST_FN_TEMPLATE}"
+      ;;
   esac
 
 elif [ "${grid_or_point}" = "point" ]; then
@@ -202,7 +219,7 @@ FCST_INPUT_FN_TEMPLATE=$( eval echo ${FCST_INPUT_FN_TEMPLATE} )
 
 OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}${slash_ensmem_subdir_or_null}"
 OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}"
-STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDGROUP_IN_MET_FILEDIR_NAMES}"
 #
 #-----------------------------------------------------------------------
 #
@@ -290,7 +307,7 @@ fi
 # First, set the base file names.
 #
 metplus_config_tmpl_bn="GridStat_or_PointStat"
-metplus_config_bn="${MetplusToolName}_${FIELDNAME_IN_MET_FILEDIR_NAMES}_${ensmem_name}"
+metplus_config_bn="${MetplusToolName}_${FIELDGROUP_IN_MET_FILEDIR_NAMES}_${ensmem_name}"
 metplus_log_bn="${metplus_config_bn}_$CDATE"
 #
 # Add prefixes and suffixes (extensions) to the base file names.
@@ -363,7 +380,7 @@ settings="\
 #
 # Field information.
 #
-'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
+'fieldgroup_in_met_filedir_names': '${FIELDGROUP_IN_MET_FILEDIR_NAMES}'
 'obtype': '${obtype}'
 'accum_hh': '${ACCUM_HH:-}'
 'accum_no_pad': '${ACCUM_NO_PAD:-}'
@@ -408,7 +425,7 @@ fi
 #-----------------------------------------------------------------------
 #
 print_info_msg "$VERBOSE" "
-Calling METplus to run MET's ${metplus_tool_name} tool for field(s): ${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+Calling METplus to run MET's ${metplus_tool_name} tool for field group: ${FIELDGROUP_IN_MET_FILEDIR_NAMES}"
 ${METPLUS_PATH}/ush/run_metplus.py \
   -c ${METPLUS_CONF}/common.conf \
   -c ${metplus_config_fp} || \

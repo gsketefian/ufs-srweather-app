@@ -91,14 +91,14 @@ CDATE="${PDY}${cyc}"
 #
 #-----------------------------------------------------------------------
 #
-FIELDNAME_IN_MET_FILEDIR_NAMES=""
+FIELDGROUP_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
   field_group="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH:-}" \
   outvarname_obtype="obtype" \
   outvarname_grid_or_point="grid_or_point" \
-  outvarname_fieldname_in_MET_filedir_names="FIELDNAME_IN_MET_FILEDIR_NAMES"
+  outvarname_fieldgroup_in_MET_filedir_names="FIELDGROUP_IN_MET_FILEDIR_NAMES"
 #
 #-----------------------------------------------------------------------
 #
@@ -182,7 +182,7 @@ if [ "${FCST_OR_OBS}" = "FCST" ]; then
   OUTPUT_BASE="${vx_output_basedir}${slash_cdate_or_null}${slash_ensmem_subdir_or_null}"
   OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_fcst"
   OUTPUT_FN_TEMPLATE=$( eval echo ${FCST_FN_TEMPLATE_PCPCOMBINE_OUTPUT} )
-  STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+  STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDGROUP_IN_MET_FILEDIR_NAMES}"
 
 elif [ "${FCST_OR_OBS}" = "OBS" ]; then
 
@@ -194,7 +194,7 @@ elif [ "${FCST_OR_OBS}" = "OBS" ]; then
   OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_obs"
   fn_template=$(eval echo \${OBS_${obtype}_${FIELD_GROUP}_FN_TEMPLATE_PCPCOMBINE_OUTPUT})
   OUTPUT_FN_TEMPLATE=$( eval echo ${fn_template} )
-  STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+  STAGING_DIR="${OUTPUT_BASE}/stage/${FIELDGROUP_IN_MET_FILEDIR_NAMES}"
 
 fi
 #
@@ -319,7 +319,7 @@ if [ "${FCST_OR_OBS}" = "FCST" ]; then
 elif [ "${FCST_OR_OBS}" = "OBS" ]; then
   suffix="_${obtype}"
 fi
-metplus_config_fn="${metplus_config_tmpl_fn}_$(echo_lowercase ${FCST_OR_OBS})_${FIELDNAME_IN_MET_FILEDIR_NAMES}${suffix}"
+metplus_config_fn="${metplus_config_tmpl_fn}_$(echo_lowercase ${FCST_OR_OBS})_${FIELDGROUP_IN_MET_FILEDIR_NAMES}${suffix}"
 metplus_log_fn="${metplus_config_fn}_$CDATE"
 #
 # Add prefixes and suffixes (extensions) to the base file names.
@@ -377,7 +377,7 @@ settings="\
 #
 # Field information.
 #
-  'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
+  'fieldgroup_in_met_filedir_names': '${FIELDGROUP_IN_MET_FILEDIR_NAMES}'
   'obtype': '${obtype}'
   'FCST_OR_OBS': '${FCST_OR_OBS}'
   'input_accum_hh': '${input_accum_hh}'
@@ -419,7 +419,7 @@ fi
 #-----------------------------------------------------------------------
 #
 print_info_msg "$VERBOSE" "
-Calling METplus to run MET's ${metplus_tool_name} tool for field(s): ${FIELDNAME_IN_MET_FILEDIR_NAMES}"
+Calling METplus to run MET's ${metplus_tool_name} tool for field group: ${FIELDGROUP_IN_MET_FILEDIR_NAMES}"
 ${METPLUS_PATH}/ush/run_metplus.py \
   -c ${METPLUS_CONF}/common.conf \
   -c ${metplus_config_fp} || \
