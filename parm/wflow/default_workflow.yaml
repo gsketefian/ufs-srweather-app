@@ -63,7 +63,7 @@ rocoto:
     cyclethrottle: "200"
     realtime: "F"
     scheduler: '{{ platform.SCHED }}'
-    taskthrottle: "1000"
+    taskthrottle: '{{ platform.TASKTHROTTLE }}'
   cycledefs:
     at_start:
       - !startstopfreq ['{{workflow.DATE_FIRST_CYCL}}', '{{workflow.DATE_FIRST_CYCL}}', '{{workflow.INCR_CYCL_FREQ}}']
