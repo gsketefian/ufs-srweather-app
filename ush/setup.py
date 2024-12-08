@@ -849,8 +849,7 @@ def setup(USHdir, user_config_fn="config.yaml", debug: bool = False):
         vx_verify_against_benchmark_fcst = vx_config["VX_VERIFY_AGAINST_BENCHMARK_FCST"]
         if vx_verify_against_benchmark_fcst:
             vx_metatasks_to_exclude_from_SFC_UPA \
-            = ["task_get_obs_ndas",
-               "task_run_MET_Pb2nc_obs_NDAS",
+            = ["task_run_MET_Pb2nc_obs_NDAS",
                "metatask_PointStat_SFC_UPA_all_mems",
                "metatask_PointStat_SFC_UPA_ensmeanprob"]
         else:
