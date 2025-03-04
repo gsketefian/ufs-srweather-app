@@ -131,7 +131,7 @@ def check_temporal_consistency_cumul_fields(
     """
 
     # Set dictionary containing all field groups that consist of cumulative
-    # fields (i.e. whether or not those field groups are to be verified).  
+    # fields (i.e. whether or not those field groups are to be verified).
     # The keys are the observation types and the field groups.
     obtype_to_fg_dict_cumul = {"CCPA": "APCP", "NOHRSC": "ASNOW"}
 
@@ -299,7 +299,7 @@ def check_temporal_consistency_cumul_fields(
                 if not set(fcst_output_hrs_of_day_str) <= set(obs_avail_hrs_of_day_str):
                     msg = dedent(f"""
                         The accumulation interval (accum_hrs) for the current cumulative field
-                        group (fg) is such that the forecast will output the field(s) in the 
+                        group (fg) is such that the forecast will output the field(s) in the
                         field group at at least one hour-of-day at which the corresponding
                         observation type is not available:
                             {fg = }
@@ -508,14 +508,14 @@ def set_rocoto_cycledefs_for_obs_days(obs_days_all_cycles):
         cycledefs_all_obs_days (list):
             A list of strings, with each string being a ROCOTO-style cycledef of the
             form
-            
+
                 '{yyyymmdd_start}0000 {yyyymmdd_end}0000 24:00:00'
-            
+
             where {yyyymmdd_start} is the starting day of the first cycle in the
             cycledef and {yyyymmdd_end} is the starting day of the last cycle (note
             that the minutes and hours in these cycledef stirngs are always set to
             '00').  For example, an element of the output list may be:
-            
+
                 '202404290000 202405010000 24:00:00'
     """
 
@@ -631,12 +631,12 @@ def get_obs_retrieve_times_by_day(
     # or instantaneous fields), and a list of the field groups that the obs
     # type may be used to verify.
     all_obs_info \
-    = [{'obtype': 'CCPA',   'time_type': 'cumul', 'field_groups': ['APCP']},
-       {'obtype': 'NOHRSC', 'time_type': 'cumul', 'field_groups': ['ASNOW']},
-       {'obtype': 'MRMS',   'time_type': 'inst',  'field_groups': ['REFC', 'RETOP']},
-       {'obtype': 'NDAS',   'time_type': 'inst',  'field_groups': ['SFC', 'UPA']},
-       {'obtype': 'AERONET',   'time_type': 'inst',  'field_groups': ['AOD']},
-       {'obtype': 'AIRNOW',   'time_type': 'inst',  'field_groups': ['PM25', 'PM10']}
+    = [{'obtype': 'CCPA',    'time_type': 'cumul', 'field_groups': ['APCP']},
+       {'obtype': 'NOHRSC',  'time_type': 'cumul', 'field_groups': ['ASNOW']},
+       {'obtype': 'MRMS',    'time_type': 'inst',  'field_groups': ['REFC', 'RETOP']},
+       {'obtype': 'NDAS',    'time_type': 'inst',  'field_groups': ['SFC', 'UPA']},
+       {'obtype': 'AERONET', 'time_type': 'inst',  'field_groups': ['AOD']},
+       {'obtype': 'AIRNOW',  'time_type': 'inst',  'field_groups': ['PM25', 'PM10']}
       ]
 
     # Create new list that has the same form as the list of dictionaries
