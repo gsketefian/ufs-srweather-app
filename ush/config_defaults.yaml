@@ -2784,7 +2784,7 @@ verification:
   DO_NMEP: True
   NBRHD_PROB_SHAPE: 'CIRCLE'
   NBRHD_PROB_WIDTHS: [15, 27]
-  NBRHD_PROB_VLD_THRESH: 1.0
+  NBRHD_PROB_VLD_THRESH: 0.0
   #
   # Parameters specifically for smoothing of NMEP probabilities (if calculating
   # these).
