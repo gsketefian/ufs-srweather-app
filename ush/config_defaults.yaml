@@ -2747,6 +2747,126 @@ verification:
   #
   VX_NDIGITS_ENSMEM_NAMES: 3
   #
+  # Parameters for verifying with neighborhood methods.  The two neighborhood
+  # methods considered here are:
+  #
+  # 1) Neighborhood Ensemble Probabilitiy (NEP)
+  # 2) Neighborhood Maximum Ensemble Probabilitiy (NMEP)
+  # 
+  # DO_NEP:
+  # Flag specifying whether to calculate NEP probabilities.
+  # 
+  # DO_NMEP:
+  # Flag specifying whether to calculate NMEP probabilities.
+  #
+  # NBRHD_PROB_SHAPE:
+  # The shape of the neighborhood to use around each forecast grid cell when
+  # calculating NEP and/or NMEP probabilities.  This can be 'SQUARE' or
+  # 'CIRCLE'.
+  #
+  # NBRHD_PROB_WIDTHS:
+  # List containing the "widths" of the neighborhoods around each grid cell
+  # to consider.  Each width is in units of grid cells and must be an odd
+  # integer (because the neighborhood must be centered on the grid cell, and
+  # a value of 1 for this quantitiy would imply no neighborhood, i.e. just
+  # the grid cell).  For a square neighborhood, the width is the number of
+  # cells along each side of the square.  For a circular neighborhood, it is
+  # the number of cells along the diameter of the circle.  NEP and/or NMEP
+  # probabilities are calculated for each neighborhood width specified in
+  # this list.
+  #
+  # NBRHD_PROB_VLD_THRESH:
+  # A number between 0 and 1 specifying the required ratio of valid data in
+  # the neighborhood for an output NEP or NMEP probability to be computed for
+  # that neighborhood/grid cell.
+  #
+  DO_NEP: True
+  DO_NMEP: True
+  NBRHD_PROB_SHAPE: 'CIRCLE'
+  NBRHD_PROB_WIDTHS: [15, 27]
+  NBRHD_PROB_VLD_THRESH: 1.0
+  #
+  # Parameters specifically for smoothing of NMEP probabilities (if calculating
+  # these).
+  # 
+  # NMEP_SMOOTH_METHOD:
+  # The method to use (if any) for smoothing NMEP probabilities in the
+  # neighborhood defined by NMEP_SMOOTH_SHAPE and NMEP_SMOOTH_WIDTH around
+  # each grid cell.  There are many methods that METplus can accept for this,
+  # but for NMEP calculations, the commonly used used ones are:
+  #
+  #   * 'GAUSSIAN'
+  #     Use Gaussian weighting of values in the neighborhood, with the 2-D
+  #     Gaussian centered at the grid cell.  The spread of the Gaussian is
+  #     specified via the parameters NMEP_SMOOTH_GAUSSIAN_DX and
+  #     NMEP_SMOOTH_GAUSSIAN_DX (described below).
+  #
+  #   * 'UW_MEAN'
+  #     Use the (unweighted) mean of the values in the neighborhood as the
+  #     smoothed value.
+  #
+  #   * 'NEAREST'
+  #     Use the NMEP value at the grid cell about which the neighborhood is
+  #     centered as the smoothed value, i.e. don't perform any smoothing.
+  #
+  # Thus, set NMEP_SMOOTH_METHOD to 'NEAREST' to disable NMEP smoothing.
+  #
+  # NMEP_SMOOTH_SHAPE:
+  # If performing smoothing of NMEP probabilities, the shape of the neighborhood
+  # around each grid cell in which to perform smoothing.  This can be 'SQUARE'
+  # or 'CIRCLE'.
+  #
+  # NMEP_SMOOTH_WIDTH:
+  # If performing smoothing of NMEP probabilities, the width of the neighborhood
+  # around each grid cell in which to perform smoothing.  This is defined in the
+  # same way as NBRHD_PROB_WIDTH, it is in units of grid cells and must be an
+  # odd integer.  For a square neighborhood, it is the number of cells along
+  # each side of the square, and for a circular neighborhood, it is the number
+  # of cells along the diameter of the circle.
+  #
+  # NMEP_SMOOTH_VLD_THRESH:
+  # A number between 0 and 1 specifying the required ratio of valid data in
+  # the NMEP smoothing neighborhood around a grid cell for NMEP smoothing to
+  # be performed for that cell.
+  #
+  # NMEP_SMOOTH_GAUSSIAN_DX, NMEP_SMOOTH_GAUSSIAN_RADIUS:
+  # If performing Gaussian smoothing, these parameters are used to calculate
+  # the non-dimensional standard deviation or width, sigma, of the gaussian,
+  # where the smoothing is given by
+  #
+  #   NMEP_smooth(i,j) = [1/(2*pi*sigma^2)] * SUM_m_n { exp[-((m-i)^2 + (n-j)^2)/(2*sigma^2)] * NMEP(m-i,n-j) }
+  #
+  # Here, NMEP_smooth(i,j) is the smoothed NMEP value at grid cell (i,j),
+  # NMEP(i,j) is the NMEP value at (i,j) before smoothing, and SUM_m_n
+  # is a summation over the neighborhood centered at (i,j) (with m and n
+  # being the dummy summation indices).  Note that this formula assumes
+  # the grid sizes in the x and y directions are identical and are given
+  # by some value dx.  Then sigma is given by
+  #
+  #   sigma = sigma_dim/dx
+  #
+  # where sigma_dim is the dimensional width of the Gaussian (i.e. the width
+  # that appears in the Gaussian before discretizing the weighting integral
+  # on the grid as above).  In METplus, dx and sigma_dim are given
+  #
+  #   dx = NMEP_SMOOTH_GAUSSIAN_DX
+  #   sigma_dim = NMEP_SMOOTH_GAUSSIAN_RADIUS
+  #
+  # Thus, METplus calculates sigma using
+  #
+  #   sigma = NMEP_SMOOTH_GAUSSIAN_RADIUS/NMEP_SMOOTH_GAUSSIAN_DX
+  #
+  # Note that NMEP_SMOOTH_GAUSSIAN_DX and NMEP_SMOOTH_GAUSSIAN_RADIUS can
+  # be specified in any units, e.g. kilometers, meters, number of grid points, 
+  # because it is only their ratio that matters here.
+  #
+  NMEP_SMOOTH_METHOD: 'NEAREST'
+  NMEP_SMOOTH_SHAPE: 'CIRCLE'
+  NMEP_SMOOTH_WIDTH: 9
+  NMEP_SMOOTH_VLD_THRESH: 0.5
+  NMEP_SMOOTH_GAUSSIAN_DX: 81.27
+  NMEP_SMOOTH_GAUSSIAN_RADIUS: 120
+  #
   # NUM_MISSING_FCST_FILES_MAX:
   # For verification tasks that need forecast data, this specifies the
   # maximum number of post-processed forecast files that may be missing. 
