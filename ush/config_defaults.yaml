@@ -3165,10 +3165,10 @@ fire:
   # Directory where fire input file (geo_em.d01.nc) can be found
   #
   # DT_FIRE
-  # The fire behavior component’s integration timestep
+  # The fire behavior component's integration timestep
   #
   # OUTPUT_DT_FIRE
-  # The fire behavior component’s output timestep
+  # The fire behavior component's output timestep
   # 
   # FIRE_NUM_TASKS
   # Number of MPI tasks assigned to the FIRE_BEHAVIOR component.
