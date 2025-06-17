@@ -2780,8 +2780,8 @@ verification:
   # the neighborhood for an output NEP or NMEP probability to be computed for
   # that neighborhood/grid cell.
   #
-  DO_NEP: True
-  DO_NMEP: True
+  DO_NEP: False
+  DO_NMEP: False
   NBRHD_PROB_SHAPE: 'CIRCLE'
   NBRHD_PROB_WIDTHS: [15, 27]
   NBRHD_PROB_VLD_THRESH: 0.0
