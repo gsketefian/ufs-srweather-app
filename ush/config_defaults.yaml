@@ -2798,7 +2798,7 @@ verification:
   #   * 'GAUSSIAN'
   #     Use Gaussian weighting of values in the neighborhood, with the 2-D
   #     Gaussian centered at the grid cell.  The spread of the Gaussian is
-  #     specified via the parameters NMEP_SMOOTH_GAUSSIAN_DX and
+  #     specified via the parameters NMEP_SMOOTH_GAUSSIAN_RADIUS and
   #     NMEP_SMOOTH_GAUSSIAN_DX (described below).
   #
   #   * 'UW_MEAN'
@@ -2809,7 +2809,9 @@ verification:
   #     Use the NMEP value at the grid cell about which the neighborhood is
   #     centered as the smoothed value, i.e. don't perform any smoothing.
   #
-  # Thus, set NMEP_SMOOTH_METHOD to 'NEAREST' to disable NMEP smoothing.
+  # Thus, set NMEP_SMOOTH_METHOD to 'NEAREST' to disable NMEP smoothing (in
+  # which case the value of NMEP_SMOOTH_WIDTH below won't matter; in METplus,
+  # this width will be (re)set to 1).
   #
   # NMEP_SMOOTH_SHAPE:
   # If performing smoothing of NMEP probabilities, the shape of the neighborhood
@@ -2829,7 +2831,7 @@ verification:
   # the NMEP smoothing neighborhood around a grid cell for NMEP smoothing to
   # be performed for that cell.
   #
-  # NMEP_SMOOTH_GAUSSIAN_DX, NMEP_SMOOTH_GAUSSIAN_RADIUS:
+  # NMEP_SMOOTH_GAUSSIAN_RADIUS, NMEP_SMOOTH_GAUSSIAN_DX:
   # If performing Gaussian smoothing, these parameters are used to calculate
   # the non-dimensional standard deviation or width, sigma, of the gaussian,
   # where the smoothing is given by
@@ -2840,8 +2842,8 @@ verification:
   # NMEP(i,j) is the NMEP value at (i,j) before smoothing, and SUM_m_n
   # is a summation over the neighborhood centered at (i,j) (with m and n
   # being the dummy summation indices).  Note that this formula assumes
-  # the grid sizes in the x and y directions are identical and are given
-  # by some value dx.  Then sigma is given by
+  # that the grid sizes in the x and y directions are identical and are
+  # given by some value dx.  Then sigma is given by
   #
   #   sigma = sigma_dim/dx
   #
@@ -2849,23 +2851,23 @@ verification:
   # that appears in the Gaussian before discretizing the weighting integral
   # on the grid as above).  In METplus, dx and sigma_dim are given
   #
-  #   dx = NMEP_SMOOTH_GAUSSIAN_DX
   #   sigma_dim = NMEP_SMOOTH_GAUSSIAN_RADIUS
+  #   dx = NMEP_SMOOTH_GAUSSIAN_DX
   #
-  # Thus, METplus calculates sigma using
+  # Thus, METplus calculates (the non-dimensional) sigma using
   #
   #   sigma = NMEP_SMOOTH_GAUSSIAN_RADIUS/NMEP_SMOOTH_GAUSSIAN_DX
   #
-  # Note that NMEP_SMOOTH_GAUSSIAN_DX and NMEP_SMOOTH_GAUSSIAN_RADIUS can
+  # Note that NMEP_SMOOTH_GAUSSIAN_RADIUS and NMEP_SMOOTH_GAUSSIAN_DX can
   # be specified in any units, e.g. kilometers, meters, number of grid points, 
   # because it is only their ratio that matters here.
   #
-  NMEP_SMOOTH_METHOD: 'NEAREST'
+  NMEP_SMOOTH_METHOD: 'GAUSSIAN'
   NMEP_SMOOTH_SHAPE: 'CIRCLE'
   NMEP_SMOOTH_WIDTH: 9
   NMEP_SMOOTH_VLD_THRESH: 0.5
-  NMEP_SMOOTH_GAUSSIAN_DX: 81.27
   NMEP_SMOOTH_GAUSSIAN_RADIUS: 120
+  NMEP_SMOOTH_GAUSSIAN_DX: 81.27
   #
   # NUM_MISSING_FCST_FILES_MAX:
   # For verification tasks that need forecast data, this specifies the
