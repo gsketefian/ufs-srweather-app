@@ -21,7 +21,7 @@ Quick Start Guide (SRW-AQM)
 
 .. attention::
 
-   These instructions should work smoothly on Hera, Hercules, Derecho and Orion but users on other systems may need to make additional adjustments. 
+   These instructions should work smoothly on Hera, Hercules, Derecho, Orion, and Gaea-C6 but users on other systems may need to make additional adjustments.
 
 Download the Code
 -------------------
@@ -46,7 +46,7 @@ On Hera and WCOSS2, users can build the SRW App AQM binaries with the following 
 
    ./devbuild.sh -p=<machine> -a=ATMAQ
 
-where ``<machine>`` is ``hera``, ``hercules``, ``orion``, or ``derecho``. The ``-a`` argument indicates the configuration/version of the application to build. 
+where ``<machine>`` is ``hera``, ``hercules``, ``orion``, ``derecho``, and ``gaeac6``. The ``-a`` argument indicates the configuration/version of the application to build.
 
 Building the SRW App with AQM on other machines, including other :srw-wiki:`Level 1 <Supported-Platforms-and-Compilers>` platforms, is not currently guaranteed to work, and users may have to make adjustments to the modulefiles for their system. 
 
@@ -78,7 +78,7 @@ Load the python environment for the workflow:
    module use /path/to/ufs-srweather-app/modulefiles
    module load wflow_<machine>
 
-where ``<machine>`` is ``hera``, ``hercules``, ``orion``, or ``derecho``. The workflow should load on other platforms listed under the ``MACHINE`` variable in :numref:`Section %s <user>`, but users may need to adjust other elements of the process when running on those platforms. 
+where ``<machine>`` is ``hera``, ``hercules``, ``orion``, ``derecho``, or ``gaeac6``. The workflow should load on other platforms listed under the ``MACHINE`` variable in :numref:`Section %s <user>`, but users may need to adjust other elements of the process when running on those platforms.
 
 If the console outputs a message, the user should run the commands specified in the message. For example, if the output says: 
 
@@ -105,6 +105,9 @@ Users will need to change the ``MACHINE`` and ``ACCOUNT`` variables in ``config.
 
 The community AQM configuration assumes that users have :term:`HPSS` access and attempts to download the data from HPSS. However, if users have the data on their system already, they may prefer to add the following lines to ``task_get_extrn_*:`` in their ``config.yaml`` file, adjusting the file path to point to the correct data locations:
 
+.. attention::
+    HPSS is not available on ``gaeac6``. User-staged data must be used.
+
 .. code-block:: console
 
    task_get_extrn_ics:
@@ -114,7 +117,7 @@ The community AQM configuration assumes that users have :term:`HPSS` access and 
       USE_USER_STAGED_EXTRN_FILES: true
       EXTRN_MDL_SOURCE_BASEDIR_LBCS: /path/to/data
 
-On Level 1 systems, users can find :term:`ICs/LBCs` in the usual :ref:`input data locations <Data>` under ``FV3GFS/netcdf/2023021700`` and ``FV3GFS/netcdf/2023021706``. Users can also download the data required for the community experiment from the `UFS SRW App Data Bucket <https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html#develop-20240618/input_model_data/FV3GFS/netcdf/>`__. 
+On Level 1 systems, users can find :term:`ICs/LBCs` in the usual :ref:`input data locations <Data>` under ``FV3GFS/netcdf/2023021700`` and ``FV3GFS/netcdf/2023021706``. Users can also download the data required for the community experiment from the `UFS SRW App Data Bucket <https://noaa-ufs-srw-pds.s3.amazonaws.com/index.html#experiment-user-cases/release-public-v3.0.0/input_model_data/FV3GFS/netcdf/>`__. 
 
 Users may also wish to change :term:`cron`-related parameters in ``config.yaml``. In the ``config.aqm.yaml`` file, which was copied into ``config.yaml``, cron is used for automatic submission and resubmission of the workflow:
 
@@ -311,5 +314,4 @@ Run the WE2E test:
 
 .. code-block:: console
 
-   $ ./run_WE2E_tests.py -t my_tests.txt -m hera -a gsd-fv3 -q
-
+   $ ./run_wE2E_tests.py -t my_tests.txt -m hera -a gsd-fv3 -q
