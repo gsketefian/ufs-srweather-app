@@ -2773,7 +2773,9 @@ verification:
   # cells along each side of the square.  For a circular neighborhood, it is
   # the number of cells along the diameter of the circle.  NEP and/or NMEP
   # probabilities are calculated for each neighborhood width specified in
-  # this list.
+  # this list.  Note that the set of widths to use for NEP calculations
+  # cannot be specified separately from the list of widths to use for NMEP
+  # calculations.
   #
   # NBRHD_PROB_VLD_THRESH:
   # A number between 0 and 1 specifying the required ratio of valid data in
