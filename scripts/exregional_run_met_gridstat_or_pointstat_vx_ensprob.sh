@@ -332,8 +332,8 @@ settings="\
 #
 # Neighborhood verification method information.
 #
-'do_nep': '${DO_NEP:-}'
-'do_nmep': '${DO_NMEP:-}'
+'do_nep': ${DO_NEP:-}
+'do_nmep': ${DO_NMEP:-}
 'nbrhd_prob_shape': '${NBRHD_PROB_SHAPE}'
 'nbrhd_prob_widths': ${NBRHD_PROB_WIDTHS}
 'nbrhd_prob_widths': [$( printf "%s, " "${NBRHD_PROB_WIDTHS[@]}")]
