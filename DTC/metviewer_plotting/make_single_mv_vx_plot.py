@@ -908,9 +908,9 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     line_types = list()
     for imod in range(0,num_models_to_plot):
         if incl_ens_means: line_types.append('b')
-        line_types.extend(["l" for imem in range(0,num_ens_mems_by_model[imod])])
+        line_types.extend(["b" for imem in range(0,num_ens_mems_by_model[imod])])
 
-    line_widths = [1 for imod in range(0,num_models_to_plot) for imem in range(0,num_ens_mems_by_model[imod])]
+    line_widths = [2 for imod in range(0,num_models_to_plot) for imem in range(0,num_ens_mems_by_model[imod])]
 
     # Set the frequency of x-axis tick labels (xtick_label_freq).
 
@@ -998,7 +998,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         # will not be found in the database).
         #
         if thresh_info['value'] in ['6.35']:
-           fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '0'])
+            fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '0'])
         elif thresh_info['value'] in ['12.7', '25.4']:
             fcst_field_name_in_db = ''.join([fcst_field_name_in_db, '00'])
 
