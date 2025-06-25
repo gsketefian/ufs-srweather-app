@@ -465,7 +465,7 @@ def parse_args(argv, valid_vx_plot_params):
                         help='Directory in which to place output (e.g. plots) from METviewer.')
 
     parser.add_argument('--model_names_short', nargs='+',
-                        type=str.lower,
+                        type=str,
                         required=True,
                         help='Short names of models to include in the verification (vx) plot.')
 
