@@ -25,8 +25,8 @@ ush
    set_fv3nml_ens_stoch_seeds
    set_fv3nml_sfc_climo_filenames
    set_gridparams_ESGgrid
-   set_gridparams_GFDLgrid
    set_leadhrs
    set_predef_grid_params
    setup
+   smoke_dust
    update_input_nml

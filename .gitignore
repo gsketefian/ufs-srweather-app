@@ -27,3 +27,5 @@ conda_loc
 
 *.swp
 __pycache__
+.idea
+ush/test_data/model_configure

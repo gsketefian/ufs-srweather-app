@@ -7,7 +7,7 @@ whatis([===[Loads libraries needed for building the UFS SRW App on Hera using GN
 
 prepend_path("MODULEPATH", "/scratch2/NCEPDEV/stmp1/role.epic/installs/gnu/modulefiles")
 prepend_path("MODULEPATH", "/scratch2/NCEPDEV/stmp1/role.epic/installs/openmpi/modulefiles")
-prepend_path("MODULEPATH", "/scratch2/NCEPDEV/stmp1/role.epic/spack-stack/spack-stack-1.6.0_gnu13/envs/upp-addon-env/install/modulefiles/Core")
+prepend_path("MODULEPATH", "/scratch2/NCEPDEV/stmp1/role.epic/spack-stack/spack-stack-1.6.0_gnu13/envs/fms-2024.01/install/modulefiles/Core")
 
 load("stack-gcc/13.3.0")
 load("stack-openmpi/4.1.6")
@@ -17,7 +17,8 @@ load("cmake/3.23.1")
 load("srw_common")
 
 load(pathJoin("nccmp", os.getenv("nccmp_ver") or "1.9.0.1"))
-load(pathJoin("nco", os.getenv("nco_ver") or "5.1.6"))
+load(pathJoin("nco", os.getenv("nco_ver") or "5.0.6"))
+load(pathJoin("prod_util", os.getenv("prod_util_ver") or "2.1.1"))
 load(pathJoin("openblas", os.getenv("openblas_ver") or "0.3.24"))
 
 prepend_path("CPPFLAGS", " -I/apps/slurm_hera/23.11.3/include/slurm"," ")

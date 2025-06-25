@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 export GLOBAL_VAR_DEFNS_FP="${EXPTDIR}/var_defns.yaml"
 . $USHdir/source_util_funcs.sh
-for sect in workflow ; do
+
+sections=(
+  workflow
+)
+for sect in ${sections[*]} ; do
   source_yaml ${GLOBAL_VAR_DEFNS_FP} ${sect}
 done
 set -xa
@@ -13,5 +17,10 @@ export SLASH_ENSMEM_SUBDIR=""
 export NWGES_DIR=${NWGES_BASEDIR}/${DATE_FIRST_CYCL:0:8}
 export bcgrp="00"
 export bcgrpnum="1"
+# Declare Intel library variable for Azure
+if [ ${PW_CSP} == "azure" ]; then
+    export FI_PROVIDER=tcp
+fi
+
 ${JOBSdir}/JREGIONAL_MAKE_LBCS
 

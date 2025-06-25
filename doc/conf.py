@@ -36,9 +36,23 @@ html_logo = "https://github.com/ufs-community/ufs/wiki/images/ufs-epic-logo.png"
 
 numfig = True
 
-nitpick_ignore = [('py:class', 'obj'),('py:class', 
-                   'yaml.dumper.Dumper'),('py:class', 
-                   'xml.etree.ElementTree'),('py:class', 'Basemap'),]
+nitpick_ignore = [
+    ('py:class', 'obj'),
+    ('py:class', 'yaml.dumper.Dumper'),
+    ('py:class', 'xml.etree.ElementTree'),
+    ('py:class', 'Basemap'),
+    ('py:class', 'numpy.ma.MaskedArray'),
+    ('py:class', 'esmpy.Field'),
+    ('py:class', 'pandas.DataFrame'),
+    ('py:class', 'netCDF4.Variable'),
+    ('py:class', 'pandas.DatetimeIndex'),
+    ('py:class', 'netCDF4.Dataset'),
+    ('py:class', 'numpy.ndarray'),
+    ('py:class', 'pydantic.BaseModel'),
+    ('py:class', 'esmpy.Grid'),
+    ('py:class', 'esmpy.StaggerLoc'),
+    ('py:class', 'pathlib._local.Path'),
+]
 
 # -- General configuration ---------------------------------------------------
 
@@ -52,6 +66,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
     'sphinxcontrib.bibtex',
+    'sphinxcontrib.plantuml', # https://github.com/sphinx-contrib/plantuml
 ]
 
 bibtex_bibfiles = ['references.bib']
@@ -103,6 +118,7 @@ user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Ge
 linkcheck_ignore = [r'https://www\.intel\.com/content/www/us/en/docs/cpp\-compiler/developer\-guide\-reference/2021\-10/thread\-affinity\-interface\.html',
                     r'https://www\.intel\.com/content/www/us/en/developer/tools/oneapi/hpc\-toolkit\-download\.html',
                     r'https://glossary.ametsoc.org/.*',
+                    r'https://www.axios.com/local/new-orleans/2025/01/21/in-photos-historic-snowstorm-new-orleans-louisiana',
                    ]
 
 # Ignore anchor tags for SRW App data bucket. Shows Not Found even when they exist.
@@ -124,6 +140,10 @@ linkcheck_allowed_redirects = {r"https://github\.com/ufs-community/ufs-srweather
                                  r"https://sso\.noaa\.gov\:443/openam/SSORedirect/metaAlias/noaa\-online/idp\?SAMLRequest\=.*",
                                r"https://github\.com/ufs-community/ufs\-srweather\-app/issues/.*": 
                                  r"https://github\.com/login\?return\_to\=https.*",
+                               r"https://mrms\.ncep\.noaa\.gov/data/": 
+                                 r"https://mrms\.ncep\.noaa\.gov",
+                               r"https://github\.com/ufs-community/ufs/wiki/.*": 
+                                 r"https://raw\.githubusercontent\.com/wiki/ufs-community/ufs/.*",
                                }
 
 
@@ -252,9 +272,24 @@ epub_exclude_files = ['search.html']
 
 # -- Options for autodoc extension ---------------------------------------
 
-autodoc_mock_imports = ["f90nml","cartopy","mpl_toolkits.basemap","fill_jinja_template",
-   "matplotlib","numpy","uwtools","mpl_toolkits","metplus",
-   ]
+autodoc_mock_imports = [
+    "f90nml",
+    "cartopy",
+    "mpl_toolkits.basemap",
+    "fill_jinja_template",
+    "matplotlib",
+    "numpy",
+    "uwtools",
+    "mpl_toolkits",
+    "metplus",
+    "esmpy",
+    "netCDF4",
+    "pandas",
+    "xarray",
+    "mpi4py",
+    "pydantic",
+    "typer",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -303,10 +338,11 @@ extlinks_detect_hardcoded_links = True
 extlinks = {'github-docs': ('https://docs.github.com/en/%s', '%s'),
             'nco': ('https://www.nco.ncep.noaa.gov/idsb/implementation_standards/%s', '%s'),
             "rst": ("https://www.sphinx-doc.org/en/master/usage/restructuredtext/%s", "%s"),
-            "rtd": ("https://readthedocs.org/projects/ufs-srweather-app/%s", "%s"),
+            "rtd": ("https://app.readthedocs.org/projects/ufs-srweather-app/%s", "%s"),
             'srw-repo': ('https://github.com/ufs-community/ufs-srweather-app/%s', '%s'),
             'srw-wiki': ('https://github.com/ufs-community/ufs-srweather-app/wiki/%s','%s'),
-            'uw': ('https://uwtools.readthedocs.io/en/main/%s', '%s'),
+            'uw': ('https://uwtools.readthedocs.io/en/stable/%s', '%s'),
+            'uw-repo': ('https://github.com/ufs-community/uwtools/%s', '%s'),
             'fire-ug': ('https://fire-behavior.readthedocs.io/en/latest/%s', '%s'),
             }
 

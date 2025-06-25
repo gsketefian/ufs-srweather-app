@@ -54,13 +54,9 @@
 #    FV3GFS_FILE_FMT_LBCS
 #
 #  task_make_lbcs:
-#    FVCOM_DIR
-#    FVCOM_FILE
-#    FVCOM_WCSTART
 #    KMP_AFFINITY_MAKE_LBCS
 #    OMP_NUM_THREADS_MAKE_LBCS
 #    OMP_STACKSIZE_MAKE_LBCS
-#    USE_FVCOM
 #    VCOORD_FILE
 #
 #  global:
@@ -86,8 +82,19 @@
 #-----------------------------------------------------------------------
 #
 . $USHdir/source_util_funcs.sh
-set -x
-for sect in user nco platform  workflow global cpl_aqm_parm constants task_get_extrn_lbcs task_make_lbcs ; do
+sections=(
+  user
+  nco
+  platform
+  workflow
+  global
+  cpl_aqm_parm
+  smoke_dust_parm
+  constants
+  task_get_extrn_lbcs.envvars
+  task_make_lbcs.envvars
+)
+for sect in ${sections[*]} ; do
   source_yaml ${GLOBAL_VAR_DEFNS_FP} ${sect}
 done
 #
@@ -182,8 +189,6 @@ varmap_file=""
 
 case "${CCPP_PHYS_SUITE}" in
 #
-  "FV3_GFS_2017_gfdlmp" | \
-  "FV3_GFS_2017_gfdlmp_regional" | \
   "FV3_GFS_v16" | \
   "FV3_GFS_v15p2" )
     varmap_file="GFSphys_var_map.txt"
@@ -194,11 +199,17 @@ case "${CCPP_PHYS_SUITE}" in
   "FV3_GFS_v17_p8" | \
   "FV3_WoFS_v0" | \
   "FV3_HRRR" | \
-  "FV3_RAP")
+  "FV3_HRRR_gf" | \
+  "FV3_RAP" | \
+  "RRFS_sas")
     if [ "${EXTRN_MDL_NAME_LBCS}" = "RAP" ] || \
        [ "${EXTRN_MDL_NAME_LBCS}" = "RRFS" ] || \
        [ "${EXTRN_MDL_NAME_LBCS}" = "HRRR" ]; then
-      varmap_file="GSDphys_var_map.txt"
+      if [ $(boolify "${DO_SMOKE_DUST}") = "TRUE" ]; then
+        varmap_file="GSDphys_smoke_var_map.txt"
+      else
+        varmap_file="GSDphys_var_map.txt"
+      fi
     elif [ "${EXTRN_MDL_NAME_LBCS}" = "NAM" ] || \
          [ "${EXTRN_MDL_NAME_LBCS}" = "FV3GFS" ] || \
          [ "${EXTRN_MDL_NAME_LBCS}" = "UFS-CASE-STUDY" ] || \
@@ -648,6 +659,10 @@ located in the following directory:
   fcst_hhh_FV3LAM=$( printf "%03d" "$fcst_hhh" )
   if [ $(boolify "${CPL_AQM}") = "TRUE" ]; then
     cp -p gfs.bndy.nc ${DATA_SHARE}/${NET}.${cycle}${dot_ensmem}.gfs_bndy.tile7.f${fcst_hhh_FV3LAM}.nc
+  elif [ $(boolify "${DO_SMOKE_DUST}") = "TRUE" ]; then
+    COMOUT="${COMROOT}/${NET}/${model_ver}/${RUN}.${PDY}/${cyc}${SLASH_ENSMEM_SUBDIR}" #temporary path, should be removed later
+    mkdir -p ${COMOUT}
+    cp -p gfs.bndy.nc ${COMOUT}/${NET}.${cycle}${dot_ensmem}.gfs_bndy.tile7.f${fcst_hhh_FV3LAM}.nc
   else
     mv gfs.bndy.nc ${INPUT_DATA}/${NET}.${cycle}${dot_ensmem}.gfs_bndy.tile7.f${fcst_hhh_FV3LAM}.nc
   fi

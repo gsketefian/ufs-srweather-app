@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 #
 #-----------------------------------------------------------------------
 #
@@ -57,6 +56,8 @@
 #    FV3_NML_FN
 #    FV3_NML_FP
 #    FV3_NML_STOCH_FP
+#    FIRE_NML_FN
+#    FIRE_NML_FP
 #    INCR_CYCL_FREQ
 #    PREDEF_GRID_NAME
 #    SYMLINK_FIX_FILES
@@ -68,6 +69,7 @@
 #  task_run_fcst:
 #    DO_FCST_RESTART
 #    DT_ATMOS
+#    FHROT
 #    FV3_EXEC_FP
 #    KMP_AFFINITY_RUN_FCST
 #    OMP_NUM_THREADS_RUN_FCST
@@ -105,6 +107,10 @@
 #  fixed_files:
 #    CYCLEDIR_LINKS_TO_FIXam_FILES_MAPPING
 #
+#  fire:
+#    UFS_FIRE
+#    FIRE_INPUT_DIR
+#
 #-----------------------------------------------------------------------
 #
 
@@ -116,11 +122,24 @@
 #-----------------------------------------------------------------------
 #
 . $USHdir/source_util_funcs.sh
-for sect in user nco platform workflow global cpl_aqm_parm constants fixed_files \
-  task_get_extrn_lbcs task_run_fcst task_run_post fire; do
+sections=(
+  user
+  nco
+  platform
+  workflow
+  global
+  cpl_aqm_parm
+  constants
+  fixed_files
+  task_get_extrn_lbcs.envvars
+  task_run_fcst.envvars
+  task_run_post.envvars
+  smoke_dust_parm
+  fire.envvars
+)
+for sect in ${sections[*]} ; do
   source_yaml ${GLOBAL_VAR_DEFNS_FP} ${sect}
 done
-
 #
 #-----------------------------------------------------------------------
 #
@@ -298,7 +317,7 @@ create_symlink_to_file $target $symlink ${relative_link_flag}
 # that the FV3 model is hardcoded to recognize, and those are the names 
 # we use below.
 #
-suites=( "FV3_RAP" "FV3_HRRR" "FV3_GFS_v15_thompson_mynn_lam3km" "FV3_GFS_v17_p8" )
+suites=( "FV3_RAP" "FV3_HRRR" "FV3_HRRR_gf" "FV3_GFS_v15_thompson_mynn_lam3km" "FV3_GFS_v17_p8" "RRFS_sas")
 if [[ ${suites[@]} =~ "${CCPP_PHYS_SUITE}" ]] ; then
   file_ids=( "ss" "ls" )
   for file_id in "${file_ids[@]}"; do
@@ -338,7 +357,7 @@ cd ${DATA}/INPUT
 #
 relative_link_flag="FALSE"
 
-if [ $(boolify "${CPL_AQM}") = "TRUE" ]; then
+if [ $(boolify "${CPL_AQM}") = "TRUE" ] || [ $(boolify "${DO_SMOKE_DUST}") = "TRUE" ]; then
   COMIN="${COMROOT}/${NET}/${model_ver}/${RUN}.${PDY}/${cyc}${SLASH_ENSMEM_SUBDIR}" #temporary path, should be removed later
 
   target="${COMIN}/${NET}.${cycle}${dot_ensmem}.gfs_data.tile${TILE_RGNL}.halo${NH0}.nc"
@@ -358,17 +377,35 @@ if [ $(boolify "${CPL_AQM}") = "TRUE" ]; then
     symlink="gfs_bndy.tile${TILE_RGNL}.${fhr}.nc"
     create_symlink_to_file $target $symlink ${relative_link_flag}
   done
-  target="${COMIN}/${NET}.${cycle}${dot_ensmem}.NEXUS_Expt.nc"
-  symlink="NEXUS_Expt.nc"
-  create_symlink_to_file $target $symlink ${relative_link_flag}
 
-  # create symlink to PT for point source in SRW-AQM
-  target="${COMIN}/${NET}.${cycle}${dot_ensmem}.PT.nc"
-  if [ -f ${target} ]; then
-    symlink="PT.nc"
+  if [ $(boolify "${CPL_AQM}") = "TRUE" ]; then
+    target="${COMIN}/${NET}.${cycle}${dot_ensmem}.NEXUS_Expt.nc"
+    symlink="NEXUS_Expt.nc"
     create_symlink_to_file $target $symlink ${relative_link_flag}
-  fi
 
+    # create symlink to PT for point source in SRW-AQM
+    target="${COMIN}/${NET}.${cycle}${dot_ensmem}.PT.nc"
+    if [ -f ${target} ]; then
+      symlink="PT.nc"
+      create_symlink_to_file $target $symlink ${relative_link_flag}
+    fi
+  else
+    ln -nsf ${FIXsmoke}/${PREDEF_GRID_NAME}/dust12m_data.nc .
+    ln -nsf ${FIXsmoke}/${PREDEF_GRID_NAME}/emi_data.nc .
+
+    smokefile="${COMIN}/${SMOKE_DUST_FILE_PREFIX}_${PDY}${cyc}00.nc"
+    if [ -f ${smokefile} ]; then
+      ln -nsf ${smokefile} ${SMOKE_DUST_FILE_PREFIX}.nc
+    else
+      if [ "${EBB_DCYCLE}" = "1" ]; then
+        ln -nsf ${FIXsmoke}/${PREDEF_GRID_NAME}/dummy_24hr_smoke_ebbdc1.nc ${SMOKE_DUST_FILE_PREFIX}.nc
+        echo "WARNING: Smoke file is not available, use dummy_24hr_smoke_ebbdc1.nc instead"
+      else
+        ln -nsf ${FIXsmoke}/${PREDEF_GRID_NAME}/dummy_24hr_smoke.nc ${SMOKE_DUST_FILE_PREFIX}.nc
+        echo "WARNING: Smoke file is not available, use dummy_24hr_smoke.nc instead"
+      fi
+    fi
+  fi
 else
   target="${INPUT_DATA}/${NET}.${cycle}${dot_ensmem}.gfs_data.tile${TILE_RGNL}.halo${NH0}.nc"
   symlink="gfs_data.nc"
@@ -509,7 +546,7 @@ create_symlink_to_file ${FIELD_TABLE_FP} ${DATA}/${FIELD_TABLE_FN} ${relative_li
 create_symlink_to_file ${FIELD_DICT_FP} ${DATA}/${FIELD_DICT_FN} ${relative_link_flag}
 
 if [ $(boolify ${WRITE_DOPOST}) = "TRUE" ]; then
-  cp ${PARMdir}/upp/nam_micro_lookup.dat ./eta_micro_lookup.dat
+  cp ${HOMEdir}/fix/upp/nam_micro_lookup.dat ./eta_micro_lookup.dat
   if [ $(boolify ${USE_CUSTOM_POST_CONFIG_FILE}) = "TRUE" ]; then
     post_config_fp="${CUSTOM_POST_CONFIG_FP}"
     print_info_msg "
@@ -520,7 +557,7 @@ if [ $(boolify ${WRITE_DOPOST}) = "TRUE" ]; then
     if [ $(boolify "${CPL_AQM}") = "TRUE" ]; then
       post_config_fp="${PARMdir}/upp/postxconfig-NT-AQM.txt"
     else
-      post_config_fp="${PARMdir}/upp/postxconfig-NT-fv3lam.txt"
+      post_config_fp="${PARMdir}/upp/postxconfig-NT-rrfs.txt"
     fi
     print_info_msg "
 ====================================================================
@@ -739,7 +776,8 @@ python3 $USHdir/create_model_configure_file.py \
   --run-dir "${DATA}" \
   --sub-hourly-post "${SUB_HOURLY_POST}" \
   --dt-subhourly-post-mnts "${DT_SUBHOURLY_POST_MNTS}" \
-  --dt-atmos "${DT_ATMOS}"
+  --dt-atmos "${DT_ATMOS}" \
+  --history-native-grid "${HISTORY_NATIVE_GRID}"
 export err=$?
 if [ $err -ne 0 ]; then
   message_txt="Call to function to create a model configuration file 
@@ -853,6 +891,20 @@ the current cycle's (cdate) run directory (DATA) failed:
 fi
 #
 #-----------------------------------------------------------------------
+# Link the zero-halo grid to support cubed sphere native history file
+# writing
+#-----------------------------------------------------------------------
+#
+if [ -d "${EXPTDIR}/grid" ] && [ $(boolify "${HISTORY_NATIVE_GRID}") = "TRUE" ]; then
+  print_info_msg "Creating link to halo0 file"
+  create_symlink_to_file "$(find "${EXPTDIR}/grid" -type f -name "C*_grid.tile7.halo0.nc")" \
+                         INPUT/grid.tile7.halo0.nc \
+                         || print_info_msg "Link to halo0 grid exists"
+else
+  print_info_msg "History not written to native grid or dynamically-generated grids not used. No hala0 grid link created."
+fi
+#
+#-----------------------------------------------------------------------
 #
 # Run the FV3-LAM model.  Note that we have to launch the forecast from
 # the current cycle's directory because the FV3 executable will look for
@@ -894,7 +946,9 @@ if [ $(boolify "${CPL_AQM}") = "TRUE" ]; then
     fi
   fi
 
-  cp -p ${DATA}/${AQM_RC_PRODUCT_FN} ${COMOUT}/${NET}.${cycle}${dot_ensmem}.${AQM_RC_PRODUCT_FN}
+  if [ $(boolify "${CPL_AQM}") = "TRUE" ]; then
+    cp -p ${DATA}/${AQM_RC_PRODUCT_FN} ${COMOUT}/${NET}.${cycle}${dot_ensmem}.${AQM_RC_PRODUCT_FN}
+  fi
 
   fhr_ct=0
   fhr=0
@@ -902,8 +956,8 @@ if [ $(boolify "${CPL_AQM}") = "TRUE" ]; then
     fhr_ct=$(printf "%03d" $fhr)
     source_dyn="${DATA}/dynf${fhr_ct}.nc"
     source_phy="${DATA}/phyf${fhr_ct}.nc"
-    target_dyn="${COMIN}/${NET}.${cycle}${dot_ensmem}.dyn.f${fhr_ct}.nc"
-    target_phy="${COMIN}/${NET}.${cycle}${dot_ensmem}.phy.f${fhr_ct}.nc"
+    target_dyn="${COMIN}/${NET}.${cycle}${dot_ensmem}.dyn.f${fhr_ct}.${POST_OUTPUT_DOMAIN_NAME}.nc"
+    target_phy="${COMIN}/${NET}.${cycle}${dot_ensmem}.phy.f${fhr_ct}.${POST_OUTPUT_DOMAIN_NAME}.nc"
     [ -f ${source_dyn} ] && cp -p ${source_dyn} ${target_dyn}
     [ -f ${source_phy} ] && cp -p ${source_phy} ${target_phy}
     (( fhr=fhr+1 ))

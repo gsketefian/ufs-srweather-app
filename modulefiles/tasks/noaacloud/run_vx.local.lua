@@ -1,8 +1,8 @@
 --[[
 Compiler-specific modules are used for met and metplus libraries
 --]]
-local met_ver = (os.getenv("met_ver") or "11.1.0")
-local metplus_ver = (os.getenv("metplus_ver") or "5.1.0")
+local met_ver = (os.getenv("met_ver") or "12.0.1")
+local metplus_ver = (os.getenv("metplus_ver") or "6.0.0")
 if (mode() == "load") then
   load(pathJoin("met", met_ver))
   load(pathJoin("metplus",metplus_ver))
@@ -26,7 +26,7 @@ load("ufs-pyenv")
 load("conda")
 setenv("SRW_ENV", "srw_app")
 
--- Add missing libstdc binary for Azure
+-- Declare Intel library variable for Azure
 if os.getenv("PW_CSP") == "azure" then
-   setenv("LD_PRELOAD","/opt/nvidia/nsight-systems/2023.1.2/host-linux-x64/libstdc++.so.6")
+   setenv("FI_PROVIDER","tcp")
 end

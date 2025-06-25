@@ -68,9 +68,16 @@
 #-----------------------------------------------------------------------
 #
 . $USHdir/source_util_funcs.sh
-
-for sect in user nco platform workflow global task_get_extrn_lbcs \
-  task_get_extrn_ics ; do
+sections=(
+  user
+  nco
+  platform
+  workflow
+  global
+  task_get_extrn_ics.envvars
+  task_get_extrn_lbcs.envvars
+)
+for sect in ${sections[*]} ; do
   source_yaml ${GLOBAL_VAR_DEFNS_FP} ${sect}
 done
 #
@@ -137,7 +144,7 @@ elif [ "${ICS_OR_LBCS}" = "LBCS" ]; then
   first_time=$((TIME_OFFSET_HRS + LBC_SPEC_INTVL_HRS))
 
   if [ ${#FCST_LEN_CYCL[@]} -gt 1 ]; then
-    cyc_mod=$(( ${cyc} - ${DATE_FIRST_CYCL:8:2} ))
+    cyc_mod=$(( 10#${cyc} - ${DATE_FIRST_CYCL:8:2} ))
     CYCLE_IDX=$(( ${cyc_mod} / ${INCR_CYCL_FREQ} ))
     FCST_LEN_HRS=${FCST_LEN_CYCL[$CYCLE_IDX]}
   fi
@@ -230,7 +237,7 @@ fi
 #-----------------------------------------------------------------------
 #
 
-mkdir -p ${EXTRN_MDL_STAGING_DIR}${mem_dir}
+mkdir -p ${EXTRN_MDL_STAGING_DIR}
 
 if [ $RUN_ENVIR = "nco" ]; then
     EXTRN_DEFNS="${NET}.${cycle}.${EXTRN_MDL_NAME}.${ICS_OR_LBCS}.${EXTRN_MDL_VAR_DEFNS_FN}.sh"

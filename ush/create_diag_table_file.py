@@ -7,16 +7,17 @@ import argparse
 import os
 import sys
 from textwrap import dedent
-from uwtools.api.template import render
 
 from python_utils import (
     cfg_to_yaml_str,
     flatten_dict,
     import_vars,
-    load_yaml_config,
     print_info_msg,
     print_input_args,
 )
+
+from uwtools.api.config import get_yaml_config
+from uwtools.api.template import render
 
 
 def create_diag_table_file(run_dir):
@@ -62,6 +63,26 @@ def create_diag_table_file(run_dir):
     if UFS_FIRE:
         settings["additional_entries"] = \
                 '"gfs_phys","fsmoke","fsmoke","fv3_history","all",.false.,"none",2'
+    elif DO_SMOKE_DUST:
+        settings["additional_entries"] = '''
+# Tracers
+"gfs_dyn","smoke",       "smoke",       "fv3_history",  "all", .false.,"none",2
+"gfs_dyn","dust",        "dust",        "fv3_history",  "all", .false.,"none",2
+"gfs_dyn","coarsepm",    "coarsepm",    "fv3_history",  "all", .false.,"none",2
+"gfs_dyn","smoke_ave",   "smoke_ave",   "fv3_history2d","all", .false.,"none",2
+"gfs_dyn","dust_ave",    "dust_ave",    "fv3_history2d","all", .false.,"none",2
+"gfs_dyn","coarsepm_ave","coarsepm_ave","fv3_history2d","all", .false.,"none",2
+
+# Aerosols emission for smoke
+"gfs_sfc", "emdust",    "emdust",    "fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "coef_bb_dc","coef_bb_dc","fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "min_fplume","min_fplume","fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "max_fplume","max_fplume","fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "hwp",       "hwp",       "fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "hwp_ave",   "hwp_ave",   "fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "frp_output","frp_output","fv3_history2d",  "all", .false.,"none",2
+"gfs_phys","ebu_smoke", "ebu_smoke", "fv3_history",    "all", .false.,"none",2
+"gfs_phys","ext550",    "ext550",    "fv3_history",    "all", .false.,"none",2'''
     settings_str = cfg_to_yaml_str(settings)
 
     print_info_msg(
@@ -104,7 +125,7 @@ def _parse_args(argv):
 
 if __name__ == "__main__":
     args = _parse_args(sys.argv[1:])
-    cfg = load_yaml_config(args.path_to_defns)
+    cfg = get_yaml_config(args.path_to_defns)
     cfg = flatten_dict(cfg)
     import_vars(dictionary=cfg)
     create_diag_table_file(args.run_dir)

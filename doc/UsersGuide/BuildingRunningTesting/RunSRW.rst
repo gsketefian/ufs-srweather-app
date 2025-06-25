@@ -55,8 +55,10 @@ The SRW App requires input files to run. These include static datasets, initial 
      - File location
    * - Derecho
      - /glade/work/epicufsrt/contrib/UFS_SRW_data/|data|/input_model_data
-   * - Gaea
+   * - Gaea-C5
      - /gpfs/f5/epic/world-shared/UFS_SRW_data/|data|/input_model_data/
+   * - Gaea-C6
+     - /gpfs/f6/bil-fire8/world-shared/UFS_SRW_data/|data|/input_model_data/
    * - Hera
      - /scratch1/NCEPDEV/nems/role.epic/UFS_SRW_data/|data|/input_model_data/
    * - Hercules
@@ -77,7 +79,7 @@ For Level 2-4 systems, the data must be added to the user's system. Detailed ins
 Grid Configuration
 =======================
 
-The SRW App officially supports the five predefined grids shown in :numref:`Table %s <PredefinedGrids>`. The out-of-the-box SRW App case uses the ``RRFS_CONUS_25km`` predefined grid option. More information on the predefined and user-generated grid options can be found in :numref:`Section %s: Limited Area Model (LAM) Grids <LAMGrids>`. Users who plan to utilize one of the five predefined domain (grid) options may continue to the next step (:numref:`Step %s: Generate the Forecast Experiment <GenerateForecast>`). Users who plan to create a new custom predefined grid should refer to the instructions in :numref:`Section %s: Creating User-Generated Grids <UserDefinedGrid>`. At a minimum, these users will need to add the new grid name to the ``valid_param_vals.yaml`` file and add the corresponding grid-specific parameters in the ``predef_grid_params.yaml`` file.
+The SRW App officially supports the five predefined grids shown in :numref:`Table %s <PredefinedGrids>`. The out-of-the-box SRW App case uses the ``RRFS_CONUS_25km`` predefined grid option. More information on the predefined and user-generated grid options can be found in :numref:`Section %s: Limited Area Model (LAM) Grids <LAMGrids>`. Users who plan to utilize one of the five predefined domain (grid) options may continue to the next step (:numref:`Step %s: Generate the Forecast Experiment <GenerateForecast>`). Users who plan to create a new custom predefined grid should refer to the instructions in :numref:`Section %s: Creating User-Generated Grids <UserDefinedGrid>`. At a minimum, these users will need to add the new grid name to the ``experiment.jsonschema`` file and add the corresponding grid-specific parameters in the ``predef_grid_params.yaml`` file.
 
 .. _PredefinedGrids:
 
@@ -171,7 +173,7 @@ Each experiment requires certain basic information to run (e.g., date, grid, phy
 Default configuration: ``config_defaults.yaml``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In general, ``config_defaults.yaml`` is split into sections by category (e.g., ``user:``, ``platform:``, ``workflow:``, ``task_make_grid:``). Users can view a full list of categories and configuration parameters in the :doc:`Table of Variables in config_defaults.yaml <DefaultVarsTable>`. Definitions and default values of each of the variables can be found in :numref:`Section %s: Workflow Parameters <ConfigWorkflow>` and in the ``config_defaults.yaml`` file comments. Some of these default values are intentionally invalid in order to ensure that the user assigns valid values in their ``config.yaml`` file. There is usually no need for a user to modify ``config_defaults.yaml`` because any settings provided in ``config.yaml`` will override the settings in ``config_defaults.yaml``.
+In general, ``config_defaults.yaml`` is split into sections by category (e.g., ``user:``, ``platform:``, ``workflow:``, ``task_make_grid:``). Each of the sections may have subsections describing run-time resource requirements in an ``execution:`` block with a structure described by the ``uwtools`` YAML documentation `here <https://uwtools.readthedocs.io/en/main/sections/user_guide/yaml/components/execution.html>`__ and variables that are used as bash environment variables in the run scripts will appear under the ``envvars:`` block. Users can view a full list of categories and configuration parameters in the :doc:`Table of Variables in config_defaults.yaml <DefaultVarsTable>`. Definitions and default values of each of the variables can be found in :numref:`Section %s: Workflow Parameters <ConfigWorkflow>` and in the ``config_defaults.yaml`` file comments. Some of these default values are intentionally invalid in order to ensure that the user assigns valid values in their ``config.yaml`` file. There is usually no need for a user to modify ``config_defaults.yaml`` because any settings provided in ``config.yaml`` will override the settings in ``config_defaults.yaml``.
 
 .. _UserSpecificConfig:
 
@@ -308,9 +310,9 @@ On platforms where Rocoto and :term:`cron` are available, users can automate res
    USE_CRON_TO_RELAUNCH: true
    CRON_RELAUNCH_INTVL_MNTS: 3
 
-.. note::
+.. attention::
 
-   On Orion, *cron* is only available on the orion-login-1 node, so users will need to work on that node when running *cron* jobs on Orion.
+   Cron is not available on Derecho or Gaea. On Orion/Hercules, users must be logged into the [hercules/orion]-login-1 node to use cron.
 
 When running with GNU compilers (i.e., if the modulefile used to set up the build environment in :numref:`Section %s <BuildExecutables>` uses a GNU compiler), users must also set ``COMPILER: "gnu"`` in the ``workflow:`` section of the ``config.yaml`` file.
 
@@ -318,27 +320,27 @@ When running with GNU compilers (i.e., if the modulefile used to set up the buil
 
    On ``JET``, users should add ``PARTITION_DEFAULT: xjet`` and ``PARTITION_FCST: xjet`` to the ``platform:`` section of the ``config.yaml`` file.
 
-For example, to run the out-of-the-box experiment on Derecho using cron to automate job submission, users can add or modify variables in the ``user``, ``workflow``, ``task_get_extrn_ics``, and ``task_get_extrn_lbcs`` sections of ``config.yaml`` according to the following example (unmodified variables are not shown here): 
+For example, to run the out-of-the-box experiment on Hercules using cron to automate job submission, users can ``ssh`` to the hercules-login-1 node and add or modify variables in the ``user``, ``workflow``, ``task_get_extrn_ics``, and ``task_get_extrn_lbcs`` sections of ``config.yaml`` according to the following example (unmodified variables are not shown here): 
 
    .. code-block::
       
       user:
-         MACHINE: derecho
-         ACCOUNT: NRAL0000
+         MACHINE: hercules
+         ACCOUNT: epic
       workflow:
          EXPT_SUBDIR: run_basic_srw
          USE_CRON_TO_RELAUNCH: true
          CRON_RELAUNCH_INTVL_MNTS: 3
       task_get_extrn_ics:
          USE_USER_STAGED_EXTRN_FILES: true
-         EXTRN_MDL_SOURCE_BASEDIR_ICS: /glade/work/epicufsrt/contrib/UFS_SRW_data/develop/input_model_data/FV3GFS/grib2/2019061518
+         EXTRN_MDL_SOURCE_BASEDIR_ICS: /work/noaa/epic/role-epic/contrib/UFS_SRW_data/develop/input_model_data/FV3GFS/grib2/2019061518
       task_get_extrn_lbcs:
          USE_USER_STAGED_EXTRN_FILES: true
-         EXTRN_MDL_SOURCE_BASEDIR_LBCS: /glade/work/epicufsrt/contrib/UFS_SRW_data/develop/input_model_data/FV3GFS/grib2/2019061518
+         EXTRN_MDL_SOURCE_BASEDIR_LBCS: /work/noaa/epic/role-epic/contrib/UFS_SRW_data/develop/input_model_data/FV3GFS/grib2/2019061518
 
 .. hint::
 
-   * Valid values for configuration variables should be consistent with those in the ``ush/valid_param_vals.yaml`` script. 
+   * Valid values for configuration variables should be consistent with those in the ``ush/experiment.jsonschema`` script. 
 
    * Various sample configuration files can be found within the subdirectories of ``tests/WE2E/test_configs``.
 
@@ -568,7 +570,7 @@ the same cycle starting date/time and forecast hours. Other parameters may diffe
 Cartopy Shapefiles
 `````````````````````
 
-The Python plotting tasks require a path to the directory where the Cartopy Natural Earth shapefiles are located. The medium scale (1:50m) cultural and physical shapefiles are used to create coastlines and other geopolitical borders on the map. On :srw-wiki:`Level 1 <Supported-Platforms-and-Compilers>` systems, this path is already set in the system's machine file using the variable ``FIXshp``. Users on other systems will need to download the shapefiles and update the path of ``$FIXshp`` in the machine file they are using (e.g., ``$SRW/ush/machine/macos.yaml`` for a generic MacOS system, where ``$SRW`` is the path to the ``ufs-srweather-app`` directory). The subset of shapefiles required for the plotting task can be obtained from the `SRW Data Bucket <https://noaa-ufs-srw-pds.s3.amazonaws.com/develop-20240618/NaturalEarth/NaturalEarth.tgz>`__. The full set of medium-scale (1:50m) Cartopy shapefiles can be downloaded `here <https://www.naturalearthdata.com/downloads/>`__. 
+The Python plotting tasks require a path to the directory where the Cartopy Natural Earth shapefiles are located. The medium scale (1:50m) cultural and physical shapefiles are used to create coastlines and other geopolitical borders on the map. On :srw-wiki:`Level 1 <Supported-Platforms-and-Compilers>` systems, this path is already set in the system's machine file using the variable ``FIXshp``. Users on other systems will need to download the shapefiles and update the path of ``$FIXshp`` in the machine file they are using (e.g., ``$SRW/ush/machine/macos.yaml`` for a generic MacOS system, where ``$SRW`` is the path to the ``ufs-srweather-app`` directory). The subset of shapefiles required for the plotting task can be obtained from the `SRW Data Bucket <https://noaa-ufs-srw-pds.s3.amazonaws.com/develop-20240618/NaturalEarth.tar.gz>`__. The full set of medium-scale (1:50m) Cartopy shapefiles can be downloaded `here <https://www.naturalearthdata.com/downloads/>`__.
 
 Task Configuration
 `````````````````````
@@ -628,7 +630,9 @@ a staged forecast (e.g. from another forecasting system) need to add additional 
 machine file (``ush/machine/<platform>.yaml``) or their ``config.yaml`` file. Other users may skip
 to the next step (:numref:`Section %s: Generate the SRW App Workflow <GenerateWorkflow>`). 
 
-To use METplus verification,  MET and METplus modules need to be installed on the system.
+To use METplus verification, MET and METplus modules need to be installed on the system. In order
+to ensure all capabilities work as expected, users should use at a minimum the latest release of
+these tools as of the latest SRW release: MET 12.0.1 and METplus 6.0.0.
 
 .. note::
    If users update their METplus installation, they must also update the module load statements in ``ufs-srweather-app/modulefiles/tasks/<machine>/run_vx.local`` to correspond to their system's updated installation:
@@ -794,6 +798,16 @@ fields they include are given in :numref:`Table %s <VXFieldGroupDescsTable>`.
    * - UPA
      - NDAS
      - Various upper-air fields (e.g. at 800 mb, 500 mb, etc)
+   * - AOD
+     - AERONET
+     - Aerosol Optical Depth
+   * - PM25
+     - AIRNOW
+     - Volumetric mass of particulate matter diameter 2.5 microns or less
+   * - PM10
+     - AIRNOW
+     - Volumetric mass of particulate matter diameter 10 microns or less
+
 
 The ``VX_FIELD_GROUPS`` list in the ``verification:`` section of ``config.yaml`` specifies the VX field
 groups for which to run verification. In order to avoid unwanted computation, the Rocoto XML will include 
@@ -818,7 +832,7 @@ summer period for which ``ASNOW`` is not relevant.
 Staging Observation Files
 ``````````````````````````````````
 The taskgroup in ``verify_pre.yaml`` defines a set of workflow tasks named ``get_obs_*``, where the ``*``
-represents any one of the supported obs types: :term:`CCPA`, :term:`NOHRSC`, :term:`MRMS`, and :term:`NDAS`. These ``get_obs_*`` tasks 
+represents any one of the supported obs types: :term:`CCPA`, :term:`NOHRSC`, :term:`MRMS`, :term:`NDAS`, :term:`AERONET`, and :term:`AIRNOW`. These ``get_obs_*`` tasks 
 will first check on disk for the existence of the obs files required for VX using the locations specified
 by the variables ``*_OBS_DIR`` and ``OBS_*_FN_TEMPLATES[1,3,...]`` in the ``verification:`` section of
 ``config.yaml``. The ``*_OBS_DIR``  are the base directories in which the obs files are or should be
@@ -844,14 +858,18 @@ place them in the locations specified by ``{*_OBS_DIR}/{OBS_*_FN_TEMPLATES[1,3,.
 that attempt is successful, the workflow will move on to subsequent tasks.  Thus:
 
    * Users who have the obs files already available (staged) on their system only need to set ``*_OBS_DIR``
-     and ``OBS_*_FN_TEMPLATES[1,3,...]`` in ``config.yaml`` to match those staging locations and file names.  
+     and ``OBS_*_FN_TEMPLATES[1,3,...]`` in ``config.yaml`` to match those staging locations and file names.
    
    * Users who do not have the obs files available on their systems and do not have access to NOAA HPSS
-     need to download :term:`CCPA`, :term:`NOHRSC`, :term:`MRMS`, and/or :term:`NDAS` files manually
-     from collections of publicly available data. 
+     need to download :term:`CCPA`, :term:`NOHRSC`, :term:`MRMS`, :term:`NDAS`, :term:`AERONET`, and/or
+     :term:`AIRNOW` files manually from collections of publicly available data.
      Then, as above, they must set ``*_OBS_DIR`` and ``OBS_*_FN_TEMPLATES[1,3,...]`` to match those
      staging locations and file names.
-   
+
+.. note::
+   AIRNOW observations can be retrieved from AWS or HPSS, but retrieving from AWS requires changing some default settings.
+   See ``ush/config_defaults.yaml`` or :numref:`Section %s <GeneralVXParams>` for more details. 
+
    * Users who have access to a data store that hosts the necessary files (e.g. NOAA HPSS) do not need to
      manually stage the obs data because the ``get_obs_*`` tasks will retrieve the necessary obs and place
      them in the locations specified by ``*_OBS_DIR`` and ``OBS_*_FN_TEMPLATES[1,3,...]``.  By default,
@@ -870,12 +888,22 @@ and ``OBS_*_FN_TEMPLATES`` might be set as follows:
       NOHRSC_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/nohrsc
       MRMS_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/mrms
       NDAS_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/ndas
+      AERONET_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/aeronet
+      AIRNOW_OBS_DIR: /path/to/UFS_SRW_data/develop/obs_data/airnow
 
       OBS_CCPA_FN_TEMPLATES: [ 'APCP', '{valid?fmt=%Y%m%d}/ccpa.t{valid?fmt=%H}z.01h.hrap.conus.gb2' ]
       OBS_NOHRSC_FN_TEMPLATES: [ 'ASNOW', 'sfav2_CONUS_6h_{valid?fmt=%Y%m%d%H}_grid184.grb2' ]
       OBS_MRMS_FN_TEMPLATES: [ 'REFC', '{valid?fmt=%Y%m%d}/MergedReflectivityQCComposite_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2',
                                'RETOP', '{valid?fmt=%Y%m%d}/EchoTop_18_00.50_{valid?fmt=%Y%m%d}-{valid?fmt=%H%M%S}.grib2' ]
       OBS_NDAS_FN_TEMPLATES: [ 'SFC_UPA', 'prepbufr.ndas.{valid?fmt=%Y%m%d%H}' ]
+      OBS_AERONET_FN_TEMPLATES: [ 'AOD', '{valid?fmt=%Y%m%d}/{valid?fmt=%Y%m%d}.lev15' ]
+      OBS_AIRNOW_FN_TEMPLATES: [ 'PM', '{valid?fmt=%Y%m%d}/HourlyAQObs_{valid?fmt=%Y%m%d%H}.dat' ]
+
+.. note::
+   For AIRNOW obs retrieved from AWS (see ``parm/data_locations.yml``, the default value should be
+   replaced with:
+
+   ``OBS_AIRNOW_FN_TEMPLATES: [ 'PM', '{valid?fmt=%Y%m%d}/HourlyData_{valid?fmt=%Y%m%d%H}.dat' ]``
 
 Now further consider the CCPA obs type.  If one of the days encompassed by the forecast(s) is 20240429,
 then the ``get_obs_ccpa`` task associated with this day will check for the existence of the set of obs
@@ -971,12 +999,11 @@ The last line of output from this script, starting with ``*/1 * * * *`` or ``*/3
 
 This workflow generation script creates an experiment directory and populates it with all the data needed to run through the workflow. The flowchart in :numref:`Figure %s <WorkflowGeneration>` describes the experiment generation process. The ``generate_FV3LAM_wflow.py`` script: 
 
-   #. Runs the ``setup.py`` script to set the configuration parameters. This script reads four other configuration scripts in order:
+   #. Runs the ``setup.py`` script to set the configuration parameters. This script reads several other configuration scripts in order:
       
       a. ``config_defaults.yaml`` (:numref:`Section %s <DefaultConfigSection>`)
       b. ``${machine}.yaml`` (the machine configuration file)
       c. ``config.yaml`` (:numref:`Section %s <UserSpecificConfig>`) 
-      d. ``valid_param_vals.yaml``
 
    #. Symlinks the time-independent (fix) files and other necessary data input files from their location to the experiment directory (``$EXPTDIR``). 
    #. Creates the input namelist file ``input.nml`` based on the ``input.nml.FV3`` file in the ``parm`` directory. 
@@ -987,7 +1014,7 @@ The generated workflow will appear in ``$EXPTDIR``, where ``EXPTDIR=${EXPT_BASED
 .. _WorkflowGeneration:
 
 .. figure:: https://github.com/ufs-community/ufs-srweather-app/wiki/WorkflowImages/SRW_regional_workflow_gen.png
-   :alt: Flowchart of the workflow generation process. Scripts are called in the following order: source_util_funcs.sh (which calls bash_utils), then set_FV3nml_sfc_climo_filenames.py, set_FV3nml_ens_stoch_seeds.py, create_diag_table_file.py, and setup.py. setup.py reads several yaml configuration files (config_defaults.yaml, config.yaml, {machine_config}.yaml, valid_param_vals.yaml, and others) and calls several scripts: set_cycle_dates.py, set_grid_params_GFDLgrid.py, set_grid_params_ESGgrid.py, link_fix.py, and set_ozone_param.py. Then, it sets a number of variables, including FIXgsm, fixorg, and FIXsfc variables. Next, set_predef_grid_params.py is called, and the FIXam and FIXLAM directories are set, along with the forecast input files. The setup script also calls set_extrn_mdl_params.py, sets the GRID_GEN_METHOD with HALO, checks various parameters, and generates shell scripts. Then, the workflow generation script produces a YAML configuration file and generates the actual Rocoto workflow XML file from the template file (by calling workflow-tools set_template). The workflow generation script checks the crontab file and, if applicable, copies certain fix files to the experiment directory. Then, it copies templates of various input files to the experiment directory and sets parameters for the input.nml file. Finally, it generates the workflow. Additional information on each step appears in comments within each script.
+   :alt: Flowchart of the workflow generation process. Scripts are called in the following order: source_util_funcs.sh (which calls bash_utils), then set_fv3nml_sfc_climo_filenames.py, set_fv3nml_ens_stoch_seeds.py, create_diag_table_file.py, and setup.py. setup.py reads several yaml configuration files (config_defaults.yaml, config.yaml, {machine_config}.yaml, and others) and calls several scripts: set_cycle_dates.py, set_grid_params_GFDLgrid.py, set_grid_params_ESGgrid.py, link_fix.py, and set_ozone_param.py. Then, it sets a number of variables, including FIXgsm, fixorg, and FIXsfc variables. Next, set_predef_grid_params.py is called, and the FIXam and FIXLAM directories are set, along with the forecast input files. The setup script also calls set_extrn_mdl_params.py, sets the GRID_GEN_METHOD with HALO, checks various parameters, and generates shell scripts. Then, the workflow generation script produces a YAML configuration file and generates the actual Rocoto workflow XML file by calling the uwtools rocoto realize tool. The workflow generation script checks the crontab file and, if applicable, copies certain fix files to the experiment directory. Then, it copies templates of various input files to the experiment directory and sets parameters for the input.nml file. Finally, it generates the workflow. Additional information on each step appears in comments within each script.
 
    *Experiment Generation Description*
 
@@ -1060,14 +1087,7 @@ In addition to the baseline tasks described in :numref:`Table %s <WorkflowTasksT
    * - plot_allvars
      - Run the plotting task and, optionally, the difference plotting task
 
-The METplus verification tasks and metatasks that are included by default in ``verify_*.yaml`` are described
-in :numref:`Table %s <VXWorkflowTasksTable>`. The ``taskgroup`` entry after the name of each (meta)task indicates
-the taskgroup file that must be included in the user's ``config.yaml`` file under ``rocoto: tasks: taskgroups:``
-in order for that (meta)task to be considered for inclusion in the workflow (see :numref:`Section %s <DefineWorkflow>`
-for details). As described in  :numref:`Section %s <defining_metatasks>`, metatasks define a set of tasks in the
-workflow based on multiple values of one or more parameters such as the ensemble member index, the accumulation
-interval (for cumulative fields such as accumulated precipitation), and the name of the verification field group
-(see description of ``VX_FIELD_GROUPS`` in :numref:`Section %s <GeneralVXParams>`).
+The METplus verification tasks and metatasks that are included by default in ``verify_*.yaml`` are described in :numref:`Table %s <VXWorkflowTasksTable>`. The ``taskgroup`` entry after the name of each (meta)task indicates the taskgroup file that must be included in the user's ``config.yaml`` file under ``rocoto: tasks: taskgroups:`` in order for that (meta)task to be considered for inclusion in the workflow (see :numref:`Section %s <DefineWorkflow>` for details). Metatasks define a set of tasks in the workflow based on multiple values of one or more parameters such as the ensemble member index, the accumulation interval (for cumulative fields such as accumulated precipitation), and the name of the verification field group (see description of ``VX_FIELD_GROUPS`` in :numref:`Section %s <GeneralVXParams>`).
 
 .. _VXWorkflowTasksTable:
 
@@ -1102,8 +1122,25 @@ interval (for cumulative fields such as accumulated precipitation), and the name
        from a data store (e.g. NOAA :term:`HPSS`) and place them in those locations.  This task is included
        in the workflow only if ``'SFC'`` and/or ``'UPA'`` are included in ``VX_FIELD_GROUPS``.
 
+   * - :bolditalic:`task_get_obs_aeronet` (``verify_pre.yaml``)
+     - Checks for existence of staged :term:`AERONET` obs files at locations specified by ``AERONET_OBS_DIR``
+       and ``OBS_AERONET_FN_TEMPLATES``.  If any files do not exist, it attempts to retrieve all the files
+       from a data store (e.g. NOAA :term:`HPSS`) and place them in those locations.  This task is included
+       in the workflow only if ``'AOD'``is included in ``VX_FIELD_GROUPS``.
+
+   * - :bolditalic:`task_get_obs_airnow` (``verify_pre.yaml``)
+     - Checks for existence of staged :term:`AIRNOW` obs files at locations specified by ``AIRNOW_OBS_DIR``
+       and ``OBS_AIRNOW_FN_TEMPLATES``.  If any files do not exist, it attempts to retrieve all the files
+       from a data store (e.g. NOAA :term:`HPSS`) and place them in those locations.  This task is included
+       in the workflow only if ``'PM25'`` and/or ``'PM10'`` are included in ``VX_FIELD_GROUPS``.
+
    * - :bolditalic:`task_run_MET_Pb2nc_obs_NDAS` (``verify_pre.yaml``)
      - Converts NDAS obs prepbufr files to NetCDF format.
+
+   * - :bolditalic:`metatask_ASCII2nc_obs` (``verify_pre.yaml``)
+     - Set of tasks that convert observations in ASCII text format to NetCDF files that can be processed by
+       :term:`METplus`; these observation types include AERONET and AIRNOW. This metatask is included in the
+       workflow only if ``'AOD'``, ``'PM25'``, or ``'PM10'`` are included in ``VX_FIELD_GROUPS``.
 
    * - :bolditalic:`metatask_PcpCombine_APCP_all_accums_obs_CCPA` (``verify_pre.yaml``)
      - Set of tasks that generate NetCDF files containing observed APCP for the accumulation intervals
@@ -1125,6 +1162,11 @@ interval (for cumulative fields such as accumulated precipitation), and the name
        In Rocoto, the tasks under this metatask are named ``run_MET_PcpCombine_ASNOW{accum_intvl}h_obs_NOHRSC``,
        where ``{accum_intvl}`` is the accumulation interval in hours (e.g., ``06``, ``24``, etc.) for which
        the task is being run.  This metatask is included in the workflow only if ``'ASNOW'`` is included in
+       ``VX_FIELD_GROUPS``.
+
+   * - :bolditalic:`metatask_PcpCombine_fcst_PM_all_mems` (``verify_pre.yaml``)
+     - Set of tasks that convert the raw forecast output of particulate matter into the appropriate bins for
+       PM 2.5 and PM10. This metatask is included in the workflow only if ``'PM25'`` or ``'PM10'`` is included in
        ``VX_FIELD_GROUPS``.
 
    * - :bolditalic:`metatask_check_post_output_all_mems` (``verify_pre.yaml``)
@@ -1338,6 +1380,10 @@ where ``/path/to/experiment/directory`` is changed to correspond to the user's `
 
    * On NOAA Cloud instances, ``*/1 * * * *`` (or ``CRON_RELAUNCH_INTVL_MNTS: 1``) is the preferred option for cron jobs because compute nodes will shut down if they remain idle too long. If the compute node shuts down, it can take 15-20 minutes to start up a new one. 
    * On other NOAA HPC systems, administrators discourage using ``*/1 * * * *`` due to load problems. ``*/3 * * * *`` (or ``CRON_RELAUNCH_INTVL_MNTS: 3``) is the preferred option for cron jobs on other Level 1 systems.
+
+.. attention::
+
+   Cron is not available on Derecho or Gaea. On Orion/Hercules, users must be logged into the [hercules/orion]-login-1 node to use cron.
 
 To check the experiment progress:
 
