@@ -107,4 +107,13 @@ avail_mv_colors_codes:
     purple:
         hex_code: '#8a2be2'
         hex_code_light: '#9370db'
+    black:
+        hex_code: '#000000'
+        hex_code_light: '#a9a9a9'
+    pink:
+        hex_code: '#ff90e3'
+        hex_code_light: '#ffc9f1'
+    orange:
+        hex_code: '#ffa500'
+        hex_code_light: '#ffca6a'
 
