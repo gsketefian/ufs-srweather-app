@@ -38,7 +38,7 @@ from python_utils import (
     load_config_file,
 )
 
-def check_for_preexisting_dir_file(dir_or_file, preexist_method):
+def check_for_preexisting_dir_file(dir_or_file, preexist_dir_method):
     """
     Function to check and handle preexisting directory or file.
 
@@ -47,7 +47,7 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
     dir_or_file:
       Name of directory or file.
 
-    preexist_method:
+    preexist_dir_method:
       Method to use to deal with a preexisting version of dir_or_file.  This
       has 3 valid values:
         'rename':  Causes the existing dir_or_file to be renamed.
@@ -59,21 +59,21 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
     None
     """
 
-    valid_vals_preexist_method = ['rename', 'delete', 'quit']
-    msg_invalid_preexist_method = dedent(f"""
-        Invalid value for preexist_method:
-          {get_pprint_str(preexist_method)}
+    valid_vals_preexist_dir_method = ['rename', 'delete', 'quit', 'overwrite']
+    msg_invalid_preexist_dir_method = dedent(f"""
+        Invalid value for preexist_dir_method:
+          {get_pprint_str(preexist_dir_method)}
         Valid values are:
-          {get_pprint_str(valid_vals_preexist_method)}
+          {get_pprint_str(valid_vals_preexist_dir_method)}
         Stopping.
         """)
 
-    if preexist_method not in valid_vals_preexist_method:
-        logging.error(msg_invalid_preexist_method)
-        raise ValueError(msg_invalid_preexist_method)
+    if preexist_dir_method not in valid_vals_preexist_dir_method:
+        logging.error(msg_invalid_preexist_dir_method)
+        raise ValueError(msg_invalid_preexist_dir_method)
 
     if os.path.exists(dir_or_file):
-        if preexist_method == 'rename':
+        if preexist_dir_method == 'rename':
             now = datetime.now()
             renamed_dir_or_file = dir_or_file + now.strftime('.old_%Y%m%d_%H%M%S')
             msg = dedent(f"""
@@ -84,7 +84,7 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
                 """)
             logging.debug(msg)
             os.rename(dir_or_file, renamed_dir_or_file)
-        elif preexist_method == 'delete':
+        elif preexist_dir_method == 'delete':
             msg = dedent(f"""
                 Output directory already exists:
                   {get_pprint_str(dir_or_file)}
@@ -92,7 +92,7 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
                 """)
             logging.info(msg)
             shutil.rmtree(dir_or_file)
-        elif preexist_method == 'quit':
+        elif preexist_dir_method == 'quit':
             msg = dedent(f"""
                 Output directory already exists:
                   {get_pprint_str(dir_or_file)}
@@ -100,9 +100,16 @@ def check_for_preexisting_dir_file(dir_or_file, preexist_method):
                 """)
             logging.error(msg)
             raise FileExistsError(msg)
+        elif preexist_dir_method == 'overwrite':
+            msg = dedent(f"""
+                Output directory already exists:
+                  {get_pprint_str(dir_or_file)}
+                Will overwrite contents of directory as necessary...
+                """)
+            logging.info(msg)
         else:
-            logging.error(msg_invalid_preexist_method)
-            raise ValueError(msg_invalid_preexist_method)
+            logging.error(msg_invalid_preexist_dir_method)
+            raise ValueError(msg_invalid_preexist_dir_method)
 
 
 def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
@@ -1086,7 +1093,7 @@ def main():
     parser.add_argument('--preexisting_dir_method',
                         type=str.lower,
                         required=False, default='rename',
-                        choices=['rename', 'delete', 'quit'],
+                        choices=['rename', 'delete', 'quit', 'overwrite'],
                         help=dedent(f"""
                             Method for dealing with pre-existing output directories.
                             """))
