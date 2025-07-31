@@ -2834,7 +2834,7 @@ verification:
   #
   # NMEP_SMOOTH_GAUSSIAN_RADIUS, NMEP_SMOOTH_GAUSSIAN_DX:
   # If performing Gaussian smoothing, these parameters are used to calculate
-  # the non-dimensional standard deviation or width, sigma, of the gaussian,
+  # the non-dimensional standard deviation or width, sigma, of the Gaussian,
   # where the smoothing is given by
   #
   #   NMEP_smooth(i,j) = [1/(2*pi*sigma^2)] * SUM_m_n { exp[-((m-i)^2 + (n-j)^2)/(2*sigma^2)] * NMEP(m-i,n-j) }
