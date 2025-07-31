@@ -387,6 +387,22 @@ settings="\
 'ensmem_name': '${ensmem_name:-}'
 'time_lag': '${time_lag:-}'
 #
+# Neighborhood verification method information.
+#
+'do_nep': ${DO_NEP:-}
+'do_nmep': ${DO_NMEP:-}
+'nbrhd_prob_shape': '${NBRHD_PROB_SHAPE}'
+'nbrhd_prob_widths': ${NBRHD_PROB_WIDTHS}
+'nbrhd_prob_widths': [$( printf "%s, " "${NBRHD_PROB_WIDTHS[@]}")]
+'nbrd_prob_vld_thresh': ${NBRHD_PROB_VLD_THRESH}
+#
+'nmep_smooth_method': '${NMEP_SMOOTH_METHOD}'
+'nmep_smooth_shape': '${NMEP_SMOOTH_SHAPE}'
+'nmep_smooth_width': ${NMEP_SMOOTH_WIDTH}
+'nmep_smooth_vld_thresh': ${NMEP_SMOOTH_VLD_THRESH}
+'nmep_smooth_gaussian_dx': ${NMEP_SMOOTH_GAUSSIAN_DX}
+'nmep_smooth_gaussian_radius': ${NMEP_SMOOTH_GAUSSIAN_RADIUS}
+#
 # Field information.
 #
 'fieldname_in_obs_input': '${FIELDNAME_IN_OBS_INPUT}'
