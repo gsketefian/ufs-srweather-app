@@ -6,6 +6,7 @@ generic_database: &generic_database
          'ge258K', 'ge263K', 'ge268K', 'ge278K', 'ge283K', 'ge288K', 'ge293K', 'ge298K', 'ge303K',
          'lt1609m', 'ge8045m', 'ge5400m', 'ge5880m',
          'ge5mps', 'ge10mps', 'ge15mps', 'ge21mps']
+    vx_masks: ['CONUS']
     models:
         - long_name: 'the_first_model_in_the_db'
           short_name: 'model1'

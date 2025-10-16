@@ -514,6 +514,11 @@ def parse_args(argv, valid_vx_plot_params):
                             plot.  This option is ignored for metrics that do not require a threshold.
                             """))
 
+    parser.add_argument('--vx_mask',
+                        type=str,
+                        required=True,
+                        help='Name of geographic region to which to limit the verification.')
+
     parser.add_argument('--incl_ens_means',
                         required=False, action=argparse.BooleanOptionalAction, default=argparse.SUPPRESS,
                         help=dedent(f"""
@@ -613,7 +618,25 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # Extract the METviewer database information.
     database_info = mv_databases_dict[cla.mv_database]
     valid_threshes_in_db = list(database_info['valid_threshes'])
+    vx_masks_in_db = database_info['vx_masks']
     model_info = list(database_info['models'])
+
+    # Make sure the specified verification mask is a valid one, i.e. that it
+    # exists in the list of masks for this database.
+    if cla.vx_mask not in vx_masks_in_db:
+        msg = dedent(f"""
+            The verification mask specified on the command line (cla.vx_mask) does
+            not correspond to any of the masks (vx_masks_in_db) in the specified 
+            database (cla.mv_database; also see the database configuration file
+            cla.mv_database_config_fp):
+              cla.mv_database = {get_pprint_str(cla.mv_database)}
+              cla.mv_database_config_fp = {get_pprint_str(cla.mv_database_config_fp)}
+              vx_masks_in_db = {get_pprint_str(vx_masks_in_db)}
+              cla.vx_mask = {get_pprint_str(cla.vx_mask)}
+            Stopping.
+            """)
+        logging.error(msg)
+        raise ValueError(msg)
 
     # METviewer expects the model (long) names passed to it to be in alphabetic
     # order.  Thus, the list of model (short) names passed via the command
@@ -876,11 +899,13 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Form the plot title.
     level_str = ''.join([level_info['value'], level_info['units']])
+    vxmask_str = f'(vxmask = {cla.vx_mask})'
     plot_title = ' '.join(filter(None,
                           [vx_metric_long_names[cla.vx_metric], 'for',
                            level_str, 
                            fcst_field_long_names[cla.fcst_field],
-                           thresh_info['in_plot_title']]))
+                           thresh_info['in_plot_title'],
+                           vxmask_str]))
 
     # Form the job title needed in the xml.
     fcst_field_uc = cla.fcst_field.upper()
@@ -1056,6 +1081,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "vx_metric_uc": cla.vx_metric.upper(),
                    "vx_metric_lc": cla.vx_metric.lower(),
                    "vx_metric_mv": vx_metric_mv,
+                   "vx_mask": cla.vx_mask,
                    "num_fcst_inits": num_fcst_inits,
                    "fcst_init_times": fcst_init_times_YmDHMS,
                    "fcst_len_hrs": cla.fcst_len_hrs,

@@ -148,6 +148,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     mv_database = plot_config_dict['mv_database']
     model_names_short = plot_config_dict['model_names_short']
     fcst_init_info = plot_config_dict['fcst_init_info']
+    vx_mask = plot_config_dict['vx_mask']
     fcst_len_hrs = plot_config_dict['fcst_len_hrs']
     metrics_fields_levels_threshes_dict = plot_config_dict["metrics_fields_levels_threshes"]
 
@@ -965,7 +966,8 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                                  '--vx_metric', metric,
                                  '--fcst_field', field,
                                  '--fcst_level', level,
-                                 '--threshold', thresh]
+                                 '--threshold', thresh,
+                                 '--vx_mask', vx_mask]
 
                     msg = dedent(f"""
                         Argument list passed to plotting script is:

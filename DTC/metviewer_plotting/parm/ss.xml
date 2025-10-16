@@ -63,7 +63,7 @@ is available, so we use that.
             <field equalize="true" name="vx_mask">
 {%- set ipf = ipf+1 %}
                 <set name="vx_mask_{{ipf}}">
-                    <val>CONUS</val>
+                    <val>{{vx_mask}}</val>
                 </set>
             </field>
             <field equalize="true" name="obtype">
