@@ -22,7 +22,12 @@
         <dep>
             <dep1>
                 <fcst_var name="{{fcst_field_name_in_db}}">
+{%- if vx_metric_uc in ["FBAR_OBAR"] %}
+                    <stat>FBAR</stat>
+                    <stat>OBAR</stat>
+{%- else %}
                     <stat>{{vx_metric_mv}}</stat>
+{%- endif %}
                 </fcst_var>
             </dep1>
             <dep2/>
@@ -116,7 +121,7 @@ However, it is not yet clear whether the above rule applies only to
 FBIAS or to both BIAS and FBIAS (and possibly other statistics).  Thus,
 for now we apply the rule only to FBIAS.
 #}
-{%- if (vx_metric_uc == "BIAS") %}
+{%- if vx_metric_uc in ["BCRMSE", "BIAS", "FBAR", "FBAR_OBAR", "OBAR", "RMSE"] %}
 {#- Known discontinuous fields.  Use aggregate statistics in this case. #}
   {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
         <agg_stat>
@@ -179,7 +184,11 @@ for now we apply the rule only to FBIAS.
             <r_file>plot_{{job_title}}.R</r_file>
             <title>{{plot_title}}</title>
             <x_label>Forecast Hour</x_label>
+{%- if vx_metric_uc in ["FBAR_OBAR"] %}
+            <y1_label>FBAR, OBAR</y1_label>
+{%- else %}
             <y1_label>{{vx_metric_uc}}</y1_label>
+{%- endif %}
             <y2_label/>
             <caption>{{caption}}</caption>
             <job_title>{{job_title}}</job_title>
@@ -292,7 +301,9 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   "{{plot_ci}}"
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</plot_ci>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"{{plot_ci}}" {%- endif -%}
+        )</plot_ci>
 {#- #}
         <!-- These appear in the MetViewer GUI under the column "Show Significant".
              Not yet clear on what they do. -->
@@ -309,7 +320,9 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   {{show_signif}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</show_signif>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{show_signif}} {%- endif -%}
+        )</show_signif>
 {#- #}
         <!-- These appear in the MetViewer GUI under the column "Hide", although it
              seems it is the opposite of this that is in the "Hide" column, i.e. if
@@ -328,7 +341,9 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   {{plot_disp}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</plot_disp>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{plot_disp}} {%- endif -%}
+        )</plot_disp>
 {#- #}
         <!-- These appear in the MetViewer GUI under the column "Line Color".
              They control the line colors. -->
@@ -345,7 +360,9 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   "{{color}}"
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</colors>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"{{color_obs}}" {%- endif -%}
+        )</colors>
 {#- #}
         <!-- These appear in the MetViewer GUI under the column "Point Symbol".
              They control the symbols used for the data points of each series. -->
@@ -362,7 +379,9 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   {{pch}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</pch>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{pch}} {%- endif -%}
+        )</pch>
 {#- #}
         <!-- These appear in the MetViewer GUI under the column "Series Line Type".
              "l" is for lines, and "b" is for "joined lines".
@@ -385,7 +404,9 @@ it doesn't seem to make a difference in the final plot.
   {%- set line_type = line_types[is] -%}
   "{{line_type}}"
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</type>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"{{line_type_obs}}" {%- endif -%}
+        )</type>
 {#- #}
         <!-- These appear in the MetViewer GUI under the column "Line Type".
              1 is for "solid", 3 is for "dotted".
@@ -403,7 +424,9 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   {{lty}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</lty>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{lty}} {%- endif -%}
+        )</lty>
 {#- #}
         <!-- These appear in the MetViewer GUI under the column "Line Width".
              They control the widths of the lines that join the data points. -->
@@ -420,7 +443,9 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   {{line_width}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</lwd>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{line_width_obs}} {%- endif -%}
+        )</lwd>
 {#- #}
         <!-- These appear in the MetViewer GUI under the column "Connect Across".
              0 is "no" and 1 is "yes".  
@@ -438,7 +463,9 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   {{cs}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</con_series>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{cs}} {%- endif -%}
+        )</con_series>
 {#- #}
         <!-- These appear in the MetViewer GUI under the column "#" (number sign).
              They control the order of the series, although details aren't clear. -->
@@ -454,7 +481,13 @@ it doesn't seem to make a difference in the final plot.
   {{- order_series[is.value:is.value+ns]|join(",") -}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
   {%- set is.value = is.value + ns -%}
-{%- endfor -%})</order_series>
+{%- endfor -%}
+{%- set indx_last = order_series[-1] -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%}
+  {%- set indx_last = indx_last + 1 -%}
+  {{- "," ~ indx_last -}}
+{%- endif -%}
+        )</order_series>
 {#- #}
         <plot_cmd/>
         <!-- These appear in the MetViewer GUI under the column "Legend Text".
@@ -484,7 +517,9 @@ jinja2 will fail.
     "{{model}}"
     {%- if imdl != num_models_to_plot -%} , {%- endif -%}
   {%- endif -%}
-{%- endfor -%})</legend>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"obs" {%- endif -%}
+        )</legend>
 {#- #}
         <create_html>TRUE</create_html>
         <y1_lim>c()</y1_lim>

@@ -1025,7 +1025,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # The remaining plot (i.e. vx metric) types have forecast hour on the
     # x-axis.  For these, there are several aspects of the plotting to
     # consider for setting xtick_label_freq.
-    elif cla.vx_metric in ['auc', 'bias', 'brier', 'fbias', 'ss']:
+    elif cla.vx_metric in ['auc', 'bcrmse', 'bias', 'brier', 'fbar', 'fbar_obar',
+                           'fbias', 'gss', 'obar', 'rmse', 'ss']:
 
         # Create a list of the forecast hours at which the metric is available
         # (vx_metric_fcst_hrs).  This requires first determining the metric's
