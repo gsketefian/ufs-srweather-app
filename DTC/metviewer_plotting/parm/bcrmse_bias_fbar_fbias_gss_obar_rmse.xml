@@ -125,7 +125,7 @@ for now we apply the rule only to FBIAS.
             <circular_block_bootstrap>true</circular_block_bootstrap>
         </agg_stat>
 {#- Continuous fields for which we want to use aggregate statistics. #}
-  {%- elif fcst_field_uc in ["DPT", "HGT", "TMP", "VIS", "WIND"] %}
+  {%- elif fcst_field_uc in ["DPT", "HGT", "AOTK", "PM25", "PM10", "TMP", "VIS", "WIND"] %}
         <agg_stat>
             <agg_sl1l2>true</agg_sl1l2>
             <boot_repl>10</boot_repl>
