@@ -1,5 +1,8 @@
 {%- set do_indent = false -%}
 {%- set indent = "" -%}
+{%- set boot_replics = 10 -%}
+{%- set boot_rand_seed = 1 -%}
+{#- {%- set boot_rand_seed = '' -%} -#}
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <plot_spec>
     <connection>
@@ -126,8 +129,8 @@ for now we apply the rule only to FBIAS.
   {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
         <agg_stat>
             <agg_sl1l2>true</agg_sl1l2>
-            <boot_repl>10</boot_repl>
-            <boot_random_seed>1</boot_random_seed>
+            <boot_repl>{{boot_replics}}</boot_repl>
+            <boot_random_seed>{{boot_rand_seed}}</boot_random_seed>
             <boot_ci>perc</boot_ci>
             <eveq_dis>false</eveq_dis>
             <cache_agg_stat>false</cache_agg_stat>
@@ -137,8 +140,8 @@ for now we apply the rule only to FBIAS.
   {%- elif fcst_field_uc in ["DPT", "HGT", "AOTK", "PM25", "PM10", "TMP", "VIS", "WIND"] %}
         <agg_stat>
             <agg_sl1l2>true</agg_sl1l2>
-            <boot_repl>10</boot_repl>
-            <boot_random_seed>1</boot_random_seed>
+            <boot_repl>{{boot_replics}}</boot_repl>
+            <boot_random_seed>{{boot_rand_seed}}</boot_random_seed>
             <boot_ci>perc</boot_ci>
             <eveq_dis>false</eveq_dis>
             <cache_agg_stat>false</cache_agg_stat>
@@ -152,8 +155,8 @@ for now we apply the rule only to FBIAS.
   {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
         <agg_stat>
             <agg_ctc>true</agg_ctc>
-            <boot_repl>10</boot_repl>
-            <boot_random_seed>1</boot_random_seed>
+            <boot_repl>{{boot_replics}}</boot_repl>
+            <boot_random_seed>{{boot_rand_seed}}</boot_random_seed>
             <boot_ci>perc</boot_ci>
             <eveq_dis>false</eveq_dis>
             <cache_agg_stat>false</cache_agg_stat>
@@ -163,8 +166,8 @@ for now we apply the rule only to FBIAS.
   {%- elif fcst_field_uc in ["VIS"] %}
         <agg_stat>
             <agg_ctc>true</agg_ctc>
-            <boot_repl>10</boot_repl>
-            <boot_random_seed>1</boot_random_seed>
+            <boot_repl>{{boot_replics}}</boot_repl>
+            <boot_random_seed>{{boot_rand_seed}}</boot_random_seed>
             <boot_ci>perc</boot_ci>
             <eveq_dis>false</eveq_dis>
             <cache_agg_stat>false</cache_agg_stat>
