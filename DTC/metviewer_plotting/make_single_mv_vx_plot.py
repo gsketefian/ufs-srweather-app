@@ -1141,6 +1141,12 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         """)
     logging.debug(msg)
 
+    # Set some METviewer plotting parameters for the obs.
+    line_type_obs = "b"
+    line_width_obs = 1
+    color_obs = 'blue'
+    color_obs = avail_mv_colors_codes[color_obs]['hex_code']
+
     # Create dictionary containing values for the variables appearing in the
     # jinja2 template.
     jinja2_vars = {"mv_host": cla.mv_host,
@@ -1175,7 +1181,10 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "order_series": order_series,
                    "xtick_label_freq": xtick_label_freq,
                    "line_types": line_types,
-                   "line_widths": line_widths}
+                   "line_widths": line_widths,
+                   "line_type_obs": line_type_obs,
+                   "line_width_obs": line_width_obs,
+                   "color_obs": color_obs}
 
     # Empty strings are included in this concatenation to force insertion
     # of delimiter.
