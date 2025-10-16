@@ -1081,8 +1081,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     template_fn = ''.join([cla.vx_metric, '.xml'])
     if (cla.vx_metric in ['auc', 'brier']):
         template_fn = 'auc_brier.xml'
-    elif (cla.vx_metric in ['bias', 'fbias']):
-        template_fn = 'bias_fbias.xml'
+    elif (cla.vx_metric in ['bcrmse', 'bias', 'fbar', 'fbar_obar', 'fbias', 'gss', 'obar', 'rmse']):
+        template_fn = 'bcrmse_bias_fbar_fbias_gss_obar_rmse.xml'
     elif (cla.vx_metric in ['rely', 'rhist']):
         template_fn = 'rely_rhist.xml'
     template_fp = os.path.join(templates_dir, template_fn)
