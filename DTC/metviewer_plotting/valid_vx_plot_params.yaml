@@ -7,20 +7,38 @@ valid_vx_metrics:
     auc:
         long_name: 'Area Under the Curve'
         needs_thresh: True
+    bcrmse:
+        long_name: 'Bias-Corrected RMSE'
+        needs_thresh: False
     bias:
         long_name: 'Bias'
         needs_thresh: False
     brier:
         long_name: 'Brier Score'
         needs_thresh: True
+    fbar:
+        long_name: 'Forecast Mean'
+        needs_thresh: False
+    fbar_obar:
+        long_name: 'Forecast and Obs Means'
+        needs_thresh: False
     fbias:
         long_name: 'Frequency Bias'
         needs_thresh: True
+    gss:
+        long_name: 'Gilbert Skill Score'
+        needs_thresh: True
+    obar:
+        long_name: 'Observations Mean'
+        needs_thresh: False
     rely:
         long_name: 'Reliability'
         needs_thresh: True
     rhist:
         long_name: 'Rank Histogram'
+        needs_thresh: False
+    rmse:
+        long_name: 'Root Mean-Squared Error'
         needs_thresh: False
     ss:
         long_name: 'Spread-Skill Ratio'
