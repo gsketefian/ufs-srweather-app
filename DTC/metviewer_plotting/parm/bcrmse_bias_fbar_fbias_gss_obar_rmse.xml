@@ -37,7 +37,11 @@
     {{- indent ~ "<val>" ~ model ~ "_mean" ~ "</val>" -}}
   {%- endif -%}
   {%- for imem in range(1, num_ens_mems_by_model[imdl-1]+1) -%}
-    {{- indent ~ "<val>" ~ model ~ "_mem" ~ fmt%imem ~ "</val>" -}}
+    {%- if fcst_is_ensemble -%}
+      {{- indent ~ "<val>" ~ model ~ "_mem" ~ fmt%imem ~ "</val>" -}}
+    {%- else %}
+      {{- indent ~ "<val>" ~ model ~ "</val>" -}}
+    {%- endif %}
   {%- endfor -%}
 {%- endfor %}
             </field>
@@ -464,12 +468,22 @@ it doesn't seem to make a difference in the final plot.
 {%- for imdl in range(1, num_models_to_plot+1) -%}
   {%- set model = model_names_short[imdl-1] -%}
   {%- if incl_ens_means -%} "{{model}}_mean", {%- endif -%}
-  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
-    "{{model}}{{fmt%imem}}",
-  {%- endfor -%}
-  {%- set imem = num_ens_mems_by_model[imdl-1] -%}
-  "{{model}}{{fmt%imem}}"
-  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{#-
+Need to define (initialize) imem before entering if-statement.  Otherwise,
+jinja2 will fail.
+-#}
+  {%- set imem = 0 -%}
+  {%- if fcst_is_ensemble -%}
+    {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+      "{{model}}{{fmt%imem}}",
+    {%- endfor -%}
+    {%- set imem = num_ens_mems_by_model[imdl-1] -%}
+    "{{model}}{{fmt%imem}}"
+    {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+  {%- else -%}
+    "{{model}}"
+    {%- if imdl != num_models_to_plot -%} , {%- endif -%}
+  {%- endif -%}
 {%- endfor -%})</legend>
 {#- #}
         <create_html>TRUE</create_html>
