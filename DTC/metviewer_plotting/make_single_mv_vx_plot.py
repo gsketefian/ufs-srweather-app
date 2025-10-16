@@ -295,9 +295,11 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     valid_vx_metrics = valid_vx_plot_params['valid_vx_metrics'].keys()
     vx_metric_long_names = {}
     vx_metric_needs_thresh = {}
+    vx_metric_CIs_allowed = {}
     for metric in valid_vx_metrics:
         vx_metric_long_names[metric] = valid_vx_plot_params['valid_vx_metrics'][metric]['long_name']
         vx_metric_needs_thresh[metric] = valid_vx_plot_params['valid_vx_metrics'][metric]['needs_thresh']
+        vx_metric_CIs_allowed[metric] = valid_vx_plot_params['valid_vx_metrics'][metric]['CIs_allowed']
 
     # Get list of valid forecast fields.
     valid_fcst_fields = valid_vx_plot_params['valid_fcst_fields'].keys()
@@ -377,6 +379,7 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     valid_vx_plot_params['valid_units_by_fcst_field'] = valid_units_by_fcst_field
     valid_vx_plot_params['vx_metric_long_names'] = vx_metric_long_names
     valid_vx_plot_params['vx_metric_needs_thresh'] = vx_metric_needs_thresh
+    valid_vx_plot_params['vx_metric_CIs_allowed'] = vx_metric_CIs_allowed
     valid_vx_plot_params['avail_mv_colors_codes'] = avail_mv_colors_codes
     valid_vx_plot_params['choices'] = choices
 
@@ -440,7 +443,8 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--mv_host_config_fp',
                         type=str,
-                        required=False, default='mv_hosts.yaml',
+                        required=False,
+                        default='mv_hosts.yaml',
                         help='METviewer host configuration file.')
 
     parser.add_argument('--mv_database',
@@ -450,7 +454,8 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--mv_database_config_fp',
                         type=str,
-                        required=False, default='mv_databases.yaml',
+                        required=False,
+                        default='mv_databases.yaml',
                         help='METviewer database configuration file.')
 
     # Find the path to the directory containing the clone of the SRW App.
@@ -461,7 +466,8 @@ def parse_args(argv, valid_vx_plot_params):
     expts_dir = Path(os.path.join(home_dir, '../expts_dir')).resolve()
     parser.add_argument('--output_dir',
                         type=str,
-                        required=False, default=os.path.join(expts_dir, 'mv_output'),
+                        required=False,
+                        default=os.path.join(expts_dir, 'mv_output'),
                         help='Directory in which to place output (e.g. plots) from METviewer.')
 
     parser.add_argument('--model_names_short', nargs='+',
@@ -471,7 +477,8 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--model_colors', nargs='+',
                         type=str,
-                        required=False, default=choices['color'],
+                        required=False,
+                        default=choices['color'],
                         choices=choices['color'],
                         help='Color to use for each model appearing the vx plot.')
 
@@ -508,14 +515,35 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--threshold',
                         type=str,
-                        required=False, default='',
+                        required=False,
+                        default='',
                         help=dedent(f"""
                             Threshold for the specified forecast field for which to generate the vx
                             plot.  This option is ignored for metrics that do not require a threshold.
                             """))
 
+    parser.add_argument('--vx_mask',
+                        type=str,
+                        required=True,
+                        help='Name of geographic region to which to limit the verification.')
+
+    parser.add_argument('--plot_CIs',
+                        required=False,
+                        action=argparse.BooleanOptionalAction,
+                        default=True,
+                        help=dedent(f"""
+                            Flag for including confidence intervals (CIs) around each data point.
+                            Not all vx metrics allow for CIs; for those that don't, this is disabled
+                            regardless of the value on the command line.
+                            """))
+
+    # If argparse.SUPPRESS is specified as the default value for an argument
+    # and if that argument is not provided on the command line, it will not
+    # be present in the Namespace object returned by the parser. 
     parser.add_argument('--incl_ens_means',
-                        required=False, action=argparse.BooleanOptionalAction, default=argparse.SUPPRESS,
+                        required=False,
+                        action=argparse.BooleanOptionalAction,
+                        default=argparse.SUPPRESS,
                         help=dedent(f"""
                             Flag for including ensemble mean curves in plot.  This flag is only
                             relevant for the metrics 'bias' and 'fbias'.  It is ignored for other
@@ -569,6 +597,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     valid_units_by_fcst_field = valid_vx_plot_params['valid_units_by_fcst_field']
     vx_metric_long_names = valid_vx_plot_params['vx_metric_long_names']
     vx_metric_needs_thresh = valid_vx_plot_params['vx_metric_needs_thresh']
+    vx_metric_CIs_allowed = valid_vx_plot_params['vx_metric_CIs_allowed']
     avail_mv_colors_codes = valid_vx_plot_params['avail_mv_colors_codes']
 
     # Load the host configuration file into a dictionary and find in it the
@@ -613,7 +642,26 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # Extract the METviewer database information.
     database_info = mv_databases_dict[cla.mv_database]
     valid_threshes_in_db = list(database_info['valid_threshes'])
+    fcst_is_ensemble = database_info['fcst_is_ensemble']
+    vx_masks_in_db = database_info['vx_masks']
     model_info = list(database_info['models'])
+
+    # Make sure the specified verification mask is a valid one, i.e. that it
+    # exists in the list of masks for this database.
+    if cla.vx_mask not in vx_masks_in_db:
+        msg = dedent(f"""
+            The verification mask specified on the command line (cla.vx_mask) does
+            not correspond to any of the masks (vx_masks_in_db) in the specified 
+            database (cla.mv_database; also see the database configuration file
+            cla.mv_database_config_fp):
+              cla.mv_database = {get_pprint_str(cla.mv_database)}
+              cla.mv_database_config_fp = {get_pprint_str(cla.mv_database_config_fp)}
+              vx_masks_in_db = {get_pprint_str(vx_masks_in_db)}
+              cla.vx_mask = {get_pprint_str(cla.vx_mask)}
+            Stopping.
+            """)
+        logging.error(msg)
+        raise ValueError(msg)
 
     # METviewer expects the model (long) names passed to it to be in alphabetic
     # order.  Thus, the list of model (short) names passed via the command
@@ -628,6 +676,46 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     model_names_avail_in_db = [model_info[i]['long_name'] for i in range(0,num_models_avail_in_db)]
     model_names_short_avail_in_db = [model_info[i]['short_name'] for i in range(0,num_models_avail_in_db)]
 
+    for model_dict in model_info:
+        if 'num_ens_mems' not in model_dict:
+            if fcst_is_ensemble:
+                msg = dedent(f"""
+                    The flag 'fcst_is_ensemble' is set to True for the specified METviewer database
+                    (mv_database), i.e. the database is specified to contain forecast(s) that are
+                    ensemble, but in the database configuration file (mv_database_config_fp), the
+                    number of ensemble members (num_ens_mems) is not defined for the current model
+                    (model_dict):
+                      cla.mv_database = {get_pprint_str(cla.mv_database)}
+                      cla.mv_database_config_fp = {get_pprint_str(cla.mv_database_config_fp)}
+                      {model_dict = }
+                    Stopping.
+                    """)
+                logging.error(msg)
+                raise ValueError(msg)
+            else:
+                model['num_ens_mems'] = 1
+
+        else:
+            num_ens_mems = model_dict['num_ens_mems']
+            if not fcst_is_ensemble and (num_ens_mems > 1):
+                msg = dedent(f"""
+                    The flag 'fcst_is_ensemble' is set to False for the specified METviewer database
+                    (mv_database), i.e. the database is specified to contain forecast(s) that are
+                    deterministic, but in the database configuration file (mv_database_config_fp),
+                    the number of ensemble members (num_ens_mems) for the current model (model_dict)
+                    has been set to a value greater than 1:
+                      cla.mv_database = {get_pprint_str(cla.mv_database)}
+                      cla.mv_database_config_fp = {get_pprint_str(cla.mv_database_config_fp)}
+                      database_info['fcst_is_ensemble'] = {database_info['fcst_is_ensemble']}
+                      {model_dict = }
+                      {database_info['fcst_is_ensemble'] = }
+                    For each model in the database, either set 'num_ens_mems' to 1 or leave it
+                    unspecified (in which case it will be defined and set to 1).
+                    Stopping.
+                    """)
+                logging.error(msg)
+                raise ValueError(msg)
+            
     # Make sure model names on the command line are not duplicated because
     # METviewer will throw an error in this case.  Create a set (using curly
     # braces) to store duplicate values.  Note that a set must be used here
@@ -800,13 +888,48 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         '\n'
     logging.debug(msg)
 
+    # If incl_ens_means is not specified on the command line...
     if ('incl_ens_means' not in cla):
-        incl_ens_means = False
-        if (cla.vx_metric == 'bias'): incl_ens_means = True
+        # If the forecast is deterministic, turn off plotting of ensemble means.
+        if not fcst_is_ensemble:
+            incl_ens_means = False
+        # If the forecast is ensemble, turn on plotting of ensemble means only
+        # for the vx metrics bias and fbias.
+        else:
+            incl_ens_means = False
+            if cla.vx_metric in ['bias', 'fbias']: incl_ens_means = True
+
+    # If incl_ens_means is specified on the command line...
     else:
         incl_ens_means = cla.incl_ens_means
-    # Apparently we can just reset or create incl_ens_means within the cla Namespace
-    # as follows:
+        # If incl_ens_means is set to True, it may have to be changed depending
+        # on the forecast type (deterministic or ensemble) and/or the metric to
+        # be plotted.
+        if incl_ens_means:
+            # If incl_ens_means is set to True on the command line but the forecast
+            # is deterministic, log an informational message and reset incl_ens_means
+            # to False. 
+            if not fcst_is_ensemble:
+                msg = dedent(f"""
+                    incl_ens_means has been set to True on the command line, but we are verifying
+                    a deterministic forecast.  Thus, resetting incl_ens_means to False.
+                    """)
+                logging.debug(msg)
+                incl_ens_means = False
+            # If incl_ens_means is set to True on the command line and the forecast
+            # is ensemble but the metric to be plotted is not bias or fbias, log an
+            # informational message and reset incl_ens_means to False. 
+            elif cla.vx_metric in ['bias', 'fbias']:
+                msg = dedent(f"""
+                    incl_ens_means has been set to True on the command line, but the verification
+                    metric to be plotted is not bias or fbias.  Thus, resetting incl_ens_means
+                    to False.
+                    """)
+                logging.debug(msg)
+                incl_ens_means = False
+
+    # Reset or create incl_ens_means within the cla Namespace to the value of incl_ens_means 
+    # set above.
     cla.incl_ens_means = incl_ens_means
 
     valid_fcst_levels = valid_fcst_levels_by_fcst_field[cla.fcst_field]
@@ -876,11 +999,13 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
 
     # Form the plot title.
     level_str = ''.join([level_info['value'], level_info['units']])
+    vxmask_str = f'(vxmask = {cla.vx_mask})'
     plot_title = ' '.join(filter(None,
                           [vx_metric_long_names[cla.vx_metric], 'for',
                            level_str, 
                            fcst_field_long_names[cla.fcst_field],
-                           thresh_info['in_plot_title']]))
+                           thresh_info['in_plot_title'],
+                           vxmask_str]))
 
     # Form the job title needed in the xml.
     fcst_field_uc = cla.fcst_field.upper()
@@ -924,7 +1049,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # The remaining plot (i.e. vx metric) types have forecast hour on the
     # x-axis.  For these, there are several aspects of the plotting to
     # consider for setting xtick_label_freq.
-    elif cla.vx_metric in ['auc', 'bias', 'brier', 'fbias', 'ss']:
+    elif cla.vx_metric in ['auc', 'bcrmse', 'bias', 'brier', 'fbar', 'fbar_obar',
+                           'fbias', 'gss', 'obar', 'rmse', 'ss']:
 
         # Create a list of the forecast hours at which the metric is available
         # (vx_metric_fcst_hrs).  This requires first determining the metric's
@@ -1011,10 +1137,14 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # For the given forecast field, generate a name for the corresponding
     # observation type in the METviewer database.
     obs_type = ''
-    if cla.fcst_field == 'apcp' :
+    if cla.fcst_field == 'apcp':
         obs_type = 'CCPA'
-    elif cla.fcst_field in ['refc', 'retop'] :
+    elif cla.fcst_field in ['refc', 'retop']:
         obs_type = 'MRMS'
+    elif cla.fcst_field in ['aotk']:
+        obs_type = 'AERONET_AOD'
+    elif cla.fcst_field in ['pm25', 'pm10']:
+        obs_type = 'AIRNOW_HOURLY_AQOBS'
     # The level for CAPE is 'L0', which means the surface, but its obtype is ADPUPA
     # (upper air).  It's a bit unintuitive...
     elif cla.fcst_field == 'cape':
@@ -1034,6 +1164,28 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
           obs_type = {get_pprint_str(obs_type)}
         """)
     logging.debug(msg)
+
+    # Set flag that determines whether or not confidence intervals (CIs)
+    # will be included in the plot.  We disable this if (for whatever 
+    # reason) CIs cannot be plotted for this metric.
+    plot_CIs = cla.plot_CIs
+    if not vx_metric_CIs_allowed[cla.vx_metric]:
+        plot_CIs = False
+        msg = dedent(f"""
+            Confidence intervals (CIs) cannot or should not be plotted for the current
+            metric (cla.metric), as specified in the dictionary "vx_metric_CIs_allowed".
+            Setting the flag for plotting CIs (plot_CIs) to False:
+              {cla.vx_metric = }
+              vx_metric_CIs_allowed['{cla.vx_metric}'] = {vx_metric_CIs_allowed[cla.vx_metric]}
+              {plot_CIs = }
+            """)
+        logging.debug(msg)
+
+    # Set some METviewer plotting parameters for the obs.
+    line_type_obs = "b"
+    line_width_obs = 1
+    color_obs = 'blue'
+    color_obs = avail_mv_colors_codes[color_obs]['hex_code']
 
     # Create dictionary containing values for the variables appearing in the
     # jinja2 template.
@@ -1056,18 +1208,24 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "vx_metric_uc": cla.vx_metric.upper(),
                    "vx_metric_lc": cla.vx_metric.lower(),
                    "vx_metric_mv": vx_metric_mv,
+                   "vx_mask": cla.vx_mask,
                    "num_fcst_inits": num_fcst_inits,
                    "fcst_init_times": fcst_init_times_YmDHMS,
                    "fcst_len_hrs": cla.fcst_len_hrs,
                    "job_title": job_title,
                    "plot_title": plot_title,
                    "caption": fcst_init_info_str,
+                   "fcst_is_ensemble": fcst_is_ensemble,
                    "incl_ens_means": incl_ens_means,
                    "num_series": num_series,
                    "order_series": order_series,
+                   "plot_CIs": plot_CIs,
                    "xtick_label_freq": xtick_label_freq,
                    "line_types": line_types,
-                   "line_widths": line_widths}
+                   "line_widths": line_widths,
+                   "line_type_obs": line_type_obs,
+                   "line_width_obs": line_width_obs,
+                   "color_obs": color_obs}
 
     # Empty strings are included in this concatenation to force insertion
     # of delimiter.
@@ -1081,8 +1239,8 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     template_fn = ''.join([cla.vx_metric, '.xml'])
     if (cla.vx_metric in ['auc', 'brier']):
         template_fn = 'auc_brier.xml'
-    elif (cla.vx_metric in ['bias', 'fbias']):
-        template_fn = 'bias_fbias.xml'
+    elif (cla.vx_metric in ['bcrmse', 'bias', 'fbar', 'fbar_obar', 'fbias', 'gss', 'obar', 'rmse']):
+        template_fn = 'bcrmse_bias_fbar_fbias_gss_obar_rmse.xml'
     elif (cla.vx_metric in ['rely', 'rhist']):
         template_fn = 'rely_rhist.xml'
     template_fp = os.path.join(templates_dir, template_fn)

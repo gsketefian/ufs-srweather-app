@@ -1,5 +1,15 @@
 {%- set do_indent = false -%}
 {%- set indent = "" -%}
+{#- Turn off plotting of base rate for now since it is not yet reliable. #}
+{%- set plot_base_rate = False -%}
+{#-
+{%- if (vx_metric_uc in ["FBIAS", "GSS"]) -%}
+  {%- set plot_base_rate = True -%}
+{%- endif -%}
+#}
+{%- set boot_replics = 10 -%}
+{%- set boot_rand_seed = 1 -%}
+{#- {%- set boot_rand_seed = '' -%} -#}
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <plot_spec>
     <connection>
@@ -22,10 +32,26 @@
         <dep>
             <dep1>
                 <fcst_var name="{{fcst_field_name_in_db}}">
+{%- if vx_metric_uc in ["FBAR_OBAR"] %}
+                    <stat>FBAR</stat>
+                    <stat>OBAR</stat>
+{%- else %}
                     <stat>{{vx_metric_mv}}</stat>
+{%- endif %}
                 </fcst_var>
             </dep1>
+{#- If plotting the base rate, use the second y-axis (the y2-axis) on 
+    the right-hand side of the plot.
+#}
+{%- if plot_base_rate %}
+            <dep2>
+                <fcst_var name="{{fcst_field_name_in_db}}">
+                    <stat>BASER</stat>
+                </fcst_var>
+            </dep2>
+{%- else %}
             <dep2/>
+{%- endif %}
         </dep>
         <series1>
             <field name="model">
@@ -37,12 +63,27 @@
     {{- indent ~ "<val>" ~ model ~ "_mean" ~ "</val>" -}}
   {%- endif -%}
   {%- for imem in range(1, num_ens_mems_by_model[imdl-1]+1) -%}
-    {{- indent ~ "<val>" ~ model ~ "_mem" ~ fmt%imem ~ "</val>" -}}
+    {%- if fcst_is_ensemble -%}
+      {{- indent ~ "<val>" ~ model ~ "_mem" ~ fmt%imem ~ "</val>" -}}
+    {%- else %}
+      {{- indent ~ "<val>" ~ model ~ "</val>" -}}
+    {%- endif %}
   {%- endfor -%}
 {%- endfor %}
             </field>
         </series1>
+{#- The following is specific to one METviewer database and will need to
+    be modified for others.
+#}
+{%- if plot_base_rate %}
+        <series2>
+            <field name="model">
+                <val>HRRR_mem000</val>
+            </field>
+        </series2>
+{%- else %}
         <series2/>
+{%- endif %}
 {%- set ipf = -1 %}
         <plot_fix>
             <field equalize="true" name="fcst_init_beg">
@@ -57,7 +98,7 @@
             <field equalize="true" name="vx_mask">
 {%- set ipf = ipf+1 %}
                 <set name="vx_mask_{{ipf}}">
-                    <val>CONUS</val>
+                    <val>{{vx_mask}}</val>
                 </set>
             </field>
             <field equalize="true" name="obtype">
@@ -72,7 +113,9 @@
                     <val>{{level_in_db}}</val>
                 </set>
             </field>
-{%- if (vx_metric_uc == "FBIAS") %}
+{#- Why is this included only when plotting the base rate but not otherwise?
+#}
+{%- if plot_base_rate %}
             <field equalize="true" name="fcst_thresh">
   {%- set ipf = ipf+1 %}
                 <set name="fcst_thresh_{{ipf}}">
@@ -108,75 +151,46 @@ to use summary statistics (although aggregate statistics is probably
 better), but for discontinuous fields, aggregate statistics should be
 used.
 
-However, it is not yet clear whether the above rule applies only to 
-FBIAS or to both BIAS and FBIAS (and possibly other statistics).  Thus,
-for now we apply the rule only to FBIAS.
+However, the safe approach is to always use aggregate statistics, so 
+that is what we do below.
+
+Note that the method used to calculate statistics (e.g. aggregate statistics
+vs. say summary statistics, which can be accomplished by using 
+
+  <plot_stat>median</plot_stat>
+
+instead of <agg_stat>...</agg_stat> below) affects not only the sizes of
+the confidence intervals but also the data points themselves (about which
+the confidence intervals are plotted).  To get the same curve regardless
+of whether plot_CIs is set to true or false, below we always calculate
+aggregate statistics.
 #}
-{%- if (vx_metric_uc == "BIAS") %}
-{#- Known discontinuous fields.  Use aggregate statistics in this case. #}
-  {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
         <agg_stat>
             <agg_sl1l2>true</agg_sl1l2>
-            <boot_repl>10</boot_repl>
-            <boot_random_seed>1</boot_random_seed>
+            <boot_repl>{{boot_replics}}</boot_repl>
+            <boot_random_seed>{{boot_rand_seed}}</boot_random_seed>
             <boot_ci>perc</boot_ci>
             <eveq_dis>false</eveq_dis>
             <cache_agg_stat>false</cache_agg_stat>
             <circular_block_bootstrap>true</circular_block_bootstrap>
         </agg_stat>
-{#- Continuous fields for which we want to use aggregate statistics. #}
-  {%- elif fcst_field_uc in ["DPT", "HGT", "TMP", "VIS", "WIND"] %}
-        <agg_stat>
-            <agg_sl1l2>true</agg_sl1l2>
-            <boot_repl>10</boot_repl>
-            <boot_random_seed>1</boot_random_seed>
-            <boot_ci>perc</boot_ci>
-            <eveq_dis>false</eveq_dis>
-            <cache_agg_stat>false</cache_agg_stat>
-            <circular_block_bootstrap>true</circular_block_bootstrap>
-        </agg_stat>
-  {%- else %}
-        <plot_stat>median</plot_stat>
-  {%- endif %}
-{%- elif (vx_metric_uc == "FBIAS") %}
-{#- Known discontinuous fields.  Use aggregate statistics in this case. #}
-  {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
-        <agg_stat>
-            <agg_ctc>true</agg_ctc>
-            <boot_repl>10</boot_repl>
-            <boot_random_seed>1</boot_random_seed>
-            <boot_ci>perc</boot_ci>
-            <eveq_dis>false</eveq_dis>
-            <cache_agg_stat>false</cache_agg_stat>
-            <circular_block_bootstrap>true</circular_block_bootstrap>
-        </agg_stat>
-{#- Continuous fields for which we want to use aggregate statistics. #}
-  {%- elif fcst_field_uc in ["VIS"] %}
-        <agg_stat>
-            <agg_ctc>true</agg_ctc>
-            <boot_repl>10</boot_repl>
-            <boot_random_seed>1</boot_random_seed>
-            <boot_ci>perc</boot_ci>
-            <eveq_dis>false</eveq_dis>
-            <cache_agg_stat>false</cache_agg_stat>
-            <circular_block_bootstrap>true</circular_block_bootstrap>
-        </agg_stat>
-{#- Known continuous fields.  Use summary statistics for these for now (may change later). #}
-  {%- elif fcst_field_uc in ["DPT", "HGT", "TMP"] %}
-        <plot_stat>median</plot_stat>
-{#- Default to summary statistics for unexpected fields. #}
-  {%- else %}
-        <plot_stat>median</plot_stat>
-  {%- endif %}
-{%- endif %}
         <tmpl>
             <data_file>plot_{{job_title}}.data</data_file>
             <plot_file>plot_{{job_title}}.png</plot_file>
             <r_file>plot_{{job_title}}.R</r_file>
             <title>{{plot_title}}</title>
             <x_label>Forecast Hour</x_label>
+{%- if vx_metric_uc in ["FBAR_OBAR"] %}
+            <y1_label>FBAR, OBAR</y1_label>
+{%- else %}
             <y1_label>{{vx_metric_uc}}</y1_label>
+{%- endif %}
+{#- If plotting the base rate on the y2-axis, add a label to that axis. #}
+{%- if plot_base_rate %}
+            <y2_label>Base Rate</y2_label>
+{%- else %}
             <y2_label/>
+{%- endif %}
             <caption>{{caption}}</caption>
             <job_title>{{job_title}}</job_title>
             <keep_revisions>false</keep_revisions>
@@ -272,7 +286,7 @@ it doesn't seem to make a difference in the final plot.
         <ci_alpha>0.05</ci_alpha>
         <eqbound_low>-0.001</eqbound_low>
         <eqbound_high>0.001</eqbound_high>
-        <!-- These appear in the MetViewer GUI under the column "Conf Interval".
+        <!-- These appear in the METviewer GUI under the column "Conf Interval".
              They specify the type of confidence intervals to plot ("none" for 
              no confidence intervals). -->
         <plot_ci>c(
@@ -280,34 +294,46 @@ it doesn't seem to make a difference in the final plot.
 {%- if do_indent -%}
   {%- set indent = " \\\n                   " -%}
 {%- endif -%}
-{%- for imdl in range(1, num_models_to_plot+1) -%}
+{#- #}
+{%- set plot_ci = "boot" -%}
+{%- if not plot_CIs -%}
   {%- set plot_ci = "none" -%}
+{%- endif -%}
+{#- #}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
   {%- if incl_ens_means -%} "{{plot_ci}}", {%- endif -%}
   {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
     "{{plot_ci}}",
   {%- endfor -%}
   "{{plot_ci}}"
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</plot_ci>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"{{plot_ci}}" {%- endif -%}
+{#- Don't add confidence intervals to the base-rate data points. #}
+{%- if plot_base_rate -%} ,"none" {%- endif -%}
+        )</plot_ci>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Show Significant".
+        <!-- These appear in the METviewer GUI under the column "Show Significant".
              Not yet clear on what they do. -->
         <show_signif>c(
 {%- set indent = "" -%}
 {%- if do_indent -%}
   {%- set indent = " \\\n                       " -%}
 {%- endif -%}
+{%- set show_signif = "FALSE" -%}
 {%- for imdl in range(1, num_models_to_plot+1) -%}
-  {%- set show_signif = "FALSE" -%}
   {%- if incl_ens_means -%} {{show_signif}}, {%- endif -%}
   {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
     {{show_signif}},
   {%- endfor -%}
   {{show_signif}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</show_signif>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{show_signif}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{show_signif}} {%- endif -%}
+        )</show_signif>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Hide", although it
+        <!-- These appear in the METviewer GUI under the column "Hide", although it
              seems it is the opposite of this that is in the "Hide" column, i.e. if
              an element is set to "TRUE" here, it will show up as "FALSE" in the GUI.
              Not yet clear on what they do. -->
@@ -316,17 +342,20 @@ it doesn't seem to make a difference in the final plot.
 {%- if do_indent -%}
   {%- set indent = " \\\n                     " -%}
 {%- endif -%}
+{%- set plot_disp = "TRUE" -%}
 {%- for imdl in range(1, num_models_to_plot+1) -%}
-  {%- set plot_disp = "TRUE" -%}
   {%- if incl_ens_means -%} {{plot_disp}}, {%- endif -%}
   {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
     {{plot_disp}},
   {%- endfor -%}
   {{plot_disp}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</plot_disp>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{plot_disp}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{plot_disp}} {%- endif -%}
+        )</plot_disp>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Line Color".
+        <!-- These appear in the METviewer GUI under the column "Line Color".
              They control the line colors. -->
         <colors>c(
 {%- set indent = "" -%}
@@ -341,28 +370,38 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   "{{color}}"
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</colors>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"{{color_obs}}" {%- endif -%}
+{#- Specify color for base-rate line. #}
+{%- set color_gray = "#808080" -%}
+{%- if plot_base_rate -%} ,"{{color_gray}}" {%- endif -%}
+        )</colors>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Point Symbol".
+        <!-- These appear in the METviewer GUI under the column "Point Symbol".
              They control the symbols used for the data points of each series. -->
         <pch>c(
 {%- set indent = "" -%}
 {%- if do_indent -%}
   {%- set indent = " \\\n               " -%}
 {%- endif -%}
+{%- set pch = 20 -%}
 {%- for imdl in range(1, num_models_to_plot+1) -%}
-  {%- set pch = 20 -%}
   {%- if incl_ens_means -%} {{pch}}, {%- endif -%}
   {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
     {{pch}},
   {%- endfor -%}
   {{pch}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</pch>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{pch}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{pch}} {%- endif -%}
+        )</pch>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Series Line Type".
-             "l" is for lines, and "b" is for "joined lines".
-             Not yet clear on what they do. -->
+        <!-- These appear in the METviewer GUI under the column "Series Line Type".
+             "l" is for "lines", and "b" is for "joined lines".  "l" or "lines" does
+             not include the plot symbol (specified by <pch>) at the data points,
+             while "b" or "joined lines" does.  There are other possibilities as well;
+             see the drop-down menu in the METviewer GUI for the full set of these. -->
         <type>c(
 {%- set indent = "" -%}
 {%- if do_indent -%}
@@ -381,9 +420,12 @@ it doesn't seem to make a difference in the final plot.
   {%- set line_type = line_types[is] -%}
   "{{line_type}}"
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</type>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"{{line_type_obs}}" {%- endif -%}
+{%- if plot_base_rate -%} ,"{{line_types[0]}}" {%- endif -%}
+        )</type>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Line Type".
+        <!-- These appear in the METviewer GUI under the column "Line Type".
              1 is for "solid", 3 is for "dotted".
              They control the line types that join the data points. -->
         <lty>c(
@@ -391,17 +433,20 @@ it doesn't seem to make a difference in the final plot.
 {%- if do_indent -%}
   {%- set indent = " \\\n               " -%}
 {%- endif -%}
+{%- set lty = 1 -%}
 {%- for imdl in range(1, num_models_to_plot+1) -%}
-  {%- set lty = 1 -%}
   {%- if incl_ens_means -%} {{lty}}, {%- endif -%}
   {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
     {{lty}},
   {%- endfor -%}
   {{lty}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</lty>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{lty}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{lty}} {%- endif -%}
+        )</lty>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Line Width".
+        <!-- These appear in the METviewer GUI under the column "Line Width".
              They control the widths of the lines that join the data points. -->
         <lwd>c(
 {%- set indent = "" -%}
@@ -416,9 +461,12 @@ it doesn't seem to make a difference in the final plot.
   {%- endfor -%}
   {{line_width}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</lwd>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{line_width_obs}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{line_widths[0]}} {%- endif -%}
+        )</lwd>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Connect Across".
+        <!-- These appear in the METviewer GUI under the column "Connect Across".
              0 is "no" and 1 is "yes".  
              Not yet clear on what they do. -->
         <con_series>c(
@@ -426,17 +474,20 @@ it doesn't seem to make a difference in the final plot.
 {%- if do_indent -%}
   {%- set indent = " \\\n                      " -%}
 {%- endif -%}
+{%- set cs = 1 -%}
 {%- for imdl in range(1, num_models_to_plot+1) -%}
-  {%- set cs = 1 -%}
   {%- if incl_ens_means -%} {{cs}}, {%- endif -%}
   {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
     {{cs}},
   {%- endfor -%}
   {{cs}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</con_series>
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{cs}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{cs}} {%- endif -%}
+        )</con_series>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "#" (number sign).
+        <!-- These appear in the METviewer GUI under the column "#" (number sign).
              They control the order of the series, although details aren't clear. -->
         <order_series>c(
 {%- set indent = "" -%}
@@ -450,10 +501,20 @@ it doesn't seem to make a difference in the final plot.
   {{- order_series[is.value:is.value+ns]|join(",") -}}
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
   {%- set is.value = is.value + ns -%}
-{%- endfor -%})</order_series>
+{%- endfor -%}
+{%- set indx_last = order_series[-1] -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%}
+  {%- set indx_last = indx_last + 1 -%}
+  {{- "," ~ indx_last -}}
+{%- endif -%}
+{%- if plot_base_rate -%}
+  {%- set indx_last = indx_last + 1 -%}
+  {{- "," ~ indx_last -}}
+{%- endif -%}
+        )</order_series>
 {#- #}
         <plot_cmd/>
-        <!-- These appear in the MetViewer GUI under the column "Legend Text".
+        <!-- These appear in the METviewer GUI under the column "Legend Text".
              They specify the text that appears in the legend for each series. -->
         <legend>c(
 {%- set indent = "" -%}
@@ -464,19 +525,37 @@ it doesn't seem to make a difference in the final plot.
 {%- for imdl in range(1, num_models_to_plot+1) -%}
   {%- set model = model_names_short[imdl-1] -%}
   {%- if incl_ens_means -%} "{{model}}_mean", {%- endif -%}
-  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
-    "{{model}}{{fmt%imem}}",
-  {%- endfor -%}
-  {%- set imem = num_ens_mems_by_model[imdl-1] -%}
-  "{{model}}{{fmt%imem}}"
-  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
-{%- endfor -%})</legend>
+{#-
+Need to define (initialize) imem before entering if-statement.  Otherwise,
+jinja2 will fail.
+-#}
+  {%- set imem = 0 -%}
+  {%- if fcst_is_ensemble -%}
+    {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+      "{{model}}{{fmt%imem}}",
+    {%- endfor -%}
+    {%- set imem = num_ens_mems_by_model[imdl-1] -%}
+    "{{model}}{{fmt%imem}}"
+    {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+  {%- else -%}
+    "{{model}}"
+    {%- if imdl != num_models_to_plot -%} , {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"obs" {%- endif -%}
+{#- Specify the legend text for the base rate. #}
+{%- if plot_base_rate -%} ,"Base Rate" {%- endif -%}
+        )</legend>
 {#- #}
         <create_html>TRUE</create_html>
         <y1_lim>c()</y1_lim>
         <x1_lim>c()</x1_lim>
         <y1_bufr>0.04</y1_bufr>
+{%- if plot_base_rate %}
+        <y2_lim>c(0,0.25)</y2_lim>
+{%- else %}
         <y2_lim>c()</y2_lim>
+{%- endif %}
     </plot>
 </plot_spec>
 

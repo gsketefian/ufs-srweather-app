@@ -148,7 +148,9 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     mv_database = plot_config_dict['mv_database']
     model_names_short = plot_config_dict['model_names_short']
     fcst_init_info = plot_config_dict['fcst_init_info']
+    vx_mask = plot_config_dict['vx_mask']
     fcst_len_hrs = plot_config_dict['fcst_len_hrs']
+    plot_CIs_all_metrics = plot_config_dict['plot_CIs_all_metrics']
     metrics_fields_levels_threshes_dict = plot_config_dict["metrics_fields_levels_threshes"]
 
     # Load the yaml-format METviewer database configuration file and extract
@@ -165,7 +167,7 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
     fcst_init_info = [str(elem) for elem in fcst_init_info.values()]
 
     # Convert fcst_len_hrs from an integer to a string since that's what
-    # the jinja2 templates exptect.
+    # the jinja2 templates expect.
     fcst_len_hrs = str(fcst_len_hrs)
 
     # Check if output directory exists and take action according to how the
@@ -961,11 +963,13 @@ def make_multi_mv_vx_plots(args, valid_vals, vx_metric_needs_thresh):
                                  '--output_dir', output_dir_crnt_vx_metric, \
                                  '--model_names_short', ] + model_names_short \
                               + ['--fcst_init_info'] + fcst_init_info \
-                              + ['--fcst_len_hrs', fcst_len_hrs, \
+                              + ['--fcst_len_hrs', fcst_len_hrs,
+                                 '--' + ('' if plot_CIs_all_metrics else 'no-') + 'plot_CIs',
                                  '--vx_metric', metric,
                                  '--fcst_field', field,
                                  '--fcst_level', level,
-                                 '--threshold', thresh]
+                                 '--threshold', thresh,
+                                 '--vx_mask', vx_mask]
 
                     msg = dedent(f"""
                         Argument list passed to plotting script is:
@@ -1049,7 +1053,16 @@ def main():
     None
     """
 
+    #
+    # Create ArgumentParser object.  Note that specifying 
+    #
+    #   formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    #
+    # in the arguments list causes the default values of arguments to be
+    # printed out when the help is invoked on the command line.
+    #
     parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description='Call METviewer to create vx plots.'
     )
 

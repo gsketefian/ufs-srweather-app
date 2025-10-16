@@ -11,6 +11,14 @@ fcst_init_info:
 
 fcst_len_hrs: 36
 
+# The METplus verification mask to use.  Only locations inside this mask
+# are included when calculating metrics.
+vx_mask: 'CONUS'
+
+# Whether or not to (try to) plot confidence intervals.  This applies to all metrics
+# for which CIs are allowed (as specified in valid_vx_plot_params.yaml).
+plot_CIs_all_metrics: True
+
 metrics_fields_levels_threshes:
     #
     auc:

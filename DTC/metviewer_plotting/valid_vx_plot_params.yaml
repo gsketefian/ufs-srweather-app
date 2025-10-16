@@ -1,30 +1,70 @@
 #
-# List of valid verification (vx) metric short names, the long name of
-# each, and whether each requires a threshold value for a given forecast
-# field.
+# List of valid verification (vx) metrics.  The first level of keys
+# are the short names of these metrics.  Under each short name are:
+#
+# 1) long_name:
+#    The long name of the metric.
+# 2) needs_thresh:
+#    Whether or not thresholds must be specified for the metric (with a
+#    different set of thresholds for each forecast field to be verified
+#    for the metric).
+# 3) CIs_allowed:
+#    Whether or not it makes sense and/or it is possible to calculate
+#    confidence intervals in METviewer for the metric.
 #
 valid_vx_metrics:
     auc:
         long_name: 'Area Under the Curve'
         needs_thresh: True
+        CIs_allowed: False
+    bcrmse:
+        long_name: 'Bias-Corrected RMSE'
+        needs_thresh: False
+        CIs_allowed: True
     bias:
         long_name: 'Bias'
         needs_thresh: False
+        CIs_allowed: True
     brier:
         long_name: 'Brier Score'
         needs_thresh: True
+        CIs_allowed: False
+    fbar:
+        long_name: 'Forecast Mean'
+        needs_thresh: False
+        CIs_allowed: True
+    fbar_obar:
+        long_name: 'Forecast and Obs Means'
+        needs_thresh: False
+        CIs_allowed: True
     fbias:
         long_name: 'Frequency Bias'
         needs_thresh: True
+        CIs_allowed: True
+    gss:
+        long_name: 'Gilbert Skill Score'
+        needs_thresh: True
+        CIs_allowed: True
+    obar:
+        long_name: 'Observations Mean'
+        needs_thresh: False
+        CIs_allowed: True
     rely:
         long_name: 'Reliability'
         needs_thresh: True
+        CIs_allowed: False
     rhist:
         long_name: 'Rank Histogram'
         needs_thresh: False
+        CIs_allowed: False
+    rmse:
+        long_name: 'Root Mean-Squared Error'
+        needs_thresh: False
+        CIs_allowed: True
     ss:
         long_name: 'Spread-Skill Ratio'
         needs_thresh: False
+        CIs_allowed: False
 #
 # List of valid forecast field short names, and, for each field:
 #
@@ -33,42 +73,66 @@ valid_vx_metrics:
 #   3) A list of valid levels.
 #
 valid_fcst_fields:
+    aotk:
+        long_name: 'Aerosol Optical Depth'
+        valid_units: ['']
+        valid_fcst_levels: ['L0']
+        is_cont: True
     apcp:
         long_name: 'Accumulated Precipitation'
         valid_units: ['mm']
         valid_fcst_levels: ['01h', '03h', '06h', '24h']
+        is_cont: False
     cape:
         long_name: 'Convenctive Available Potential Energy'
         valid_units: ['Jpkg']
         valid_fcst_levels: ['L0']
+        is_cont: False
     dpt:
         long_name: 'Dew Point'
         valid_units: ['K']
         valid_fcst_levels: ['2m', '500mb', '700mb', '850mb']
+        is_cont: True
     hgt:
         long_name: 'Height'
         valid_units: ['m']
         valid_fcst_levels: ['500mb']
+        is_cont: True
+    pm10:
+        long_name: 'PM10'
+        valid_units: ['ugpm3']
+        valid_fcst_levels: ['8m']
+        is_cont: True
+    pm25:
+        long_name: 'PM2.5'
+        valid_units: ['ugpm3']
+        valid_fcst_levels: ['8m']
+        is_cont: True
     refc:
         long_name: 'Composite Reflectivity'
         valid_units: ['dbz', 'dBZ']
         valid_fcst_levels: ['L0']
+        is_cont: False
     retop:
         long_name: 'Echo Top'
         valid_units: ['kft']
         valid_fcst_levels: ['L0']
+        is_cont: False
     tmp:
         long_name: 'Temperature'
         valid_units: ['K']
         valid_fcst_levels: ['2m', '500mb', '700mb', '850mb']
+        is_cont: True
     vis:
         long_name: 'Visibility'
         valid_units: ['m']
         valid_fcst_levels: ['L0']
+        is_cont: True
     wind:
         long_name: 'Wind'
         valid_units: ['mps']
         valid_fcst_levels: ['10m', '500mb', '700mb', '850mb']
+        is_cont: True
 #
 # Dictionary containing set of allowed levels (the keys) that can be
 # specified on the command line along with the corresponding strings
@@ -85,6 +149,7 @@ valid_fcst_levels_to_levels_in_db: {'01h': 'A1',
                                     '24h': 'A24',
                                     'L0': 'L0',
                                     '2m': 'Z2',
+                                    '8m': 'Z8',
                                     '10m': 'Z10', 
                                     '500mb': 'P500',
                                     '700mb': 'P700',

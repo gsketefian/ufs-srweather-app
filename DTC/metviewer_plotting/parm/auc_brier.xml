@@ -47,6 +47,12 @@
 {%- endfor %}
                 </set>
             </field>
+            <field equalize="true" name="vx_mask">
+{%- set ipf = ipf+1 %}
+                <set name="vx_mask_{{ipf}}">
+                    <val>{{vx_mask}}</val>
+                </set>
+            </field>
             <field equalize="true" name="fcst_lev">
 {%- set ipf = ipf+1 %}
                 <set name="fcst_lev_{{ipf}}">

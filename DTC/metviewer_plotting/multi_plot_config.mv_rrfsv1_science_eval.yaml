@@ -1,0 +1,123 @@
+mv_host: 'mohawk'
+
+mv_database: 'mv_rrfsv1_science_eval'
+
+#model_names_short: ['href', 'gdas', 'gefs']
+#model_names_short: ['HRRR', 'NSSL-MPAS-HN', 'NSSL-MPAS-HT', 'NSSL-MPAS-RT', 'RRFS-A', 'GSL-MPAS-05']
+#model_names_short: ['GSL-MPAS-05-RT', 'HRRR', 'NSSL-MPAS-HN', 'NSSL-MPAS-HT', 'NSSL-MPAS-RT', 'RRFS-A']
+#model_names_short: ['GSL-MPAS-05-RT', 'HRRR', 'NSSL-MPAS-HN', 'NSSL-MPAS-HT', 'NSSL-MPAS-RT', 'RRFS-A']
+model_names_short: ['RRFS']
+
+fcst_init_info:
+    fcst_init_time_first: '2024010900'
+    num_fcst_inits: 31
+    fcst_init_intvl_hrs: 24
+
+fcst_len_hrs: 84
+
+# The METplus verification mask to use.  Only locations inside this mask
+# are included when calculating metrics.
+vx_mask: 'CONUS'
+
+# Whether or not to (try to) plot confidence intervals.  This applies to all metrics
+# for which CIs are allowed (as specified in valid_vx_plot_params.yaml).
+plot_CIs_all_metrics: True
+
+metrics_fields_levels_threshes:
+
+    fbar:
+        vis:
+            L0: []
+        AOTK:
+            L0: []
+    obar:
+        vis:
+            L0: []
+
+    bcrmse:
+        AOTK:
+            L0: []
+        dpt:
+            2m: []
+        pm25:
+            8m: []
+        pm10:
+            8m: []
+        tmp:
+            2m: []
+        vis:
+            L0: []
+        wind:
+            10m: []
+
+    bias:
+        AOTK:
+            L0: []
+        dpt:
+            2m: []
+        pm25:
+            8m: []
+        pm10:
+            8m: []
+        tmp:
+            2m: []
+            500mb: []
+            700mb: []
+            850mb: []
+        vis:
+            L0: []
+        wind:
+            10m: []
+            700mb: []
+            850mb: []
+
+    fbar_obar:
+        AOTK:
+            L0: []
+        dpt:
+            2m: []
+        pm25:
+            8m: []
+        pm10:
+            8m: []
+        tmp:
+            2m: []
+        vis:
+            L0: []
+        wind:
+            10m: []
+
+    rmse:
+        AOTK:
+            L0: []
+        dpt:
+            2m: []
+        pm25:
+            8m: []
+        pm10:
+            8m: []
+        tmp:
+            2m: []
+        vis:
+            L0: []
+        wind:
+            10m: []
+
+# These fail.  Need to understand why.
+#    fbias:
+#        apcp:
+##            03h: ['gt0.0mm', 'ge2.54mm']
+##            03h: ['ge6.350mm']
+##            03h: ['ge2.54mm', 'ge6.350mm']
+#            03h: ['ge2.54mm']
+#        refc:
+##            L0: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ']
+#            L0: ['ge20dBZ']
+
+# These fail.  Need to understand why.
+#    gss:
+#        apcp:
+#            03h: ['ge2.54mm', 'ge6.350mm']
+#        refc:
+#            L0: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ']
+
