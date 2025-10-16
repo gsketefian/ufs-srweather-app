@@ -1040,6 +1040,10 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         obs_type = 'CCPA'
     elif cla.fcst_field in ['refc', 'retop'] :
         obs_type = 'MRMS'
+    elif cla.fcst_field in ['aotk']:
+        obs_type = 'AERONET_AOD'
+    elif cla.fcst_field in ['pm25', 'pm10']:
+        obs_type = 'AIRNOW_HOURLY_AQOBS'
     # The level for CAPE is 'L0', which means the surface, but its obtype is ADPUPA
     # (upper air).  It's a bit unintuitive...
     elif cla.fcst_field == 'cape':
