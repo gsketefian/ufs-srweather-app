@@ -1113,9 +1113,9 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # For the given forecast field, generate a name for the corresponding
     # observation type in the METviewer database.
     obs_type = ''
-    if cla.fcst_field == 'apcp' :
+    if cla.fcst_field == 'apcp':
         obs_type = 'CCPA'
-    elif cla.fcst_field in ['refc', 'retop'] :
+    elif cla.fcst_field in ['refc', 'retop']:
         obs_type = 'MRMS'
     elif cla.fcst_field in ['aotk']:
         obs_type = 'AERONET_AOD'
