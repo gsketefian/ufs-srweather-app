@@ -6,14 +6,16 @@ generic_database: &generic_database
          'ge258K', 'ge263K', 'ge268K', 'ge278K', 'ge283K', 'ge288K', 'ge293K', 'ge298K', 'ge303K',
          'lt1609m', 'ge8045m', 'ge5400m', 'ge5880m',
          'ge5mps', 'ge10mps', 'ge15mps', 'ge21mps']
+    fcst_is_ensemble: False
     vx_masks: ['CONUS']
     models:
         - long_name: 'the_first_model_in_the_db'
           short_name: 'model1'
-          num_ens_mems: '1'
+          num_ens_mems: 1
 
 mv_gefs_gdas_rtps_href_spring_2022:
     <<: *generic_database
+    fcst_is_ensemble: True
     models:
         - long_name: 'RRFS_GDAS_GF.SPP.SPPT'
           short_name: 'gdas'
@@ -30,6 +32,7 @@ mv_gefs_gdas_rtps_href_spring_2022:
 
 mv_rrfse_icpert_stoch:
     <<: *generic_database
+    fcst_is_ensemble: True
     models:
         - long_name: 'RRFSE_CONUS_ICperts_nostoch.rrfs_conuscompact_3km'
           short_name: 'nostoch'
@@ -47,6 +50,7 @@ mv_hwt2024:
          'ge258K', 'ge263K', 'ge268K', 'ge278K', 'ge283K', 'ge288K', 'ge293K', 'ge298K', 'ge303K',
          'lt1609m', 'ge8045m', 'ge5400m', 'ge5880m',
          'ge5mps', 'ge10mps', 'ge15mps', 'ge21mps']
+    fcst_is_ensemble: False
     models:
          - long_name: 'HRRR_mem000'
            short_name: 'HRRR'

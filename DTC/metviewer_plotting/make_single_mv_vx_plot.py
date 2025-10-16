@@ -618,6 +618,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # Extract the METviewer database information.
     database_info = mv_databases_dict[cla.mv_database]
     valid_threshes_in_db = list(database_info['valid_threshes'])
+    fcst_is_ensemble = database_info['fcst_is_ensemble']
     vx_masks_in_db = database_info['vx_masks']
     model_info = list(database_info['models'])
 
@@ -651,6 +652,46 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     model_names_avail_in_db = [model_info[i]['long_name'] for i in range(0,num_models_avail_in_db)]
     model_names_short_avail_in_db = [model_info[i]['short_name'] for i in range(0,num_models_avail_in_db)]
 
+    for model_dict in model_info:
+        if 'num_ens_mems' not in model_dict:
+            if fcst_is_ensemble:
+                msg = dedent(f"""
+                    The flag 'fcst_is_ensemble' is set to True for the specified METviewer database
+                    (mv_database), i.e. the database is specified to contain forecast(s) that are
+                    ensemble, but in the database configuration file (mv_database_config_fp), the
+                    number of ensemble members (num_ens_mems) is not defined for the current model
+                    (model_dict):
+                      cla.mv_database = {get_pprint_str(cla.mv_database)}
+                      cla.mv_database_config_fp = {get_pprint_str(cla.mv_database_config_fp)}
+                      {model_dict = }
+                    Stopping.
+                    """)
+                logging.error(msg)
+                raise ValueError(msg)
+            else:
+                model['num_ens_mems'] = 1
+
+        else:
+            num_ens_mems = model_dict['num_ens_mems']
+            if not fcst_is_ensemble and (num_ens_mems > 1):
+                msg = dedent(f"""
+                    The flag 'fcst_is_ensemble' is set to False for the specified METviewer database
+                    (mv_database), i.e. the database is specified to contain forecast(s) that are
+                    deterministic, but in the database configuration file (mv_database_config_fp),
+                    the number of ensemble members (num_ens_mems) for the current model (model_dict)
+                    has been set to a value greater than 1:
+                      cla.mv_database = {get_pprint_str(cla.mv_database)}
+                      cla.mv_database_config_fp = {get_pprint_str(cla.mv_database_config_fp)}
+                      database_info['fcst_is_ensemble'] = {database_info['fcst_is_ensemble']}
+                      {model_dict = }
+                      {database_info['fcst_is_ensemble'] = }
+                    For each model in the database, either set 'num_ens_mems' to 1 or leave it
+                    unspecified (in which case it will be defined and set to 1).
+                    Stopping.
+                    """)
+                logging.error(msg)
+                raise ValueError(msg)
+            
     # Make sure model names on the command line are not duplicated because
     # METviewer will throw an error in this case.  Create a set (using curly
     # braces) to store duplicate values.  Note that a set must be used here
@@ -823,13 +864,48 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         '\n'
     logging.debug(msg)
 
+    # If incl_ens_means is not specified on the command line...
     if ('incl_ens_means' not in cla):
-        incl_ens_means = False
-        if (cla.vx_metric == 'bias'): incl_ens_means = True
+        # If the forecast is deterministic, turn off plotting of ensemble means.
+        if not fcst_is_ensemble:
+            incl_ens_means = False
+        # If the forecast is ensemble, turn on plotting of ensemble means only
+        # for the vx metrics bias and fbias.
+        else:
+            incl_ens_means = False
+            if cla.vx_metric in ['bias', 'fbias']: incl_ens_means = True
+
+    # If incl_ens_means is specified on the command line...
     else:
         incl_ens_means = cla.incl_ens_means
-    # Apparently we can just reset or create incl_ens_means within the cla Namespace
-    # as follows:
+        # If incl_ens_means is set to True, it may have to be changed depending
+        # on the forecast type (deterministic or ensemble) and/or the metric to
+        # be plotted.
+        if incl_ens_means:
+            # If incl_ens_means is set to True on the command line but the forecast
+            # is deterministic, log an informational message and reset incl_ens_means
+            # to False. 
+            if not fcst_is_ensemble:
+                msg = dedent(f"""
+                    incl_ens_means has been set to True on the command line, but we are verifying
+                    a deterministic forecast.  Thus, resetting incl_ens_means to False.
+                    """)
+                logging.debug(msg)
+                incl_ens_means = False
+            # If incl_ens_means is set to True on the command line and the forecast
+            # is ensemble but the metric to be plotted is not bias or fbias, log an
+            # informational message and reset incl_ens_means to False. 
+            elif cla.vx_metric in ['bias', 'fbias']:
+                msg = dedent(f"""
+                    incl_ens_means has been set to True on the command line, but the verification
+                    metric to be plotted is not bias or fbias.  Thus, resetting incl_ens_means
+                    to False.
+                    """)
+                logging.debug(msg)
+                incl_ens_means = False
+
+    # Reset or create incl_ens_means within the cla Namespace to the value of incl_ens_means 
+    # set above.
     cla.incl_ens_means = incl_ens_means
 
     valid_fcst_levels = valid_fcst_levels_by_fcst_field[cla.fcst_field]
@@ -1092,6 +1168,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "job_title": job_title,
                    "plot_title": plot_title,
                    "caption": fcst_init_info_str,
+                   "fcst_is_ensemble": fcst_is_ensemble,
                    "incl_ens_means": incl_ens_means,
                    "num_series": num_series,
                    "order_series": order_series,
