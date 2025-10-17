@@ -295,9 +295,11 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     valid_vx_metrics = valid_vx_plot_params['valid_vx_metrics'].keys()
     vx_metric_long_names = {}
     vx_metric_needs_thresh = {}
+    vx_metric_CIs_allowed = {}
     for metric in valid_vx_metrics:
         vx_metric_long_names[metric] = valid_vx_plot_params['valid_vx_metrics'][metric]['long_name']
         vx_metric_needs_thresh[metric] = valid_vx_plot_params['valid_vx_metrics'][metric]['needs_thresh']
+        vx_metric_CIs_allowed[metric] = valid_vx_plot_params['valid_vx_metrics'][metric]['CIs_allowed']
 
     # Get list of valid forecast fields.
     valid_fcst_fields = valid_vx_plot_params['valid_fcst_fields'].keys()
@@ -377,6 +379,7 @@ def get_valid_vx_plot_params(valid_vx_plot_params_config_fp):
     valid_vx_plot_params['valid_units_by_fcst_field'] = valid_units_by_fcst_field
     valid_vx_plot_params['vx_metric_long_names'] = vx_metric_long_names
     valid_vx_plot_params['vx_metric_needs_thresh'] = vx_metric_needs_thresh
+    valid_vx_plot_params['vx_metric_CIs_allowed'] = vx_metric_CIs_allowed
     valid_vx_plot_params['avail_mv_colors_codes'] = avail_mv_colors_codes
     valid_vx_plot_params['choices'] = choices
 
@@ -574,6 +577,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     valid_units_by_fcst_field = valid_vx_plot_params['valid_units_by_fcst_field']
     vx_metric_long_names = valid_vx_plot_params['vx_metric_long_names']
     vx_metric_needs_thresh = valid_vx_plot_params['vx_metric_needs_thresh']
+    vx_metric_CIs_allowed = valid_vx_plot_params['vx_metric_CIs_allowed']
     avail_mv_colors_codes = valid_vx_plot_params['avail_mv_colors_codes']
 
     # Load the host configuration file into a dictionary and find in it the
@@ -1168,6 +1172,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "vx_metric_uc": cla.vx_metric.upper(),
                    "vx_metric_lc": cla.vx_metric.lower(),
                    "vx_metric_mv": vx_metric_mv,
+                   "vx_metric_CIs_allowed": vx_metric_CIs_allowed[cla.vx_metric],
                    "vx_mask": cla.vx_mask,
                    "num_fcst_inits": num_fcst_inits,
                    "fcst_init_times": fcst_init_times_YmDHMS,
