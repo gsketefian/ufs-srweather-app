@@ -70,3 +70,32 @@ mv_hwt2024:
          - long_name: 'GSL_MPAS05_mem001'
            short_name: 'GSL-MPAS-05-RT'
            num_ens_mems: 1
+
+mv_rrfsv1_science_eval:
+    <<: *generic_database
+    valid_threshes:
+        ['gt0.0mm', 'ge0.508mm', 'ge2.54mm', 'ge6.350mm', 'ge12.7mm', 'ge25.4mm',
+         'ge20dBZ', 'ge30dBZ', 'ge40dBZ', 'ge50dBZ',
+         'ge20kft', 'ge30kft', 'ge40kft', 'ge50kft',
+         'ge258K', 'ge263K', 'ge268K', 'ge278K', 'ge283K', 'ge288K', 'ge293K', 'ge298K', 'ge303K',
+         #
+         'lt805m',  #  < 0.5 mi
+         'lt1609m', #  < 1 mi
+         'lt4828m', #  < 3 mi
+         'lt8045m', #  < 5 mi
+         'ge8045m', #  >= 5 mi
+         'lt16090', #  < 10 mi
+         #
+         'ge2.572mps',             # >= 5 kn
+         'ge2.572mps&&lt5.144mps', # >= 5 kn and < 10 kn
+         'ge5.144mps',             # >= 10 kn
+         'ge10.288mps',            # >= 20 kn
+         'ge15.433mps',            # >= 20 kn
+          ]
+    fcst_is_ensemble: False
+    vx_masks: ['CONUS', 'FULL', 'AZCA', 'EAST', 'EAST_ROCKIES', 'ECA', 'WCA', 'WEST']
+    models:
+         - long_name: 'RRFS_verification_mem000'
+           short_name: 'RRFS'
+           num_ens_mems: 1
+
