@@ -1,8 +1,8 @@
 {%- set do_indent = false -%}
 {%- set indent = "" -%}
-{%- set include_base_rate = False -%}
+{%- set plot_base_rate = False -%}
 {%- if (vx_metric_uc in ["FBIAS", "GSS"]) -%}
-  {%- set include_base_rate = True -%}
+  {%- set plot_base_rate = True -%}
 {%- endif -%}
 {%- set boot_replics = 10 -%}
 {%- set boot_rand_seed = 1 -%}
@@ -40,7 +40,7 @@
 {#- If plotting the base rate, use the second y-axis (the y2-axis) on 
     the right-hand side of the plot.
 #}
-{%- if include_base_rate %}
+{%- if plot_base_rate %}
             <dep2>
                 <fcst_var name="{{fcst_field_name_in_db}}">
                     <stat>BASER</stat>
@@ -72,7 +72,7 @@
 {#- The following is specific to one METviewer database and will need to
     be modified for others.
 #}
-{%- if include_base_rate %}
+{%- if plot_base_rate %}
         <series2>
             <field name="model">
                 <val>HRRR_mem000</val>
@@ -110,9 +110,9 @@
                     <val>{{level_in_db}}</val>
                 </set>
             </field>
-{#- Why is the following needed? #}
-{#- {%- if (vx_metric_uc == "FBIAS") %} #}
-{%- if include_base_rate %}
+{#- Why is this included only when plotting the base rate but not otherwise?
+#}
+{%- if plot_base_rate %}
             <field equalize="true" name="fcst_thresh">
   {%- set ipf = ipf+1 %}
                 <set name="fcst_thresh_{{ipf}}">
@@ -220,8 +220,8 @@ for now we apply the rule only to FBIAS.
 {%- else %}
             <y1_label>{{vx_metric_uc}}</y1_label>
 {%- endif %}
-{#- If plotting the base rate on the y2-axis, add label to that axis. #}
-{%- if include_base_rate %}
+{#- If plotting the base rate on the y2-axis, add a label to that axis. #}
+{%- if plot_base_rate %}
             <y2_label>Base Rate</y2_label>
 {%- else %}
             <y2_label/>
@@ -339,7 +339,8 @@ it doesn't seem to make a difference in the final plot.
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"{{plot_ci}}" {%- endif -%}
-{%- if include_base_rate -%} ,"none" {%- endif -%}
+{#- Don't add confidence intervals to the base-rate data points. #}
+{%- if plot_base_rate -%} ,"none" {%- endif -%}
         )</plot_ci>
 {#- #}
         <!-- These appear in the METviewer GUI under the column "Show Significant".
@@ -359,7 +360,7 @@ it doesn't seem to make a difference in the final plot.
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{show_signif}} {%- endif -%}
-{%- if include_base_rate -%} ,{{show_signif}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{show_signif}} {%- endif -%}
         )</show_signif>
 {#- #}
         <!-- These appear in the METviewer GUI under the column "Hide", although it
@@ -381,7 +382,7 @@ it doesn't seem to make a difference in the final plot.
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{plot_disp}} {%- endif -%}
-{%- if include_base_rate -%} ,{{plot_disp}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{plot_disp}} {%- endif -%}
         )</plot_disp>
 {#- #}
         <!-- These appear in the METviewer GUI under the column "Line Color".
@@ -401,8 +402,9 @@ it doesn't seem to make a difference in the final plot.
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"{{color_obs}}" {%- endif -%}
+{#- Specify color for base-rate line. #}
 {%- set color_gray = "#808080" -%}
-{%- if include_base_rate -%} ,"{{color_gray}}" {%- endif -%}
+{%- if plot_base_rate -%} ,"{{color_gray}}" {%- endif -%}
         )</colors>
 {#- #}
         <!-- These appear in the METviewer GUI under the column "Point Symbol".
@@ -422,7 +424,7 @@ it doesn't seem to make a difference in the final plot.
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{pch}} {%- endif -%}
-{%- if include_base_rate -%} ,{{pch}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{pch}} {%- endif -%}
         )</pch>
 {#- #}
         <!-- These appear in the METviewer GUI under the column "Series Line Type".
@@ -450,7 +452,7 @@ it doesn't seem to make a difference in the final plot.
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"{{line_type_obs}}" {%- endif -%}
-{%- if include_base_rate -%} ,"{{line_types[0]}}" {%- endif -%}
+{%- if plot_base_rate -%} ,"{{line_types[0]}}" {%- endif -%}
         )</type>
 {#- #}
         <!-- These appear in the METviewer GUI under the column "Line Type".
@@ -471,7 +473,7 @@ it doesn't seem to make a difference in the final plot.
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{lty}} {%- endif -%}
-{%- if include_base_rate -%} ,{{lty}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{lty}} {%- endif -%}
         )</lty>
 {#- #}
         <!-- These appear in the METviewer GUI under the column "Line Width".
@@ -491,7 +493,7 @@ it doesn't seem to make a difference in the final plot.
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{line_width_obs}} {%- endif -%}
-{%- if include_base_rate -%} ,{{line_widths[0]}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{line_widths[0]}} {%- endif -%}
         )</lwd>
 {#- #}
         <!-- These appear in the METviewer GUI under the column "Connect Across".
@@ -512,7 +514,7 @@ it doesn't seem to make a difference in the final plot.
   {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,{{cs}} {%- endif -%}
-{%- if include_base_rate -%} ,{{cs}} {%- endif -%}
+{%- if plot_base_rate -%} ,{{cs}} {%- endif -%}
         )</con_series>
 {#- #}
         <!-- These appear in the METviewer GUI under the column "#" (number sign).
@@ -535,7 +537,7 @@ it doesn't seem to make a difference in the final plot.
   {%- set indx_last = indx_last + 1 -%}
   {{- "," ~ indx_last -}}
 {%- endif -%}
-{%- if include_base_rate -%}
+{%- if plot_base_rate -%}
   {%- set indx_last = indx_last + 1 -%}
   {{- "," ~ indx_last -}}
 {%- endif -%}
@@ -571,14 +573,15 @@ jinja2 will fail.
   {%- endif -%}
 {%- endfor -%}
 {%- if vx_metric_uc in ["FBAR_OBAR"] -%} ,"obs" {%- endif -%}
-{%- if include_base_rate -%} ,"Base Rate" {%- endif -%}
+{#- Specify the legend text for the base rate. #}
+{%- if plot_base_rate -%} ,"Base Rate" {%- endif -%}
         )</legend>
 {#- #}
         <create_html>TRUE</create_html>
         <y1_lim>c()</y1_lim>
         <x1_lim>c()</x1_lim>
         <y1_bufr>0.04</y1_bufr>
-{%- if include_base_rate %}
+{%- if plot_base_rate %}
         <y2_lim>c(0,0.25)</y2_lim>
 {%- else %}
         <y2_lim>c()</y2_lim>
