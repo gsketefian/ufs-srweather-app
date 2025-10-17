@@ -1,48 +1,70 @@
 #
-# List of valid verification (vx) metric short names, the long name of
-# each, and whether each requires a threshold value for a given forecast
-# field.
+# List of valid verification (vx) metrics.  The first level of keys
+# are the short names of these metrics.  Under each short name are:
+#
+# 1) long_name:
+#    The long name of the metric.
+# 2) needs_thresh:
+#    Whether or not thresholds must be specified for the metric (with a
+#    different set of thresholds for each forecast field to be verified
+#    for the metric).
+# 3) CIs_allowed:
+#    Whether or not confidence intervals can be calculated for the metric.
 #
 valid_vx_metrics:
     auc:
         long_name: 'Area Under the Curve'
         needs_thresh: True
+        CIs_allowed: False
     bcrmse:
         long_name: 'Bias-Corrected RMSE'
         needs_thresh: False
+        CIs_allowed: True
     bias:
         long_name: 'Bias'
         needs_thresh: False
+#        CIs_allowed: True
+        CIs_allowed: False
     brier:
         long_name: 'Brier Score'
         needs_thresh: True
+        CIs_allowed: False
     fbar:
         long_name: 'Forecast Mean'
         needs_thresh: False
+        CIs_allowed: True
     fbar_obar:
         long_name: 'Forecast and Obs Means'
         needs_thresh: False
+        CIs_allowed: True
     fbias:
         long_name: 'Frequency Bias'
         needs_thresh: True
+        CIs_allowed: True
     gss:
         long_name: 'Gilbert Skill Score'
         needs_thresh: True
+        CIs_allowed: True
     obar:
         long_name: 'Observations Mean'
         needs_thresh: False
+        CIs_allowed: True
     rely:
         long_name: 'Reliability'
         needs_thresh: True
+        CIs_allowed: False
     rhist:
         long_name: 'Rank Histogram'
         needs_thresh: False
+        CIs_allowed: False
     rmse:
         long_name: 'Root Mean-Squared Error'
         needs_thresh: False
+        CIs_allowed: True
     ss:
         long_name: 'Spread-Skill Ratio'
         needs_thresh: False
+        CIs_allowed: False
 #
 # List of valid forecast field short names, and, for each field:
 #
