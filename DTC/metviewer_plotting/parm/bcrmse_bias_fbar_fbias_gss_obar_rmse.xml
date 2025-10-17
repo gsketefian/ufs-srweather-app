@@ -37,6 +37,9 @@
 {%- endif %}
                 </fcst_var>
             </dep1>
+{#- If plotting the base rate, use the second y-axis (the y2-axis) on 
+    the right-hand side of the plot.
+#}
 {%- if include_base_rate %}
             <dep2>
                 <fcst_var name="{{fcst_field_name_in_db}}">
@@ -66,6 +69,9 @@
 {%- endfor %}
             </field>
         </series1>
+{#- The following is specific to one METviewer database and will need to
+    be modified for others.
+#}
 {%- if include_base_rate %}
         <series2>
             <field name="model">
@@ -214,6 +220,7 @@ for now we apply the rule only to FBIAS.
 {%- else %}
             <y1_label>{{vx_metric_uc}}</y1_label>
 {%- endif %}
+{#- If plotting the base rate on the y2-axis, add label to that axis. #}
 {%- if include_base_rate %}
             <y2_label>Base Rate</y2_label>
 {%- else %}
@@ -314,7 +321,7 @@ it doesn't seem to make a difference in the final plot.
         <ci_alpha>0.05</ci_alpha>
         <eqbound_low>-0.001</eqbound_low>
         <eqbound_high>0.001</eqbound_high>
-        <!-- These appear in the MetViewer GUI under the column "Conf Interval".
+        <!-- These appear in the METviewer GUI under the column "Conf Interval".
              They specify the type of confidence intervals to plot ("none" for 
              no confidence intervals). -->
         <plot_ci>c(
@@ -335,7 +342,7 @@ it doesn't seem to make a difference in the final plot.
 {%- if include_base_rate -%} ,"none" {%- endif -%}
         )</plot_ci>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Show Significant".
+        <!-- These appear in the METviewer GUI under the column "Show Significant".
              Not yet clear on what they do. -->
         <show_signif>c(
 {%- set indent = "" -%}
@@ -355,7 +362,7 @@ it doesn't seem to make a difference in the final plot.
 {%- if include_base_rate -%} ,{{show_signif}} {%- endif -%}
         )</show_signif>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Hide", although it
+        <!-- These appear in the METviewer GUI under the column "Hide", although it
              seems it is the opposite of this that is in the "Hide" column, i.e. if
              an element is set to "TRUE" here, it will show up as "FALSE" in the GUI.
              Not yet clear on what they do. -->
@@ -377,7 +384,7 @@ it doesn't seem to make a difference in the final plot.
 {%- if include_base_rate -%} ,{{plot_disp}} {%- endif -%}
         )</plot_disp>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Line Color".
+        <!-- These appear in the METviewer GUI under the column "Line Color".
              They control the line colors. -->
         <colors>c(
 {%- set indent = "" -%}
@@ -398,7 +405,7 @@ it doesn't seem to make a difference in the final plot.
 {%- if include_base_rate -%} ,"{{color_gray}}" {%- endif -%}
         )</colors>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Point Symbol".
+        <!-- These appear in the METviewer GUI under the column "Point Symbol".
              They control the symbols used for the data points of each series. -->
         <pch>c(
 {%- set indent = "" -%}
@@ -418,9 +425,11 @@ it doesn't seem to make a difference in the final plot.
 {%- if include_base_rate -%} ,{{pch}} {%- endif -%}
         )</pch>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Series Line Type".
-             "l" is for lines, and "b" is for "joined lines".
-             Not yet clear on what they do. -->
+        <!-- These appear in the METviewer GUI under the column "Series Line Type".
+             "l" is for "lines", and "b" is for "joined lines".  "l" or "lines" does
+             not include the plot symbol (specified by <pch>) at the data points,
+             while "b" or "joined lines" does.  There are other possibilities as well;
+             see the drop-down menu in the METviewer GUI for the full set of these. -->
         <type>c(
 {%- set indent = "" -%}
 {%- if do_indent -%}
@@ -444,7 +453,7 @@ it doesn't seem to make a difference in the final plot.
 {%- if include_base_rate -%} ,"{{line_types[0]}}" {%- endif -%}
         )</type>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Line Type".
+        <!-- These appear in the METviewer GUI under the column "Line Type".
              1 is for "solid", 3 is for "dotted".
              They control the line types that join the data points. -->
         <lty>c(
@@ -465,7 +474,7 @@ it doesn't seem to make a difference in the final plot.
 {%- if include_base_rate -%} ,{{lty}} {%- endif -%}
         )</lty>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Line Width".
+        <!-- These appear in the METviewer GUI under the column "Line Width".
              They control the widths of the lines that join the data points. -->
         <lwd>c(
 {%- set indent = "" -%}
@@ -485,7 +494,7 @@ it doesn't seem to make a difference in the final plot.
 {%- if include_base_rate -%} ,{{line_widths[0]}} {%- endif -%}
         )</lwd>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "Connect Across".
+        <!-- These appear in the METviewer GUI under the column "Connect Across".
              0 is "no" and 1 is "yes".  
              Not yet clear on what they do. -->
         <con_series>c(
@@ -506,7 +515,7 @@ it doesn't seem to make a difference in the final plot.
 {%- if include_base_rate -%} ,{{cs}} {%- endif -%}
         )</con_series>
 {#- #}
-        <!-- These appear in the MetViewer GUI under the column "#" (number sign).
+        <!-- These appear in the METviewer GUI under the column "#" (number sign).
              They control the order of the series, although details aren't clear. -->
         <order_series>c(
 {%- set indent = "" -%}
@@ -533,7 +542,7 @@ it doesn't seem to make a difference in the final plot.
         )</order_series>
 {#- #}
         <plot_cmd/>
-        <!-- These appear in the MetViewer GUI under the column "Legend Text".
+        <!-- These appear in the METviewer GUI under the column "Legend Text".
              They specify the text that appears in the legend for each series. -->
         <legend>c(
 {%- set indent = "" -%}
