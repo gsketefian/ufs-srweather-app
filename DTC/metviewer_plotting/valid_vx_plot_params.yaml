@@ -23,8 +23,7 @@ valid_vx_metrics:
     bias:
         long_name: 'Bias'
         needs_thresh: False
-#        CIs_allowed: True
-        CIs_allowed: False
+        CIs_allowed: True
     brier:
         long_name: 'Brier Score'
         needs_thresh: True
