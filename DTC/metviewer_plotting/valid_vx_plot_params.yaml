@@ -9,7 +9,8 @@
 #    different set of thresholds for each forecast field to be verified
 #    for the metric).
 # 3) CIs_allowed:
-#    Whether or not confidence intervals can be calculated for the metric.
+#    Whether or not it makes sense and/or it is possible to calculate
+#    confidence intervals in METviewer for the metric.
 #
 valid_vx_metrics:
     auc:
