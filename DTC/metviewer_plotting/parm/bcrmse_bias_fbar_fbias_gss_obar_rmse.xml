@@ -4,10 +4,6 @@
 {%- if (vx_metric_uc in ["FBIAS", "GSS"]) -%}
   {%- set plot_base_rate = True -%}
 {%- endif -%}
-{%- set plot_conf_intervals = False -%}
-{%- if vx_metric_CIs_allowed %}
-  {%- set plot_conf_intervals = True -%}
-{%- endif -%}
 {%- set boot_replics = 10 -%}
 {%- set boot_rand_seed = 1 -%}
 {#- {%- set boot_rand_seed = '' -%} -#}
@@ -163,8 +159,8 @@ vs. say summary statistics, which can be accomplished by using
 instead of <agg_stat>...</agg_stat> below) affects not only the sizes of
 the confidence intervals but also the data points themselves (about which
 the confidence intervals are plotted).  To get the same curve regardless
-of whether plot_conf_intervals is set to true or false, below we always
-calculate aggregate statistics.
+of whether plot_CIs is set to true or false, below we always calculate
+aggregate statistics.
 #}
         <agg_stat>
             <agg_sl1l2>true</agg_sl1l2>
@@ -297,7 +293,7 @@ it doesn't seem to make a difference in the final plot.
 {%- endif -%}
 {#- #}
 {%- set plot_ci = "boot" -%}
-{%- if not plot_conf_intervals -%}
+{%- if not plot_CIs -%}
   {%- set plot_ci = "none" -%}
 {%- endif -%}
 {#- #}
