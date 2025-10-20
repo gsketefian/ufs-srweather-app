@@ -443,7 +443,8 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--mv_host_config_fp',
                         type=str,
-                        required=False, default='mv_hosts.yaml',
+                        required=False,
+                        default='mv_hosts.yaml',
                         help='METviewer host configuration file.')
 
     parser.add_argument('--mv_database',
@@ -453,7 +454,8 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--mv_database_config_fp',
                         type=str,
-                        required=False, default='mv_databases.yaml',
+                        required=False,
+                        default='mv_databases.yaml',
                         help='METviewer database configuration file.')
 
     # Find the path to the directory containing the clone of the SRW App.
@@ -464,7 +466,8 @@ def parse_args(argv, valid_vx_plot_params):
     expts_dir = Path(os.path.join(home_dir, '../expts_dir')).resolve()
     parser.add_argument('--output_dir',
                         type=str,
-                        required=False, default=os.path.join(expts_dir, 'mv_output'),
+                        required=False,
+                        default=os.path.join(expts_dir, 'mv_output'),
                         help='Directory in which to place output (e.g. plots) from METviewer.')
 
     parser.add_argument('--model_names_short', nargs='+',
@@ -474,7 +477,8 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--model_colors', nargs='+',
                         type=str,
-                        required=False, default=choices['color'],
+                        required=False,
+                        default=choices['color'],
                         choices=choices['color'],
                         help='Color to use for each model appearing the vx plot.')
 
@@ -511,7 +515,8 @@ def parse_args(argv, valid_vx_plot_params):
 
     parser.add_argument('--threshold',
                         type=str,
-                        required=False, default='',
+                        required=False,
+                        default='',
                         help=dedent(f"""
                             Threshold for the specified forecast field for which to generate the vx
                             plot.  This option is ignored for metrics that do not require a threshold.
@@ -522,8 +527,23 @@ def parse_args(argv, valid_vx_plot_params):
                         required=True,
                         help='Name of geographic region to which to limit the verification.')
 
+    parser.add_argument('--plot_CIs',
+                        required=False,
+                        action=argparse.BooleanOptionalAction,
+                        default=True,
+                        help=dedent(f"""
+                            Flag for including confidence intervals (CIs) around each data point.
+                            Not all vx metrics allow for CIs; for those that don't, this is disabled
+                            regardless of the value on the command line.
+                            """))
+
+    # If argparse.SUPPRESS is specified as the default value for an argument
+    # and if that argument is not provided on the command line, it will not
+    # be present in the Namespace object returned by the parser. 
     parser.add_argument('--incl_ens_means',
-                        required=False, action=argparse.BooleanOptionalAction, default=argparse.SUPPRESS,
+                        required=False,
+                        action=argparse.BooleanOptionalAction,
+                        default=argparse.SUPPRESS,
                         help=dedent(f"""
                             Flag for including ensemble mean curves in plot.  This flag is only
                             relevant for the metrics 'bias' and 'fbias'.  It is ignored for other
@@ -1145,6 +1165,24 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
         """)
     logging.debug(msg)
 
+    # Set flag that determines whether or not confidence intervals (CIs)
+    # will be included in the plot.  We disable this if (for whatever 
+    # reason) CIs cannot be plotted for this metric.
+    plot_CIs = cla.plot_CIs
+    print(f'')
+    print(f'{vx_metric_CIs_allowed[cla.vx_metric] = }')
+    if not vx_metric_CIs_allowed[cla.vx_metric]:
+        plot_CIs = False
+        msg = dedent(f"""
+            Confidence intervals (CIs) cannot or should not be plotted for the current
+            metric (cla.metric), as specified in the dictionary "vx_metric_CIs_allowed".
+            Setting the flag for plotting CIs (plot_CIs) to False:
+              {cla.vx_metric = }
+              vx_metric_CIs_allowed['{cla.vx_metric}'] = {vx_metric_CIs_allowed[cla.vx_metric]}
+              {plot_CIs = }
+            """)
+        logging.debug(msg)
+
     # Set some METviewer plotting parameters for the obs.
     line_type_obs = "b"
     line_width_obs = 1
@@ -1172,7 +1210,6 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "vx_metric_uc": cla.vx_metric.upper(),
                    "vx_metric_lc": cla.vx_metric.lower(),
                    "vx_metric_mv": vx_metric_mv,
-                   "vx_metric_CIs_allowed": vx_metric_CIs_allowed[cla.vx_metric],
                    "vx_mask": cla.vx_mask,
                    "num_fcst_inits": num_fcst_inits,
                    "fcst_init_times": fcst_init_times_YmDHMS,
@@ -1184,6 +1221,7 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
                    "incl_ens_means": incl_ens_means,
                    "num_series": num_series,
                    "order_series": order_series,
+                   "plot_CIs": plot_CIs,
                    "xtick_label_freq": xtick_label_freq,
                    "line_types": line_types,
                    "line_widths": line_widths,
