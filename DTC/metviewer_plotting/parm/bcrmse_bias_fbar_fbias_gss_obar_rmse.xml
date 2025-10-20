@@ -4,6 +4,10 @@
 {%- if (vx_metric_uc in ["FBIAS", "GSS"]) -%}
   {%- set plot_base_rate = True -%}
 {%- endif -%}
+{%- set plot_conf_intervals = False -%}
+{%- if vx_metric_CIs_allowed %}
+  {%- set plot_conf_intervals = True -%}
+{%- endif -%}
 {%- set boot_replics = 10 -%}
 {%- set boot_rand_seed = 1 -%}
 {#- {%- set boot_rand_seed = '' -%} -#}
@@ -148,13 +152,20 @@ to use summary statistics (although aggregate statistics is probably
 better), but for discontinuous fields, aggregate statistics should be
 used.
 
-However, it is not yet clear whether the above rule applies only to 
-FBIAS or to both BIAS and FBIAS (and possibly other statistics).  Thus,
-for now we apply the rule only to FBIAS.
+However, the safe approach is to always use aggregate statistics, so 
+that is what we do below.
+
+Note that the method used to calculate statistics (e.g. aggregate statistics
+vs. say summary statistics, which can be accomplished by using 
+
+  <plot_stat>median</plot_stat>
+
+instead of <agg_stat>...</agg_stat> below) affects not only the sizes of
+the confidence intervals but also the data points themselves (about which
+the confidence intervals are plotted).  To get the same curve regardless
+of whether plot_conf_intervals is set to true or false, below we always
+calculate aggregate statistics.
 #}
-{%- if vx_metric_uc in ["BCRMSE", "BIAS", "FBAR", "FBAR_OBAR", "OBAR", "RMSE"] %}
-{#- Known discontinuous fields.  Use aggregate statistics in this case. #}
-  {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
         <agg_stat>
             <agg_sl1l2>true</agg_sl1l2>
             <boot_repl>{{boot_replics}}</boot_repl>
@@ -164,51 +175,6 @@ for now we apply the rule only to FBIAS.
             <cache_agg_stat>false</cache_agg_stat>
             <circular_block_bootstrap>true</circular_block_bootstrap>
         </agg_stat>
-{#- Continuous fields for which we want to use aggregate statistics. #}
-  {%- elif fcst_field_uc in ["DPT", "HGT", "AOTK", "PM25", "PM10", "TMP", "VIS", "WIND"] %}
-        <agg_stat>
-            <agg_sl1l2>true</agg_sl1l2>
-            <boot_repl>{{boot_replics}}</boot_repl>
-            <boot_random_seed>{{boot_rand_seed}}</boot_random_seed>
-            <boot_ci>perc</boot_ci>
-            <eveq_dis>false</eveq_dis>
-            <cache_agg_stat>false</cache_agg_stat>
-            <circular_block_bootstrap>true</circular_block_bootstrap>
-        </agg_stat>
-  {%- else %}
-        <plot_stat>median</plot_stat>
-  {%- endif %}
-{%- elif (vx_metric_uc == "FBIAS") %}
-{#- Known discontinuous fields.  Use aggregate statistics in this case. #}
-  {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
-        <agg_stat>
-            <agg_ctc>true</agg_ctc>
-            <boot_repl>{{boot_replics}}</boot_repl>
-            <boot_random_seed>{{boot_rand_seed}}</boot_random_seed>
-            <boot_ci>perc</boot_ci>
-            <eveq_dis>false</eveq_dis>
-            <cache_agg_stat>false</cache_agg_stat>
-            <circular_block_bootstrap>true</circular_block_bootstrap>
-        </agg_stat>
-{#- Continuous fields for which we want to use aggregate statistics. #}
-  {%- elif fcst_field_uc in ["VIS"] %}
-        <agg_stat>
-            <agg_ctc>true</agg_ctc>
-            <boot_repl>{{boot_replics}}</boot_repl>
-            <boot_random_seed>{{boot_rand_seed}}</boot_random_seed>
-            <boot_ci>perc</boot_ci>
-            <eveq_dis>false</eveq_dis>
-            <cache_agg_stat>false</cache_agg_stat>
-            <circular_block_bootstrap>true</circular_block_bootstrap>
-        </agg_stat>
-{#- Known continuous fields.  Use summary statistics for these for now (may change later). #}
-  {%- elif fcst_field_uc in ["DPT", "HGT", "TMP"] %}
-        <plot_stat>median</plot_stat>
-{#- Default to summary statistics for unexpected fields. #}
-  {%- else %}
-        <plot_stat>median</plot_stat>
-  {%- endif %}
-{%- endif %}
         <tmpl>
             <data_file>plot_{{job_title}}.data</data_file>
             <plot_file>plot_{{job_title}}.png</plot_file>
@@ -329,8 +295,13 @@ it doesn't seem to make a difference in the final plot.
 {%- if do_indent -%}
   {%- set indent = " \\\n                   " -%}
 {%- endif -%}
-{%- for imdl in range(1, num_models_to_plot+1) -%}
+{#- #}
+{%- set plot_ci = "boot" -%}
+{%- if not plot_conf_intervals -%}
   {%- set plot_ci = "none" -%}
+{%- endif -%}
+{#- #}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
   {%- if incl_ens_means -%} "{{plot_ci}}", {%- endif -%}
   {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
     "{{plot_ci}}",
