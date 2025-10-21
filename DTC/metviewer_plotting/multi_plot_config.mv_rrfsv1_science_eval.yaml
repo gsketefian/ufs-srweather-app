@@ -103,16 +103,18 @@ metrics_fields_levels_threshes:
         wind:
             10m: []
 
-# These fail.  Need to check why.
+# These fail.  Need to understand why.
 #    fbias:
 #        apcp:
 ##            03h: ['gt0.0mm', 'ge2.54mm']
 ##            03h: ['ge6.350mm']
-#            03h: ['ge2.54mm', 'ge6.350mm']
+##            03h: ['ge2.54mm', 'ge6.350mm']
+#            03h: ['ge2.54mm']
 #        refc:
-#            L0: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ']
+##            L0: ['ge20dBZ', 'ge30dBZ', 'ge40dBZ']
+#            L0: ['ge20dBZ']
 
-# These fail.  Need to check why.
+# These fail.  Need to understand why.
 #    gss:
 #        apcp:
 #            03h: ['ge2.54mm', 'ge6.350mm']

@@ -1,9 +1,12 @@
 {%- set do_indent = false -%}
 {%- set indent = "" -%}
+{#- Turn off plotting of base rate for now since it is not yet reliable. #}
 {%- set plot_base_rate = False -%}
+{#-
 {%- if (vx_metric_uc in ["FBIAS", "GSS"]) -%}
   {%- set plot_base_rate = True -%}
 {%- endif -%}
+#}
 {%- set boot_replics = 10 -%}
 {%- set boot_rand_seed = 1 -%}
 {#- {%- set boot_rand_seed = '' -%} -#}
