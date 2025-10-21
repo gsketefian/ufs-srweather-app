@@ -1053,7 +1053,16 @@ def main():
     None
     """
 
+    #
+    # Create ArgumentParser object.  Note that specifying 
+    #
+    #   formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    #
+    # in the arguments list causes the default values of arguments to be
+    # printed out when the help is invoked on the command line.
+    #
     parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description='Call METviewer to create vx plots.'
     )
 
