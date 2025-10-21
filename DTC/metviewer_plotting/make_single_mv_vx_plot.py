@@ -1169,8 +1169,6 @@ def generate_metviewer_xml(cla, valid_vx_plot_params, mv_databases_dict):
     # will be included in the plot.  We disable this if (for whatever 
     # reason) CIs cannot be plotted for this metric.
     plot_CIs = cla.plot_CIs
-    print(f'')
-    print(f'{vx_metric_CIs_allowed[cla.vx_metric] = }')
     if not vx_metric_CIs_allowed[cla.vx_metric]:
         plot_CIs = False
         msg = dedent(f"""
