@@ -1,36 +1,32 @@
 #!/usr/bin/env python3
 
 """
-Function to create a diag_table file for the FV3 model using a
-template.
+Creates a ``diag_table`` file for the FV3 model using a template
 """
+import argparse
 import os
 import sys
-import argparse
 from textwrap import dedent
-import tempfile
-
 
 from python_utils import (
-    import_vars,
-    print_input_args,
-    print_info_msg,
     cfg_to_yaml_str,
-    load_shell_config,
     flatten_dict,
+    import_vars,
+    print_info_msg,
+    print_input_args,
 )
 
-# These come from ush/python_utils/workflow-tools
-from scripts.templater import set_template
+from uwtools.api.config import get_yaml_config
+from uwtools.api.template import render
 
 
 def create_diag_table_file(run_dir):
-    """Creates a diagnostic table file for each cycle to be run
+    """Creates an FV3 diagnostic table (``diag_table``) file for each cycle to be run
 
     Args:
-        run_dir: run directory
+        run_dir (str): Run directory
     Returns:
-        Boolean
+        True
     """
 
     print_input_args(locals())
@@ -63,7 +59,30 @@ def create_diag_table_file(run_dir):
         verbose=VERBOSE,
     )
 
-    settings = {"starttime": CDATE, "cres": CRES}
+    settings = {"starttime": CDATE, "cres": CRES, "additional_entries": ""}
+    if UFS_FIRE:
+        settings["additional_entries"] = \
+                '"gfs_phys","fsmoke","fsmoke","fv3_history","all",.false.,"none",2'
+    elif DO_SMOKE_DUST:
+        settings["additional_entries"] = '''
+# Tracers
+"gfs_dyn","smoke",       "smoke",       "fv3_history",  "all", .false.,"none",2
+"gfs_dyn","dust",        "dust",        "fv3_history",  "all", .false.,"none",2
+"gfs_dyn","coarsepm",    "coarsepm",    "fv3_history",  "all", .false.,"none",2
+"gfs_dyn","smoke_ave",   "smoke_ave",   "fv3_history2d","all", .false.,"none",2
+"gfs_dyn","dust_ave",    "dust_ave",    "fv3_history2d","all", .false.,"none",2
+"gfs_dyn","coarsepm_ave","coarsepm_ave","fv3_history2d","all", .false.,"none",2
+
+# Aerosols emission for smoke
+"gfs_sfc", "emdust",    "emdust",    "fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "coef_bb_dc","coef_bb_dc","fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "min_fplume","min_fplume","fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "max_fplume","max_fplume","fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "hwp",       "hwp",       "fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "hwp_ave",   "hwp_ave",   "fv3_history2d",  "all", .false.,"none",2
+"gfs_sfc", "frp_output","frp_output","fv3_history2d",  "all", .false.,"none",2
+"gfs_phys","ebu_smoke", "ebu_smoke", "fv3_history",    "all", .false.,"none",2
+"gfs_phys","ext550",    "ext550",    "fv3_history",    "all", .false.,"none",2'''
     settings_str = cfg_to_yaml_str(settings)
 
     print_info_msg(
@@ -77,21 +96,16 @@ def create_diag_table_file(run_dir):
         verbose=VERBOSE,
     )
 
-    with tempfile.NamedTemporaryFile(dir="./",
-                                     mode="w+t",
-                                     prefix="aqm_rc_settings",
-                                     suffix=".yaml") as tmpfile:
-        tmpfile.write(settings_str)
-        tmpfile.seek(0)
-        # set_template does its own error handling
-        set_template(
-            ["-c", tmpfile.name, "-i", DIAG_TABLE_TMPL_FP, "-o", diag_table_fp]
+    render(
+        input_file = DIAG_TABLE_TMPL_FP,
+        output_file = diag_table_fp,
+        values_src = settings,
         )
     return True
 
 
-def parse_args(argv):
-    """Parse command line arguments"""
+def _parse_args(argv):
+    """Parses command line arguments"""
     parser = argparse.ArgumentParser(description="Creates diagnostic table file.")
 
     parser.add_argument(
@@ -110,8 +124,8 @@ def parse_args(argv):
 
 
 if __name__ == "__main__":
-    args = parse_args(sys.argv[1:])
-    cfg = load_shell_config(args.path_to_defns)
+    args = _parse_args(sys.argv[1:])
+    cfg = get_yaml_config(args.path_to_defns)
     cfg = flatten_dict(cfg)
     import_vars(dictionary=cfg)
     create_diag_table_file(args.run_dir)

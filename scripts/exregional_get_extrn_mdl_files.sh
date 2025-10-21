@@ -1,4 +1,64 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+
+#
+#-----------------------------------------------------------------------
+#
+# The ex-script for getting the model files that will be used for either
+# initial conditions or lateral boundary conditions for the experiment.
+#
+# Run-time environment variables:
+#
+#    CDATE
+#    COMIN
+#    cyc
+#    DATA
+#    EXTRN_MDL_CDATE
+#    EXTRN_MDL_NAME
+#    EXTRN_MDL_STAGING_DIR
+#    GLOBAL_VAR_DEFNS_FP
+#    ICS_OR_LBCS
+#    NET
+#    PDY
+#    TIME_OFFSET_HRS
+#
+# Experiment variables
+#
+#  user:
+#    MACHINE
+#    PARMdir
+#    RUN_ENVIR
+#    USHdir
+#
+#  platform:
+#    EXTRN_MDL_DATA_STORES
+#
+#  workflow:
+#    DATE_FIRST_CYCL
+#    EXTRN_MDL_VAR_DEFNS_FN
+#    FCST_LEN_CYCL
+#    INCR_CYCL_FREQ
+#    SYMLINK_FIX_FILES
+#
+#  task_get_extrn_lbcs:
+#    EXTRN_MDL_FILES_LBCS
+#    EXTRN_MDL_SOURCE_BASEDIR_LBCS
+#    EXTRN_MDL_SYSBASEDIR_LBCS
+#    FV3GFS_FILE_FMT_LBCS
+#    LBC_SPEC_INTVL_HRS
+#
+#  task_get_extrn_ics:
+#    EXTRN_MDL_FILES_ICS
+#    EXTRN_MDL_SOURCE_BASEDIR_ICS
+#    EXTRN_MDL_SYSBASEDIR_ICS
+#    FV3GFS_FILE_FMT_ICS
+#
+#  global:
+#    DO_ENSEMBLE
+#    NUM_ENS_MEMBERS
+#
+#-----------------------------------------------------------------------
+#
 
 #
 #-----------------------------------------------------------------------
@@ -8,7 +68,18 @@
 #-----------------------------------------------------------------------
 #
 . $USHdir/source_util_funcs.sh
-source_config_for_task "task_get_extrn_ics|task_get_extrn_lbcs" ${GLOBAL_VAR_DEFNS_FP}
+sections=(
+  user
+  nco
+  platform
+  workflow
+  global
+  task_get_extrn_ics.envvars
+  task_get_extrn_lbcs.envvars
+)
+for sect in ${sections[*]} ; do
+  source_yaml ${GLOBAL_VAR_DEFNS_FP} ${sect}
+done
 #
 #-----------------------------------------------------------------------
 #
@@ -73,20 +144,12 @@ elif [ "${ICS_OR_LBCS}" = "LBCS" ]; then
   first_time=$((TIME_OFFSET_HRS + LBC_SPEC_INTVL_HRS))
 
   if [ ${#FCST_LEN_CYCL[@]} -gt 1 ]; then
-    cyc_mod=$(( ${cyc} - ${DATE_FIRST_CYCL:8:2} ))
+    cyc_mod=$(( 10#${cyc} - ${DATE_FIRST_CYCL:8:2} ))
     CYCLE_IDX=$(( ${cyc_mod} / ${INCR_CYCL_FREQ} ))
     FCST_LEN_HRS=${FCST_LEN_CYCL[$CYCLE_IDX]}
   fi
   end_hr=$FCST_LEN_HRS
-  if [ $BOUNDARY_LEN_HRS -gt $end_hr ]; then
-     end_hr=$BOUNDARY_LEN_HRS
-  fi
-  # Download 0th hour lbcs if requested for it, mostly for DA
-  if [ ${NEED_ALL_LBCS} = "TRUE" ]; then
-    first_time=$((TIME_OFFSET_HRS))
-  else
-    first_time=$((TIME_OFFSET_HRS + LBC_SPEC_INTVL_HRS ))
-  fi
+  first_time=$((TIME_OFFSET_HRS + LBC_SPEC_INTVL_HRS ))
   last_time=$((TIME_OFFSET_HRS + end_hr))
 
 
@@ -155,12 +218,12 @@ if [ -n "${input_file_path:-}" ] ; then
   --input_file_path ${input_file_path}"
 fi
 
-if [ $SYMLINK_FIX_FILES = "TRUE" ]; then
+if [ $(boolify $SYMLINK_FIX_FILES) = "TRUE" ]; then
   additional_flags="$additional_flags \
   --symlink"
 fi
 
-if [ $DO_ENSEMBLE == "TRUE" ] ; then
+if [ $(boolify $DO_ENSEMBLE) = "TRUE" ] ; then
   mem_dir="/mem{mem:03d}"
   member_list=(1 ${NUM_ENS_MEMBERS})
   additional_flags="$additional_flags \
@@ -174,7 +237,7 @@ fi
 #-----------------------------------------------------------------------
 #
 
-mkdir -p ${EXTRN_MDL_STAGING_DIR}${mem_dir}
+mkdir -p ${EXTRN_MDL_STAGING_DIR}
 
 if [ $RUN_ENVIR = "nco" ]; then
     EXTRN_DEFNS="${NET}.${cycle}.${EXTRN_MDL_NAME}.${ICS_OR_LBCS}.${EXTRN_MDL_VAR_DEFNS_FN}.sh"
@@ -230,7 +293,7 @@ if [ "${EXTRN_MDL_NAME}" = "GEFS" ]; then
     for num in $(seq -f "%02g" ${NUM_ENS_MEMBERS}); do
         sorted_fn=( )
         for fcst_hr in "${all_fcst_hrs_array[@]}"; do
-            # Read in filenames from $EXTRN_MDL_FNS and sort them
+            # Read in filenames from EXTRN_MDL_FNS and sort them
             base_path="${EXTRN_MDL_STAGING_DIR}/mem`printf %03d $num`"
             filenames_array=`awk -F= '/EXTRN_MDL_FNS/{print $2}' $base_path/${EXTRN_DEFNS}`
             for filename in ${filenames_array[@]}; do

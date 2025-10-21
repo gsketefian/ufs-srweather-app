@@ -6,7 +6,7 @@ Usage: source etc/lmod-setup.csh PLATFORM
 
 OPTIONS:
    PLATFORM - name of machine you are building on
-      (e.g. cheyenne | hera | jet | orion | wcoss2 )
+      (e.g. derecho | hera | orion | hercules | ursa | wcoss2 )
 EOF_USAGE
    exit 1
 else
@@ -37,8 +37,14 @@ else if ( "$L_MACHINE" == singularity ) then
 
    module purge
 
-else if ( "$L_MACHINE" == gaea ) then
-   source /lustre/f2/dev/role.epic/contrib/Lmod_init.csh
+else if ( "$L_MACHINE" == gaeac5 ) then
+   module reset
+
+else if ( "$L_MACHINE" == gaeac6 ) then
+   module reset
+
+else if ( "$L_MACHINE" == derecho ) then
+   module purge
 
 else if ( "$L_MACHINE" == odin ) then
    module unload modules

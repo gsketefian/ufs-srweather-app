@@ -1,4 +1,4 @@
-from .misc import uppercase, lowercase, find_pattern_in_str, find_pattern_in_file
+from .misc import uppercase, lowercase, find_pattern_in_str, find_pattern_in_file, dict_find
 from .check_for_preexist_dir_file import check_for_preexist_dir_file
 from .check_var_valid_value import check_var_valid_value
 from .create_symlink_to_file import create_symlink_to_file
@@ -14,15 +14,6 @@ from .environment import (
     get_env_var,
     import_vars,
     export_vars,
-)
-from .filesys_cmds_vrfy import (
-    cmd_vrfy,
-    cp_vrfy,
-    mv_vrfy,
-    rm_vrfy,
-    ln_vrfy,
-    mkdir_vrfy,
-    cd_vrfy,
 )
 from .print_input_args import print_input_args
 from .print_msg import print_info_msg, print_err_msg_exit, log_info

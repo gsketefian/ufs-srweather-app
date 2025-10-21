@@ -12,7 +12,7 @@
 #
 #  The wrapper loads the appropriate workflow environment for the
 #  machine, and sets the machine test suite file before invoking the
-#  run_WE2E_tests.py script.
+#  run_we2e_tests.py script.
 #
 #  The script is dependent on a successful build of this repo using the
 #  tests/build.sh script in the ufs-srweather-app repository.  The UFS
@@ -38,14 +38,14 @@ function usage {
   echo "   compiler  [optional] compiler used to build binaries (intel or gnu)"
   echo "   tests     [optional] tests to run: can be suite (all|comprehensive|fundamental|coverage)
                         a filename, or a test name"
-  echo "   others    [optional] All other arguments are forwarded to run_WE2E_tests.py"
+  echo "   others    [optional] All other arguments are forwarded to run_we2e_tests.py"
   echo "   -h        display this help"
   echo
   exit 1
 
 }
 
-machines=( hera jet cheyenne orion wcoss2 gaea odin singularity macos noaacloud )
+machines=( hera ursa derecho orion wcoss2 gaeac5 gaeac6 odin singularity macos noaacloud )
 
 if [ "$1" = "-h" ] ; then usage ; fi
 [[ $# -le 2 ]] && usage
@@ -80,7 +80,8 @@ export HOME=$homedir
 source ../../ush/load_modules_wflow.sh ${machine}
 
 # Run the E2E Workflow tests
-./run_WE2E_tests.py \
+[[ ${tests} = none ]] && echo "none" || \
+./run_we2e_tests.py \
   --machine=${machine} \
   --account=${account} \
   --compiler=${compiler} \

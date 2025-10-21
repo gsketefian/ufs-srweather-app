@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #
 #-----------------------------------------------------------------------
@@ -8,7 +8,20 @@
 #-----------------------------------------------------------------------
 #
 . $USHdir/source_util_funcs.sh
-source_config_for_task "task_run_met_pb2nc_obs" ${GLOBAL_VAR_DEFNS_FP}
+sections=(
+  user
+  nco
+  platform
+  workflow
+  global
+  verification
+  cpl_aqm_parm
+  constants
+  fixed_files
+)
+for sect in ${sections[*]} ; do
+  source_yaml ${GLOBAL_VAR_DEFNS_FP} ${sect}
+done
 #
 #-----------------------------------------------------------------------
 #
@@ -16,9 +29,8 @@ source_config_for_task "task_run_met_pb2nc_obs" ${GLOBAL_VAR_DEFNS_FP}
 #
 #-----------------------------------------------------------------------
 #
-. $USHdir/get_met_metplus_tool_name.sh
+. $USHdir/get_metplus_tool_name.sh
 . $USHdir/set_vx_params.sh
-. $USHdir/set_vx_fhr_list.sh
 #
 #-----------------------------------------------------------------------
 #
@@ -44,14 +56,15 @@ scrfunc_dir=$( dirname "${scrfunc_fp}" )
 #-----------------------------------------------------------------------
 #
 # Get the name of the MET/METplus tool in different formats that may be
-# needed from the global variable MET_TOOL.
+# needed from the global variable METPLUSTOOLNAME.
 #
 #-----------------------------------------------------------------------
 #
-get_met_metplus_tool_name \
-  generic_tool_name="${MET_TOOL}" \
-  outvarname_met_tool_name="met_tool_name" \
-  outvarname_metplus_tool_name="metplus_tool_name"
+get_metplus_tool_name \
+  METPLUSTOOLNAME="${METPLUSTOOLNAME}" \
+  outvarname_metplus_tool_name="metplus_tool_name" \
+  outvarname_MetplusToolName="MetplusToolName" \
+  outvarname_METPLUS_TOOL_NAME="METPLUS_TOOL_NAME"
 #
 #-----------------------------------------------------------------------
 #
@@ -64,9 +77,33 @@ print_info_msg "
 Entering script:  \"${scrfunc_fn}\"
 In directory:     \"${scrfunc_dir}\"
 
-This is the ex-script for the task that runs the METplus tool ${metplus_tool_name}
+This is the ex-script for the task that runs the METplus tool ${MetplusToolName}
 to convert NDAS prep buffer observation files to NetCDF format.
 ========================================================================"
+#
+#-----------------------------------------------------------------------
+#
+# The day (in the form YYYMMDD) associated with the current task via the
+# task's cycledefs attribute in the ROCOTO xml.
+#
+#-----------------------------------------------------------------------
+#
+yyyymmdd_task=${PDY}
+
+# Seconds since some reference time that the DATE_UTIL utility uses of
+# the day of the current task.  This will be used below to find hours
+# since the start of this day.
+sec_since_ref_task=$(${DATE_UTIL} --date "${yyyymmdd_task} 0 hours" +%s)
+#
+#-----------------------------------------------------------------------
+#
+# Get the list of all the times in the current day at which to retrieve
+# obs.  This is an array with elements having format "YYYYMMDDHH".
+#
+#-----------------------------------------------------------------------
+#
+array_name="OBS_RETRIEVE_TIMES_${OBTYPE}_${yyyymmdd_task}"
+eval obs_retrieve_times_crnt_day=\( \${${array_name}[@]} \)
 #
 #-----------------------------------------------------------------------
 #
@@ -91,10 +128,9 @@ FIELDNAME_IN_MET_FILEDIR_NAMES=""
 
 set_vx_params \
   obtype="${OBTYPE}" \
-  field="$VAR" \
+  field_group="${FIELD_GROUP}" \
   accum_hh="${ACCUM_HH}" \
   outvarname_grid_or_point="grid_or_point" \
-  outvarname_field_is_APCPgt01h="field_is_APCPgt01h" \
   outvarname_fieldname_in_obs_input="FIELDNAME_IN_OBS_INPUT" \
   outvarname_fieldname_in_fcst_input="FIELDNAME_IN_FCST_INPUT" \
   outvarname_fieldname_in_MET_output="FIELDNAME_IN_MET_OUTPUT" \
@@ -110,29 +146,75 @@ set_vx_params \
 vx_output_basedir=$( eval echo "${VX_OUTPUT_BASEDIR}" )
 
 OBS_INPUT_DIR="${OBS_DIR}"
-OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_SFCorUPA_FN_TEMPLATE} )
+OBS_INPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_FN_TEMPLATES[1]} )
 
 OUTPUT_BASE="${vx_output_basedir}"
-OUTPUT_DIR="${OUTPUT_BASE}/metprd/${metplus_tool_name}_obs"
-OUTPUT_FN_TEMPLATE="${OBS_INPUT_FN_TEMPLATE}.nc"
-STAGING_DIR="${OUTPUT_BASE}/stage/${metplus_tool_name}_obs"
+OUTPUT_DIR="${OUTPUT_BASE}/metprd/${MetplusToolName}_obs"
+OUTPUT_FN_TEMPLATE=$( eval echo ${OBS_NDAS_SFCandUPA_FN_TEMPLATE_PB2NC_OUTPUT} )
+STAGING_DIR="${OUTPUT_BASE}/stage/${MetplusToolName}_obs"
 #
 #-----------------------------------------------------------------------
 #
-# Set the array of forecast hours for which to run the MET/METplus tool.
+# Set the array of lead hours (relative to the date associated with this
+# task) for which to run the MET/METplus tool.
 #
 #-----------------------------------------------------------------------
 #
-set_vx_fhr_list \
-  cdate="${CDATE}" \
-  fcst_len_hrs="${FCST_LEN_HRS}" \
-  field="$VAR" \
-  accum_hh="${ACCUM_HH}" \
-  base_dir="${OBS_INPUT_DIR}" \
-  fn_template="${OBS_INPUT_FN_TEMPLATE}" \
-  check_accum_contrib_files="FALSE" \
-  num_missing_files_max="${NUM_MISSING_OBS_FILES_MAX}" \
-  outvarname_fhr_list="FHR_LIST"
+LEADHR_LIST=""
+num_missing_files=0
+for yyyymmddhh in ${obs_retrieve_times_crnt_day[@]}; do
+  yyyymmdd=$(echo ${yyyymmddhh} | cut -c1-8)
+  hh=$(echo ${yyyymmddhh} | cut -c9-10)
+
+  # Set the full path to the final processed obs file (fp_proc) we want to
+  # create.
+  sec_since_ref=$(${DATE_UTIL} --date "${yyyymmdd} ${hh} hours" +%s)
+  lhr=$(( (sec_since_ref - sec_since_ref_task)/3600 ))
+
+  fp=$( python3 $USHdir/eval_metplus_timestr_tmpl.py \
+    --init_time="${yyyymmdd_task}00" \
+    --lhr="${lhr}" \
+    --fn_template="${OBS_DIR}/${OBS_NDAS_FN_TEMPLATES[1]}") || \
+    print_err_msg_exit "Call to eval_metplus_timestr_tmpl.py failed with return code: $?"
+
+  if [[ -f "${fp}" ]]; then
+    print_info_msg "
+Found ${OBTYPE} obs file corresponding to observation retrieval time (yyyymmddhh):
+  yyyymmddhh = \"${yyyymmddhh}\"
+  fp = \"${fp}\"
+"
+    hh_noZero=$((10#${hh}))
+    LEADHR_LIST="${LEADHR_LIST},${hh_noZero}"
+  else
+    num_missing_files=$((num_missing_files+1))
+    print_info_msg "
+${OBTYPE} obs file corresponding to observation retrieval time (yyyymmddhh)
+does not exist on disk:
+  yyyymmddhh = \"${yyyymmddhh}\"
+  fp = \"${fp}\"
+Removing this time from the list of times to be processed by ${METPLUSTOOLNAME}.
+"
+  fi
+done
+
+# If the number of missing files is greater than the maximum allowed
+# (specified by num_missing_files_max), print out an error message and
+# exit.
+if [ "${num_missing_files}" -gt "${NUM_MISSING_OBS_FILES_MAX}" ]; then
+  print_err_msg_exit "\
+The number of missing ${OBTYPE} obs files (num_missing_files) is greater
+than the maximum allowed number (NUM_MISSING_FILES_MAX):
+  num_missing_files = ${num_missing_files}
+  NUM_MISSING_OBS_FILES_MAX = ${NUM_MISSING_OBS_FILES_MAX}"
+fi
+
+# Remove leading comma from LEADHR_LIST.
+LEADHR_LIST=$( echo "${LEADHR_LIST}" | $SED "s/^,//g" )
+print_info_msg "$VERBOSE" "\
+Final (i.e. after filtering for missing obs files) set of lead hours
+(saved in a scalar string variable) is:
+  LEADHR_LIST = \"${LEADHR_LIST}\"
+"
 #
 #-----------------------------------------------------------------------
 #
@@ -140,7 +222,7 @@ set_vx_fhr_list \
 #
 #-----------------------------------------------------------------------
 #
-mkdir_vrfy -p "${OUTPUT_DIR}"
+mkdir -p "${OUTPUT_DIR}"
 #
 #-----------------------------------------------------------------------
 #
@@ -166,15 +248,15 @@ export LOGDIR
 #
 #-----------------------------------------------------------------------
 #
-# Do not run METplus if there isn't at least one valid forecast hour for
-# which to run it.
+# Do not run METplus if there isn't at least one lead hour for which to
+# run it.
 #
 #-----------------------------------------------------------------------
 #
-if [ -z "${FHR_LIST}" ]; then
+if [ -z "${LEADHR_LIST}" ]; then
   print_err_msg_exit "\
-The list of forecast hours for which to run METplus is empty:
-  FHR_LIST = [${FHR_LIST}]"
+The list of lead hours for which to run METplus is empty:
+  LEADHR_LIST = [${LEADHR_LIST}]"
 fi
 #
 #-----------------------------------------------------------------------
@@ -187,7 +269,7 @@ fi
 #
 # First, set the base file names.
 #
-metplus_config_tmpl_fn="${metplus_tool_name}_obs"
+metplus_config_tmpl_fn="${MetplusToolName}_obs"
 #
 # Note that we append the cycle date to the name of the configuration
 # file because we are considering only observations when using Pb2NC, so
@@ -205,8 +287,8 @@ metplus_config_tmpl_fn="${metplus_tool_name}_obs"
 # information, but we still include that info in the file name so that
 # the behavior in the two modes is as similar as possible.
 #
-metplus_config_fn="${metplus_config_tmpl_fn}_${CDATE}"
-metplus_log_fn="${metplus_config_fn}"
+metplus_config_fn="${metplus_config_tmpl_fn}_NDAS_${CDATE}"
+metplus_log_fn="${metplus_config_fn}_NDAS"
 #
 # Add prefixes and suffixes (extensions) to the base file names.
 #
@@ -231,10 +313,17 @@ metplus_config_fp="${OUTPUT_DIR}/${metplus_config_fn}"
 #
 settings="\
 #
-# Date and forecast hour information.
+# MET/METplus information.
+#
+  'metplus_tool_name': '${metplus_tool_name}'
+  'MetplusToolName': '${MetplusToolName}'
+  'METPLUS_TOOL_NAME': '${METPLUS_TOOL_NAME}'
+  'metplus_verbosity_level': '${METPLUS_VERBOSITY_LEVEL}'
+#
+# Date and lead hour information.
 #
   'cdate': '$CDATE'
-  'fhr_list': '${FHR_LIST}'
+  'leadhr_list': '${LEADHR_LIST}'
 #
 # Input and output directory/file information.
 #
@@ -258,40 +347,31 @@ settings="\
 #
 # Field information.
 #
-  'fieldname_in_obs_input': '${FIELDNAME_IN_OBS_INPUT}'
-  'fieldname_in_fcst_input': '${FIELDNAME_IN_FCST_INPUT}'
-  'fieldname_in_met_output': '${FIELDNAME_IN_MET_OUTPUT}'
-  'fieldname_in_met_filedir_names': '${FIELDNAME_IN_MET_FILEDIR_NAMES}'
   'obtype': '${OBTYPE}'
-  'accum_hh': '${ACCUM_HH:-}'
-  'accum_no_pad': '${ACCUM_NO_PAD:-}'
-  'field_thresholds': '${FIELD_THRESHOLDS:-}'
 "
-# Store the settings in a temporary file
+
+# Render the template to create a METplus configuration file
 tmpfile=$( $READLINK -f "$(mktemp ./met_plus_settings.XXXXXX.yaml)")
-cat > $tmpfile << EOF
-$settings
-EOF
-#
-# Call the python script to generate the METplus configuration file from
-# the jinja template.
-#
-python3 $USHdir/python_utils/workflow-tools/scripts/templater.py \
-  -c ${tmpfile} \
+printf "%s" "$settings" > "$tmpfile"
+uw template render \
   -i ${metplus_config_tmpl_fp} \
-  -o ${metplus_config_fp} || \
-print_err_msg_exit "\
-Call to workflow-tools templater.py to generate a METplus
-configuration file from a jinja template failed.  Parameters passed
-to this script are:
-  Full path to template METplus configuration file:
-    metplus_config_tmpl_fp = \"${metplus_config_tmpl_fp}\"
-  Full path to output METplus configuration file:
-    metplus_config_fp = \"${metplus_config_fp}\"
-  Full path to configuration file:
-    ${tmpfile}
-"
+  -o ${metplus_config_fp} \
+  --verbose \
+  --values-file "${tmpfile}" \
+  --search-path "/"
+
+err=$?
 rm $tmpfile
+if [ $err -ne 0 ]; then
+  message_txt="Error rendering template for METplus config.
+     Contents of input are:
+$settings"
+  if [ "${RUN_ENVIR}" = "nco" ] && [ "${MACHINE}" = "WCOSS2" ]; then
+    err_exit "${message_txt}"
+  else
+    print_err_msg_exit "${message_txt}"
+  fi
+fi
 #
 #-----------------------------------------------------------------------
 #
@@ -300,7 +380,7 @@ rm $tmpfile
 #-----------------------------------------------------------------------
 #
 print_info_msg "$VERBOSE" "
-Calling METplus to run MET's ${met_tool_name} tool on observations of type: ${OBTYPE}"
+Calling METplus to run MET's ${metplus_tool_name} tool on observations of type: ${OBTYPE}"
 ${METPLUS_PATH}/ush/run_metplus.py \
   -c ${METPLUS_CONF}/common.conf \
   -c ${metplus_config_fp} || \
@@ -311,13 +391,23 @@ METplus configuration file used is:
 #
 #-----------------------------------------------------------------------
 #
+# Create flag file that indicates completion of task.  This is needed by
+# the workflow.
+#
+#-----------------------------------------------------------------------
+#
+mkdir -p ${WFLOW_FLAG_FILES_DIR}
+touch "${WFLOW_FLAG_FILES_DIR}/${OBTYPE}_nc_obs_${PDY}_ready.txt"
+#
+#-----------------------------------------------------------------------
+#
 # Print message indicating successful completion of script.
 #
 #-----------------------------------------------------------------------
 #
 print_info_msg "
 ========================================================================
-METplus ${metplus_tool_name} tool completed successfully.
+METplus ${MetplusToolName} tool completed successfully.
 
 Exiting script:  \"${scrfunc_fn}\"
 In directory:    \"${scrfunc_dir}\"

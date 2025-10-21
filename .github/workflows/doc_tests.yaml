@@ -1,0 +1,32 @@
+name: Doc Tests
+on:
+  push:
+  pull_request:
+    branches:
+      - develop
+      - 'release/*'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash -leo pipefail {0}
+
+jobs:
+  doc_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install package dependencies
+        run: sudo apt-get update --yes && sudo apt-get install --yes plantuml
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Check tech docs
+        run: .github/scripts/check_tech_doc.sh
+      - name: Build documentation
+        run: |
+          cd doc
+          make clean && make html
+      - name: Check links
+        if: ${{ !cancelled() }}
+        run: |
+          cd doc
+          make linkcheck

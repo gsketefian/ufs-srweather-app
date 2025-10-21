@@ -1,9 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #
 #-----------------------------------------------------------------------
 #
 #
+# The J-Job that runs METplus for point-stat by initialization time for
+# all forecast hours.
+#
+# Run-time environment variables:
+#
+#    GLOBAL_VAR_DEFNS_FP
+#
+# Experiment variables
+#
+#  user:
+#    SCRIPTSdir
+#    USHdir
 #
 #-----------------------------------------------------------------------
 #
@@ -16,7 +28,14 @@
 #-----------------------------------------------------------------------
 #
 . $USHdir/source_util_funcs.sh
-source_config_for_task "task_run_met_pb2nc_obs" ${GLOBAL_VAR_DEFNS_FP}
+sections=(
+  user
+  nco
+  workflow
+)
+for sect in ${sections[*]} ; do
+  source_yaml ${GLOBAL_VAR_DEFNS_FP} ${sect}
+done
 . $USHdir/job_preamble.sh
 #
 #-----------------------------------------------------------------------
@@ -51,8 +70,8 @@ print_info_msg "
 Entering script:  \"${scrfunc_fn}\"
 In directory:     \"${scrfunc_dir}\"
 
-This is the J-job script for the task that runs METplus for point-stat
-by initialization time for all forecast hours.
+This is the J-job script for the task that runs METplus for pb2nc on
+NDAS observations.
 ========================================================================"
 #
 #-----------------------------------------------------------------------

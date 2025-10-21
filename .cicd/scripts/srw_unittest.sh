@@ -10,19 +10,22 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)
 # Get repository root from Jenkins WORKSPACE variable if set, otherwise,
 # set relative to script directory.
 declare workspace
-if [[ -n "${WORKSPACE:-}" ]]; then
-  workspace="${WORKSPACE}"
+if [[ -n "${WORKSPACE}/${SRW_PLATFORM}" ]]; then
+  workspace="${WORKSPACE}/${SRW_PLATFORM}"
 else
   workspace="$(cd -- "${script_dir}/../.." && pwd)"
 fi
 
 cd $workspace
 # Only run this on machines with hpss access
-hpss_machines=( jet hera )
+hpss_machines=( hera ursa )
 if [[ ${hpss_machines[@]} =~ ${SRW_PLATFORM} ]] ; then
 
-  source ${workspace}/ush/load_modules_wflow.sh ${SRW_PLATFORM}
-  module load hpss
+  # Only on hera you need to load hpss module
+  if [[ ${SRW_PLATFORM} == hera ]] ; then
+    source ${workspace}/ush/load_modules_wflow.sh ${SRW_PLATFORM}
+    module load hpss
+  fi
 
   export PYTHONPATH=${workspace}/ush
 

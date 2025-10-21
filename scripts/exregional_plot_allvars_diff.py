@@ -325,6 +325,11 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
+        "--net",
+        help="Model name; prefix of model output files.",
+        default="srw",
+        )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Print debug messages",
@@ -370,25 +375,12 @@ if __name__ == "__main__":
         vtime = ndate(itime, int(fhr))
     
         # Define the location of the input files
+        file_name = f"{args.net}.t{cyc}z.prslev.f{fhour}.{POST_OUTPUT_DOMAIN_NAME}.grib2"
         data1 = pygrib.open(
-            COMOUT_1
-            + "/rrfs.t"
-            + cyc
-            + "z.prslev.f"
-            + fhour
-            + "."
-            + POST_OUTPUT_DOMAIN_NAME
-            + ".grib2"
+            f"{COMOUT_1}/{file_name}"
         )
         data2 = pygrib.open(
-            COMOUT_2
-            + "/rrfs.t"
-            + cyc
-            + "z.prslev.f"
-            + fhour
-            + "."
-            + POST_OUTPUT_DOMAIN_NAME
-            + ".grib2"
+            f"{COMOUT_2}/{file_name}"
         )
     
         # Get the lats and lons
@@ -454,9 +446,9 @@ if __name__ == "__main__":
         t1a = time.perf_counter()
     
         # Sea level pressure
-        slp_1 = data1.select(name="Pressure reduced to MSL")[0].values * 0.01
+        slp_1 = data1.select(name="MSLP (Eta model reduction)")[0].values * 0.01
         slpsmooth_1 = ndimage.gaussian_filter(slp_1, 13.78)
-        slp_2 = data2.select(name="Pressure reduced to MSL")[0].values * 0.01
+        slp_2 = data2.select(name="MSLP (Eta model reduction)")[0].values * 0.01
         slpsmooth_2 = ndimage.gaussian_filter(slp_2, 13.78)
         slp_diff = slp_2 - slp_1
     
@@ -552,7 +544,12 @@ if __name__ == "__main__":
         qpf_diff = qpf_2 - qpf_1
     
         # Composite reflectivity
+        # refc is the 37th entry in the GRIB2 post output file
+        data1.rewind()
+        data1.seek(36) 
         refc_1 = data1.select(name="Maximum/Composite radar reflectivity")[0].values
+        data2.rewind()
+        data2.seek(36)
         refc_2 = data2.select(name="Maximum/Composite radar reflectivity")[0].values
     
         if fhr > 0:
@@ -660,6 +657,7 @@ if __name__ == "__main__":
                 facecolor="none",
                 linewidth=fline_wd,
                 alpha=falpha,
+                zorder=4,
             )
             coastline = cfeature.NaturalEarthFeature(
                 "physical",
@@ -669,6 +667,7 @@ if __name__ == "__main__":
                 facecolor="none",
                 linewidth=fline_wd,
                 alpha=falpha,
+                zorder=4,
             )
             states = cfeature.NaturalEarthFeature(
                 "cultural",
@@ -679,6 +678,7 @@ if __name__ == "__main__":
                 linewidth=fline_wd,
                 linestyle=":",
                 alpha=falpha,
+                zorder=4,
             )
             borders = cfeature.NaturalEarthFeature(
                 "cultural",
@@ -688,6 +688,7 @@ if __name__ == "__main__":
                 facecolor="none",
                 linewidth=fline_wd,
                 alpha=falpha,
+                zorder=4,
             )
     
             # All lat lons are earth relative, so setup the associated projection correct for that data

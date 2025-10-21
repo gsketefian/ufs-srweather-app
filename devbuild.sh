@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # usage instructions
 usage () {
@@ -10,13 +10,15 @@ OPTIONS
       show this help guide
   -p, --platform=PLATFORM
       name of machine you are building on
-      (e.g. cheyenne | hera | jet | orion | wcoss2)
+      (e.g. derecho | hera | jet | orion | ursa | wcoss2)
   -c, --compiler=COMPILER
       compiler to use; default depends on platform
       (e.g. intel | gnu | cray | gccgfortran)
   -a, --app=APPLICATION
-      weather model application to build; for example, ATMAQ for Online-CMAQ
-      (e.g. ATM | ATMAQ | ATMW | S2S | S2SW)
+      weather model application to build; supported SRW options are
+        ATM    (default) Atmosphere only
+        ATMAQ  Online-CMAQ (air quality)
+        ATMF   UFS_FIRE (coupled Community Fire Behavior Model)
   --ccpp="CCPP_SUITE1,CCPP_SUITE2..."
       CCPP suites (CCPP_SUITES) to include in build; delimited with ','
   --enable-options="OPTION1,OPTION2,..."
@@ -41,6 +43,8 @@ OPTIONS
       installation prefix
   --bin-dir=BIN_DIR
       installation binary directory name ("exec" by default; any name is available)
+  --conda-dir=CONDA_DIR
+      installation location for miniconda (SRW clone conda subdirectory by default)
   --build-type=BUILD_TYPE
       build type; defaults to RELEASE
       (e.g. DEBUG | RELEASE | RELWITHDEBINFO)
@@ -52,9 +56,11 @@ OPTIONS
       build with verbose output
 
 TARGETS
-   default = builds the default list of apps (also not passing any target does the same)
-   all = builds all apps
-   Or any combinations of (ufs, ufs_utils, upp, gsi, rrfs_utils)
+   default = builds the default list of components for the specified application
+            (also not passing any target does the same)
+   all = builds all standard components for ATM
+   conda_only = installs miniconda, but no other 
+   Or any combinations of (ufs, ufs_utils, upp, nexus, aqm_utils)
 
 NOTE: See User's Guide for detailed build instructions
 
@@ -84,8 +90,6 @@ Settings:
   BUILD_UFS=${BUILD_UFS}
   BUILD_UFS_UTILS=${BUILD_UFS_UTILS}
   BUILD_UPP=${BUILD_UPP}
-  BUILD_GSI=${BUILD_GSI}
-  BUILD_RRFS_UTILS=${BUILD_RRFS_UTILS}
   BUILD_NEXUS=${BUILD_NEXUS}
   BUILD_AQM_UTILS=${BUILD_AQM_UTILS}
 
@@ -101,11 +105,8 @@ usage_error () {
 
 # default settings
 LCL_PID=$$
-SRW_DIR=$(cd "$(dirname "$(readlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
-MACHINE_SETUP=${SRW_DIR}/src/UFS_UTILS/sorc/machine-setup.sh
-BUILD_DIR="${SRW_DIR}/build"
-INSTALL_DIR=${SRW_DIR}
 BIN_DIR="exec"
+CONDA_BUILD_DIR="conda"
 COMPILER=""
 APPLICATION=""
 CCPP_SUITES=""
@@ -119,11 +120,10 @@ VERBOSE=false
 
 # Turn off all apps to build and choose default later
 DEFAULT_BUILD=true
+BUILD_CONDA="on"
 BUILD_UFS="off"
 BUILD_UFS_UTILS="off"
 BUILD_UPP="off"
-BUILD_GSI="off"
-BUILD_RRFS_UTILS="off"
 BUILD_NEXUS="off"
 BUILD_AQM_UTILS="off"
 
@@ -168,6 +168,8 @@ while :; do
     --install-dir|--install-dir=) usage_error "$1 requires argument." ;;
     --bin-dir=?*) BIN_DIR=${1#*=} ;;
     --bin-dir|--bin-dir=) usage_error "$1 requires argument." ;;
+    --conda-dir=?*) CONDA_BUILD_DIR=${1#*=} ;;
+    --conda-dir|--conda-dir=) usage_error "$1 requires argument." ;;
     --build-type=?*) BUILD_TYPE=${1#*=} ;;
     --build-type|--build-type=) usage_error "$1 requires argument." ;;
     --build-jobs=?*) BUILD_JOBS=$((${1#*=})) ;;
@@ -178,13 +180,11 @@ while :; do
     # targets
     default) ;;
     all) DEFAULT_BUILD=false; BUILD_UFS="on";
-         BUILD_UFS_UTILS="on"; BUILD_UPP="on";
-         BUILD_GSI="on"; BUILD_RRFS_UTILS="on";;
+         BUILD_UFS_UTILS="on"; BUILD_UPP="on";;
+    conda_only) DEFAULT_BUILD=false;;
     ufs) DEFAULT_BUILD=false; BUILD_UFS="on" ;;
     ufs_utils) DEFAULT_BUILD=false; BUILD_UFS_UTILS="on" ;;
     upp) DEFAULT_BUILD=false; BUILD_UPP="on" ;;
-    gsi) DEFAULT_BUILD=false; BUILD_GSI="on" ;;
-    rrfs_utils) DEFAULT_BUILD=false; BUILD_RRFS_UTILS="on" ;;
     nexus) DEFAULT_BUILD=false; BUILD_NEXUS="on" ;;
     aqm_utils) DEFAULT_BUILD=false; BUILD_AQM_UTILS="on" ;;
     # unknown
@@ -195,10 +195,9 @@ while :; do
 done
 
 # Ensure uppercase / lowercase ============================================
-APPLICATION="${APPLICATION^^}"
-PLATFORM="${PLATFORM,,}"
-COMPILER="${COMPILER,,}"
-EXTERNALS="${EXTERNALS^^}"
+APPLICATION=$(echo ${APPLICATION} | tr '[a-z]' '[A-Z]')
+PLATFORM=$(echo ${PLATFORM} | tr '[A-Z]' '[a-z]')
+COMPILER=$(echo ${COMPILER} | tr '[A-Z]' '[a-z]')
 
 # check if PLATFORM is set
 if [ -z $PLATFORM ] ; then
@@ -209,6 +208,60 @@ fi
 # set PLATFORM (MACHINE)
 MACHINE="${PLATFORM}"
 printf "PLATFORM(MACHINE)=${PLATFORM}\n" >&2
+
+
+# Conda is not used on WCOSS2
+if [ "${PLATFORM}" = "wcoss2" ]; then
+    BUILD_CONDA="off"
+fi
+
+# build conda and conda environments, if requested.
+if [ "${BUILD_CONDA}" = "on" ] ; then
+  if [ ! -d "${CONDA_BUILD_DIR}" ] ; then
+    os=$(uname)
+    test $os == Darwin && os=MacOSX
+    hardware=$(uname -m)
+    installer=Miniforge3-${os}-${hardware}.sh
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/download/23.3.1-1/${installer}"
+    bash ./${installer} -bfp "${CONDA_BUILD_DIR}"
+    rm ${installer}
+  fi
+
+  source ${CONDA_BUILD_DIR}/etc/profile.d/conda.sh
+  # Put some additional packages in the base environment on MacOS systems
+  if [ "${os}" == "MacOSX" ] ; then
+    mamba install -y bash coreutils sed
+  fi
+  conda activate
+  if ! conda env list | grep -q "^srw_app\s" ; then
+    mamba env create -n srw_app --file environment.yml
+  fi
+  if ! conda env list | grep -q "^srw_graphics\s" ; then
+    mamba env create -n srw_graphics --file graphics_environment.yml
+  fi
+  if ! conda env list | grep -q "^srw_sd\s" ; then
+    mamba env create -n srw_sd --file sd_environment.yml
+  fi
+  if [ "${APPLICATION}" = "ATMAQ" ]; then
+    if ! conda env list | grep -q "^srw_aqm\s" ; then
+      mamba env create -n srw_aqm --file aqm_environment.yml
+    fi
+  fi
+
+else
+  if [ -d "${CONDA_BUILD_DIR}" ] ; then
+    source ${CONDA_BUILD_DIR}/etc/profile.d/conda.sh
+    conda activate
+  fi
+fi
+
+# Conda environment should have linux utilities to perform these tasks on macos.
+SRW_DIR=$(cd "$(dirname "$(readlink -f -n "${BASH_SOURCE[0]}" )" )" && pwd -P)
+MACHINE_SETUP=${SRW_DIR}/src/UFS_UTILS/sorc/machine-setup.sh
+BUILD_DIR="${BUILD_DIR:-${SRW_DIR}/build}"
+INSTALL_DIR=${INSTALL_DIR:-$SRW_DIR}
+CONDA_BUILD_DIR="$(readlink -f "${CONDA_BUILD_DIR}")"
+echo ${CONDA_BUILD_DIR} > ${SRW_DIR}/conda_loc
 
 # choose default apps to build
 if [ "${DEFAULT_BUILD}" = true ]; then
@@ -235,10 +288,10 @@ set -eu
 # automatically determine compiler
 if [ -z "${COMPILER}" ] ; then
   case ${PLATFORM} in
-    jet|hera|gaea) COMPILER=intel ;;
-    orion) COMPILER=intel ;;
+    jet|hera|gaea|gaea-c6|ursa) COMPILER=intel ;;
+    orion|hercules) COMPILER=intel ;;
     wcoss2) COMPILER=intel ;;
-    cheyenne) COMPILER=intel ;;
+    derecho) COMPILER=intel ;;
     macos|singularity) COMPILER=gnu ;;
     odin|noaacloud) COMPILER=intel ;;
     *)
@@ -315,14 +368,13 @@ fi
 
 # cmake settings
 CMAKE_SETTINGS="\
+ -DBUILD_MACHINE=${MACHINE}\
  -DCMAKE_BUILD_TYPE=${BUILD_TYPE}\
  -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}\
  -DCMAKE_INSTALL_BINDIR=${BIN_DIR}\
  -DBUILD_UFS=${BUILD_UFS}\
  -DBUILD_UFS_UTILS=${BUILD_UFS_UTILS}\
  -DBUILD_UPP=${BUILD_UPP}\
- -DBUILD_GSI=${BUILD_GSI}\
- -DBUILD_RRFS_UTILS=${BUILD_RRFS_UTILS}\
  -DBUILD_NEXUS=${BUILD_NEXUS}\
  -DBUILD_AQM_UTILS=${BUILD_AQM_UTILS}"
 
@@ -407,15 +459,6 @@ if [ $USE_SUB_MODULES = true ]; then
         module use ${SRW_DIR}/sorc/UPP/modulefiles
         load_module ""
     fi
-    if [ $BUILD_GSI = "on" ]; then
-        printf "... Loading GSI modules ...\n"
-        module use ${SRW_DIR}/sorc/gsi/modulefiles
-        load_module "gsi_"
-    fi
-    if [ $BUILD_RRFS_UTILS = "on" ]; then
-        printf "... Loading RRFS_UTILS modules ...\n"
-        load_module ""
-    fi
     if [ $BUILD_NEXUS = "on" ]; then
         printf "... Loading NEXUS modules ...\n"
         module use ${SRW_DIR}/sorc/arl_nexus/modulefiles
@@ -463,6 +506,40 @@ else
            mv ${INSTALL_DIR}/${BIN_DIR}/* ${SRW_DIR}/${BIN_DIR}
        fi
     fi
+fi
+
+# Copy config/python directories from component to main directory (EE2 compliance)
+if [ "${BUILD_UFS_UTILS}" = "on" ]; then
+  if [ -d "${SRW_DIR}/parm/ufs_utils_parm" ]; then
+    rm -rf ${SRW_DIR}/parm/ufs_utils_parm
+  fi
+  cp -rp ${SRW_DIR}/sorc/UFS_UTILS/parm ${SRW_DIR}/parm/ufs_utils_parm
+fi
+if [ "${BUILD_UPP}" = "on" ]; then
+  if [ -d "${SRW_DIR}/parm/upp_parm" ]; then
+    rm -rf ${SRW_DIR}/parm/upp_parm
+  fi
+  cp -rp ${SRW_DIR}/sorc/UPP/parm ${SRW_DIR}/parm/upp_parm
+fi
+if [ "${BUILD_NEXUS}" = "on" ]; then
+  if [ -d "${SRW_DIR}/parm/nexus_config" ]; then
+    rm -rf ${SRW_DIR}/parm/nexus_config
+  fi
+  cp -rp ${SRW_DIR}/sorc/arl_nexus/config ${SRW_DIR}/parm/nexus_config
+  if [ -d "${SRW_DIR}/ush/nexus_utils" ]; then
+    rm -rf ${SRW_DIR}/ush/nexus_utils
+  fi
+  cp -rp ${SRW_DIR}/sorc/arl_nexus/utils ${SRW_DIR}/ush/nexus_utils
+fi
+if [ "${BUILD_AQM_UTILS}" = "on" ]; then
+  if [ -d "${SRW_DIR}/parm/aqm_utils_parm" ]; then
+    rm -rf ${SRW_DIR}/parm/aqm_utils_parm
+  fi
+  cp -rp ${SRW_DIR}/sorc/AQM-utils/parm ${SRW_DIR}/parm/aqm_utils_parm
+  if [ -d "${SRW_DIR}/ush/aqm_utils_python" ]; then
+    rm -rf ${SRW_DIR}/ush/aqm_utils_python
+  fi
+  cp -rp ${SRW_DIR}/sorc/AQM-utils/python_utils ${SRW_DIR}/ush/aqm_utils_python
 fi
 
 exit 0

@@ -15,9 +15,9 @@ for the current code in the users ufs-srweather-app directory.  It consists of t
 
 Currently, the following configurations are supported:
 
-Machine     | Cheyenne    | Hera   | Jet    | Orion  | wcoss2  |
-------------| ------------|--------|--------|--------|---------|
-Compiler(s) | Intel, GNU  | Intel  | Intel  | Intel  | Intel   |
+Machine     | Derecho | Gaea C6 | Hera        | Hercules | Orion   | Ursa        |
+------------|---------|---------|-------------|----------|---------|-------------|
+Compiler(s) | Intel   | Intel   | Intel, GNU  | Intel    | Intel   | Intel, GNU  |
 
 The CMake build is done in the ``build_${compiler}`` directory.
 The executables for each build are installed under the ``bin_${compiler}`` directory.
@@ -46,10 +46,11 @@ The unit tests in the test_python/ directory test various parts of the workflow 
 
 ### Set PYTHONPATH
 
-First, you will need to set the PYTHONPATH environment variable to include the ush/ directory:
+First, you will need to set the PYTHONPATH environment variable to include the ush/ directory.
+From the top level of the ufs-srweather-app clone, run the following command:
 
 ```
-export PYTHONPATH=/path/to/ufs-srweather-app/ush:${PYTHONPATH}
+export PYTHONPATH=$(pwd)/ush
 ```
 
 ### Set up HPSS tests

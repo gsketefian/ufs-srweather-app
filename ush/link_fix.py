@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import os
-import sys
 import argparse
-import re
 import glob
+import os
+import re
+import sys
+from pathlib import Path
 
 from python_utils import (
     import_vars,
@@ -15,11 +16,10 @@ from python_utils import (
     define_macos_utilities,
     check_var_valid_value,
     flatten_dict,
-    cd_vrfy,
-    mkdir_vrfy,
     find_pattern_in_str,
-    load_shell_config,
 )
+
+from uwtools.api.config import get_yaml_config
 
 
 def link_fix(
@@ -35,25 +35,24 @@ def link_fix(
     sfc_climo_fields,
     **kwargs,
 ):
-    """This file defines a function that links fix files to the target
-    directory for a given SRW experiment. Only links files for one group
-    at a time.
+    """Links fix files to the target directory for a given SRW experiment. 
+    It only links files for one group at a time.
 
     Args:
-        cfg_d: dictionary of settings
-        file_group: could be on of ["grid", "orog", "sfc_climo"]
-        source_dir: the path to directory where the file_group fix files
-                    are linked from
-        target_dir: the directory where the fix files should be linked to
-        dot_or_uscore: str containing either a dot or an underscore
-        nhw: grid parameter setting
-        constants: dict containing the constants used by SRW
-        run_task: boolean value indicating whether the task is to be run
-                  in the experiment
-        climo_fields: list of fields needed for climo
+        cfg_d           (dict): Dictionary of configuration settings
+        file_group      (str) : Choice of [``"grid"``, ``"orog"``, ``"sfc_climo"``]
+        source_dir      (str) : Path to directory that the ``file_group`` fix files are linked from
+        target_dir      (str) : Directory that the fix files should be linked to
+        dot_or_uscore   (str) : Either a dot (``.``) or an underscore (``_``)
+        nhw             (int) : Wide halo width (grid parameter setting: N=number of cells, 
+                                H=halo, W=wide halo)
+        constants       (dict): Dictionary containing the constants used by the SRW App
+        run_task        (bool): Whether the task is to be run in the experiment
+        climo_fields    (list): List of fields needed for surface climatology (see 
+                                ``fixed_files_mapping.yaml`` for details)
 
     Returns:
-        a string: resolution
+        res (str): File/grid resolution
     """
 
     print_input_args(locals())
@@ -99,9 +98,9 @@ def link_fix(
     # 1) "C*.mosaic.halo${NHW}.nc"
     #    This mosaic file for the wide-halo grid (i.e. the grid with a ${NHW}-
     #    cell-wide halo) is needed as an input to the orography filtering
-    #    executable in the orography generation task.  The filtering code
+    #    executable in the orography generation task. The filtering code
     #    extracts from this mosaic file the name of the file containing the
-    #    grid on which it will generate filtered topography.  Note that the
+    #    grid on which it will generate filtered topography. Note that the
     #    orography generation and filtering are both performed on the wide-
     #    halo grid.  The filtered orography file on the wide-halo grid is then
     #    shaved down to obtain the filtered orography files with ${NH3}- and
@@ -207,7 +206,7 @@ def link_fix(
             f"C*{dot_or_uscore}oro_data.tile{tile_rgnl}.halo{nh0}.nc",
             f"C*{dot_or_uscore}oro_data.tile{tile_rgnl}.halo{nh4}.nc",
         ]
-        if ccpp_phys_suite == "FV3_RAP" or ccpp_phys_suite == "FV3_HRRR" or ccpp_phys_suite == "FV3_GFS_v15_thompson_mynn_lam3km" or ccpp_phys_suite == "FV3_GFS_v17_p8":
+        if ccpp_phys_suite == "FV3_RAP" or ccpp_phys_suite == "FV3_HRRR" or ccpp_phys_suite == "FV3_HRRR_gf" or ccpp_phys_suite == "FV3_GFS_v15_thompson_mynn_lam3km" or ccpp_phys_suite == "FV3_GFS_v17_p8" or ccpp_phys_suite == "RRFS_sas":
             fns += [
                 f"C*{dot_or_uscore}oro_data_ss.tile{tile_rgnl}.halo{nh0}.nc",
                 f"C*{dot_or_uscore}oro_data_ls.tile{tile_rgnl}.halo{nh0}.nc",
@@ -256,7 +255,7 @@ def link_fix(
             if not res:
                 print_err_msg_exit(
                     f"""
-                    The resolution could not be extracted from the current file's name.  The
+                    The resolution could not be extracted from the current file's name. The
                     full path to the file (fp) is:
                       fp = '{fp}'
                     This may be because fp contains the * globbing character, which would
@@ -298,8 +297,7 @@ def link_fix(
     #
     # -----------------------------------------------------------------------
     #
-    save_dir = os.getcwd()
-    cd_vrfy(target_dir)
+    target_dir = Path(target_dir)
     #
     # -----------------------------------------------------------------------
     #
@@ -319,8 +317,8 @@ def link_fix(
         relative_link_flag = True
 
     for fp in fps:
-        fn = os.path.basename(fp)
-        create_symlink_to_file(fp, fn, relative_link_flag)
+        fp = Path(fp)
+        create_symlink_to_file(fp, target_dir / fp.name, relative_link_flag)
     #
     # -----------------------------------------------------------------------
     #
@@ -343,7 +341,7 @@ def link_fix(
     if file_group == "grid":
         target = f"{cres}{dot_or_uscore}grid.tile{tile_rgnl}.halo{nh4}.nc"
         symlink = f"{cres}{dot_or_uscore}grid.tile{tile_rgnl}.nc"
-        create_symlink_to_file(target, symlink, True)
+        create_symlink_to_file(target_dir / target, target_dir / symlink, True)
     #
     # -----------------------------------------------------------------------
     #
@@ -363,21 +361,18 @@ def link_fix(
             # Create links without "halo" in the name
             halo = f"{cres}.{field}.tile{tile_rgnl}.halo{nh4}.nc"
             no_halo = re.sub(f".halo{nh4}", "", halo)
-            create_symlink_to_file(halo, no_halo, True)
+            create_symlink_to_file(target_dir / halo, target_dir / no_halo, True)
 
             # Create links without halo and tile7, and with "tile1"
             halo_tile = f"{cres}.{field}.tile{tile_rgnl}.halo{nh0}.nc"
             no_halo_tile = re.sub(f"tile{tile_rgnl}.halo{nh0}", "tile1", halo_tile)
-            create_symlink_to_file(halo_tile, no_halo_tile, True)
-
-    # Change directory back to original one.
-    cd_vrfy(save_dir)
+            create_symlink_to_file(target_dir / halo_tile, target_dir / no_halo_tile, True)
 
     return res
 
 
-def parse_args(argv):
-    """Parse command line arguments"""
+def _parse_args(argv):
+    """Parses command line arguments"""
     parser = argparse.ArgumentParser(
         description="Creates symbolic links to FIX directories."
     )
@@ -402,12 +397,12 @@ def parse_args(argv):
 
 
 if __name__ == "__main__":
-    args = parse_args(sys.argv[1:])
-    cfg = load_shell_config(args.path_to_defns)
+    args = _parse_args(sys.argv[1:])
+    cfg = get_yaml_config(args.path_to_defns)
     link_fix(
         verbose=cfg["workflow"]["VERBOSE"],
         file_group=args.file_group,
-        source_dir=cfg[f"task_make_{args.file_group.lower()}"][
+        source_dir=cfg[f"task_make_{args.file_group.lower()}"]["envvars"][
             f"{args.file_group.upper()}_DIR"
         ],
         target_dir=cfg["workflow"]["FIXlam"],

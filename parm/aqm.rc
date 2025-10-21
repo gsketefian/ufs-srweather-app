@@ -7,14 +7,18 @@
 #
 #  General settings
 #
-ae_matrix_nml: {{ aqm_config_dir }}/AE_cb6r3_ae6_aq.nml
-gc_matrix_nml: {{ aqm_config_dir }}/GC_cb6r3_ae6_aq.nml
-nr_matrix_nml: {{ aqm_config_dir }}/NR_cb6r3_ae6_aq.nml
-tr_matrix_nml: {{ aqm_config_dir }}/Species_Table_TR_0.nml
+ae_matrix_nml: {{ fixaqm }}/epa/AE_cb6r5_ae7_aq.nml
+gc_matrix_nml: {{ fixaqm }}/epa/GC_cb6r5_ae7_aq.nml
+nr_matrix_nml: {{ fixaqm }}/epa/NR_cb6r5_ae7_aq.nml
+tr_matrix_nml: {{ fixaqm }}/epa/Species_Table_TR_0.nml
 
-csqy_data:   {{ aqm_config_dir }}/CSQY_DATA_cb6r3_ae6_aq
-optics_data: {{ aqm_config_dir }}/PHOT_OPTICS.dat
-omi_data:    {{ aqm_config_dir }}/omi_cmaq_2015_361X179.dat
+csqy_data:   {{ fixaqm }}/epa/CSQY_DATA_cb6r5_ae7_aq
+optics_data: {{ fixaqm }}/epa/PHOT_OPTICS.dat
+omi_data:    {{ fixaqm }}/epa/omi_cmaq_2015_361X179.dat
+
+desid_chem_ctrl: {{ fixaqm }}/epa/CMAQ_Control_DESID_cb6r5_ae7_aq.nml
+desid_ctrl: {{ fixaqm }}/epa/CMAQ_Control_DESID.nml
+misc_ctrl:  {{ fixaqm }}/epa/CMAQ_Control_Misc.nml
 
 init_concentrations: {{ init_concentrations | lower }}
 
@@ -31,6 +35,26 @@ dy_tracer_map_start: 11
 ctm_aod: true
 ctm_pmdiag: true
 ctm_stdout: maintask
+
+#
+# Inline Canopy Effects
+#
+canopy_yn: {{ do_aqm_canopy | lower }}
+canopy_type: canopy
+canopy_format: netcdf
+canopy_file: {{ aqm_rc_canopy_file_fp }}
+canopy_frequency: static
+canopy_species::
+    FCH        1.00000   FCH      m
+    FRT        1.00000   FRT      1
+    CLU        1.00000   CLU      1
+    POPU       1.00000   POPU     10000_people/10km2
+    LAIE       1.00000   LAIE     1
+    C1R        1.00000   C1R      1
+    C2R        1.00000   C2R      1
+    C3R        1.00000   C3R      1
+    C4R        1.00000   C4R      1
+::
 
 #
 #  Input emissions
@@ -172,7 +196,7 @@ bio_format: netcdf
 bio_file: {{ aqm_rc_bio_file_fp }}
 bio_frequency: static
 bio_period: summer
-bio_speciation_file: {{ dcominbio }}/gspro_biogenics_1mar2017.txt
+bio_speciation_file: {{ fixaqm }}/bio/gspro_biogenics_1mar2017.txt
 bio_speciation_profile: B10C6
 bio_species::
     AVG_NOAG_GROW        1.00000  AVG_NOAG_GROW     gmN/hr

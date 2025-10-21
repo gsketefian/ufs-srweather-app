@@ -1,45 +1,46 @@
 #!/usr/bin/env python3
 """
-Create a model_configure file for the FV3 forecast model from a
-template.
+Creates a ``model_configure`` file for the FV3 forecast model from a template.
 """
+import argparse
 import os
 import sys
-import argparse
 from textwrap import dedent
-import tempfile
 
 from python_utils import (
+    cfg_to_yaml_str,
+    flatten_dict,
     import_vars,
+    lowercase,
+    print_info_msg,
     print_input_args,
     str_to_type,
-    print_info_msg,
-    lowercase,
-    cfg_to_yaml_str,
-    load_shell_config,
-    flatten_dict,
 )
 
-# These come from ush/python_utils/workflow-tools
-from scripts.templater import set_template
+from uwtools.api.config import get_yaml_config
+from uwtools.api.template import render
 
 
 def create_model_configure_file(
-    cdate, fcst_len_hrs, fhrot, run_dir, sub_hourly_post, dt_subhourly_post_mnts, dt_atmos
+    cdate, fcst_len_hrs, fhrot, run_dir, sub_hourly_post, dt_subhourly_post_mnts, dt_atmos,
+    history_native_grid
     ): #pylint: disable=too-many-arguments
-    """Creates a model configuration file in the specified
-    run directory
+    """Creates a model configuration file in the specified run directory
 
     Args:
-        cdate: cycle date
-        fcst_len_hrs: forecast length in hours
-        fhrot: forecast hour at restart
-        run_dir: run directory
-        sub_hourly_post
-        dt_subhourly_post_mnts
-        dt_atmos
+        cdate (int): Cycle date in ``YYYYMMDD`` format
+        fcst_len_hrs (int): Forecast length in hours
+        fhrot (int): Forecast hour at restart
+        run_dir (str): Run directory
+        sub_hourly_post (bool): Sets subhourly post to either ``True`` or ``False``
+        dt_subhourly_post_mnts (int): Subhourly forecast model output and post-processing 
+                                      frequency in minutes
+        dt_atmos (int): Atmospheric forecast model's main timestep in seconds
+        history_native_grid (bool): If ``True``, write history files on the native FV3 cubed sphere
+                                    grid.
+
     Returns:
-        Boolean
+        True
     """
 
     print_input_args(locals())
@@ -72,6 +73,14 @@ def create_model_configure_file(
     #
     # -----------------------------------------------------------------------
     #
+
+    if history_native_grid:
+        output_grid = "cubed_sphere_grid"
+        print_info_msg("output_grid set to cubed_sphere_grid when writing history files on native "
+                       "grid.")
+    else:
+        output_grid = WRTCMP_output_grid
+
     settings = {
         "start_year": cdate.year,
         "start_month": cdate.month,
@@ -81,13 +90,15 @@ def create_model_configure_file(
         "fhrot": fhrot,
         "dt_atmos": DT_ATMOS,
         "restart_interval": RESTART_INTERVAL,
+        "itasks": ITASKS,
         "write_dopost": f".{lowercase(str(WRITE_DOPOST))}.",
         "quilting": f".{lowercase(str(QUILTING))}.",
-        "output_grid": WRTCMP_output_grid,
+        "output_grid": output_grid,
+        "history_native_grid": ".true." if history_native_grid else ".false.",
     }
     #
     # If the write-component is to be used, then specify a set of computational
-    # parameters and a set of grid parameters.  The latter depends on the type
+    # parameters and a set of grid parameters. The latter depends on the type
     # (coordinate system) of the grid that the write-component will be using.
     #
     if QUILTING:
@@ -102,7 +113,7 @@ def create_model_configure_file(
             }
         )
 
-        if WRTCMP_output_grid == "lambert_conformal":
+        if output_grid == "lambert_conformal":
             settings.update(
                 {
                     "stdlat1": WRTCMP_stdlat1,
@@ -118,7 +129,7 @@ def create_model_configure_file(
                 }
             )
         elif (
-            WRTCMP_output_grid in ("regional_latlon", "rotated_latlon")
+            output_grid in ("regional_latlon", "rotated_latlon")
         ):
             settings.update(
                 {
@@ -134,12 +145,23 @@ def create_model_configure_file(
                     "dy": "",
                 }
             )
+        else:
+            settings.update({
+                "dlat": None,
+                "dlon": None,
+                "lon2": None,
+                "nx": None,
+                "stdlat1": None,
+                "lat2": None,
+                "stdlat2": None,
+                "dy": None,
+                "ny": None,
+                "dx": None,
+            })
+
     #
     # If not using the write-component (aka quilting), set those variables
-    # needed for quilting in the jinja template for the model configuration
-    # file (MODEL_CONFIG_TMPL_FP) to "None".  This is necessary because
-    # otherwise, the run_fcst task will fail in the call to set_template()
-    # below with a "variables are not provided" message.
+    # needed for quilting to None so that it gets rendered in the template appropriately.
     #
     else:
         settings.update(
@@ -164,22 +186,22 @@ def create_model_configure_file(
         )
     #
     # If sub_hourly_post is set to "TRUE", then the forecast model must be
-    # directed to generate output files on a sub-hourly interval.  Do this
+    # directed to generate output files on a sub-hourly interval. Do this
     # by specifying the output interval in the model configuration file
     # (MODEL_CONFIG_FN) in units of number of forecat model time steps (nsout).
     # nsout is calculated using the user-specified output time interval
     # dt_subhourly_post_mnts (in units of minutes) and the forecast model's
-    # main time step dt_atmos (in units of seconds).  Note that nsout is
+    # main time step dt_atmos (in units of seconds). Note that nsout is
     # guaranteed to be an integer because the experiment generation scripts
     # require that dt_subhourly_post_mnts (after conversion to seconds) be
-    # evenly divisible by dt_atmos.  Also, in this case, the variable output_fh
+    # evenly divisible by dt_atmos. Also, in this case, the variable output_fh
     # [which specifies the output interval in hours;
     # see the jinja model_config template file] is set to 0, although this
-    # doesn't matter because any positive of nsout will override output_fh.
+    # doesn't matter because any positive value of nsout will override output_fh.
     #
     # If sub_hourly_post is set to "FALSE", then the workflow is hard-coded
     # (in the jinja model_config template file) to direct the forecast model
-    # to output files every hour.  This is done by setting (1) output_fh to 1
+    # to output files every hour. This is done by setting (1) output_fh to 1
     # here, and (2) nsout to -1 here which turns off output by time step interval.
     #
     # Note that the approach used here of separating how hourly and subhourly
@@ -222,28 +244,15 @@ def create_model_configure_file(
     #
     model_config_fp = os.path.join(run_dir, MODEL_CONFIG_FN)
 
-    with tempfile.NamedTemporaryFile(dir="./",
-                                     mode="w+t",
-                                     suffix=".yaml",
-                                     prefix="model_config_settings.") as tmpfile:
-        tmpfile.write(settings_str)
-        tmpfile.seek(0)
-        # set_template does its own error handling
-        set_template(
-            [
-                "-c",
-                tmpfile.name,
-                "-i",
-                MODEL_CONFIG_TMPL_FP,
-                "-o",
-                model_config_fp,
-            ]
+    render(
+        input_file = MODEL_CONFIG_TMPL_FP,
+        output_file = model_config_fp,
+        values_src = settings
         )
-
     return True
 
 
-def parse_args(argv):
+def _parse_args(argv):
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description="Creates model configuration file.")
 
@@ -307,13 +316,21 @@ def parse_args(argv):
         help="Path to var_defns file.",
     )
 
+    parser.add_argument(
+        "--history-native-grid",
+        dest="history_native_grid",
+        required=True,
+        help="Enable writing history files on native FV3 cubed sphere grid with a true/false "
+             "string.",
+    )
+
     return parser.parse_args(argv)
 
 
 if __name__ == "__main__":
-    args = parse_args(sys.argv[1:])
-    cfg = load_shell_config(args.path_to_defns)
-    cfg = flatten_dict(cfg)
+    args = _parse_args(sys.argv[1:])
+    cfg = get_yaml_config(args.path_to_defns)
+    cfg = flatten_dict({**cfg["task_run_fcst"], **cfg["workflow"]})
     import_vars(dictionary=cfg)
     create_model_configure_file(
         run_dir=args.run_dir,
@@ -323,4 +340,5 @@ if __name__ == "__main__":
         sub_hourly_post=str_to_type(args.sub_hourly_post),
         dt_subhourly_post_mnts=str_to_type(args.dt_subhourly_post_mnts),
         dt_atmos=str_to_type(args.dt_atmos),
+        history_native_grid=str_to_type(args.history_native_grid),
     )

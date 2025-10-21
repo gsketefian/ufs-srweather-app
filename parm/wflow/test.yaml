@@ -1,0 +1,52 @@
+# Settings that will run tasks needed per-experiment to create "fix
+# files" for the stationary grid.
+
+default_task_test: &default_task
+  account: '&ACCOUNT;'
+  attrs:
+    cycledefs: forecast
+    maxtries: '2'
+  envars: &default_envars
+    GLOBAL_VAR_DEFNS_FP: '&GLOBAL_VAR_DEFNS_FP;'
+    USHdir: '&USHdir;'
+    FCST_DIR:
+      cyclestr:
+        value:  '&FCST_DIR;'
+    PDY:
+      cyclestr:
+        value:  "@Y@m@d"
+    cyc:
+      cyclestr:
+        value:  "@H"
+    subcyc:
+      cyclestr:
+        value:  "@M"
+    LOGDIR:
+      cyclestr:
+        value:  "&LOGDIR;"
+    SLASH_ENSMEM_SUBDIR: '&SLASH_ENSMEM_SUBDIR;'
+    ENSMEM_INDX: '#mem#'
+  native: '{{ platform.SCHED_NATIVE_CMD }}'
+  partition: '{{ "&PARTITION_DEFAULT;" if platform.get("PARTITION_DEFAULT") }}'
+  queue: '&QUEUE_DEFAULT;'
+  walltime: '{{ task_integration_test.execution.batchargs.walltime }}'
+
+metatask_integration_test:
+  var:
+    mem: '{% if global.DO_ENSEMBLE  %}{%- for m in range(1, global.NUM_ENS_MEMBERS+1) -%}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
+  task_integration_test_mem#mem#:
+    <<: *default_task
+    command: '&LOAD_MODULES_RUN_TASK; "integration_test" "&JOBSdir;/JREGIONAL_INTEGRATION_TEST"'
+    nodes: '{{ task_integration_test.execution.batchargs.nodes }}:ppn={{ task_integration_test.execution.batchargs.tasks_per_node }}'
+    join:
+      cyclestr:
+        value:  '&LOGDIR;/{{ jobname }}_@Y@m@d@H&LOGEXT;'
+    dependency:
+      and_run_fcst: 
+        taskvalid:
+          attrs:
+            task: run_fcst_mem#mem#
+        taskdep:
+          attrs:
+            task: run_fcst_mem#mem#
+

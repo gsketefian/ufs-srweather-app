@@ -28,8 +28,8 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)
 # Get repository root from Jenkins WORKSPACE variable if set, otherwise, set
 # relative to script directory.
 declare workspace
-if [[ -n "${WORKSPACE}" ]]; then
-    workspace="${WORKSPACE}"
+if [[ -n "${WORKSPACE}/${SRW_PLATFORM}" ]]; then
+    workspace="${WORKSPACE}/${SRW_PLATFORM}"
     cd $workspace
 else
     workspace="$(cd -- "${script_dir}/../.." && pwd)"
@@ -43,14 +43,9 @@ else
     platform="${SRW_PLATFORM}"
 fi
 
-if [[ "${SRW_PLATFORM}" = jet-epic ]]; then
-    platform='jet'
-fi
-
 # Test directories
 we2e_experiment_base_dir="${workspace}/expt_dirs"
 we2e_test_dir="${workspace}/tests/WE2E"
-nco_dir="${workspace}/nco_dirs"
 
 pwd
 
@@ -58,44 +53,49 @@ pwd
 #     "Run the Workflow Using Stand-Alone Scripts".
 echo "BRANCH=${BRANCH}"
 
-# Set the ACCOUNT to use for this PLATFORM ...
-sed "s|^  ACCOUNT: \"\"|  ACCOUNT: \"${SRW_PROJECT}\"|1" -i ush/config_defaults.yaml
-sed "s|hera|${platform,,}|1" ush/config.community.yaml | sed "s|an_account|${SRW_PROJECT}|1" > ush/config.yaml
-
-# Set directory paths ...
+# Set test settings for the platform and account
 export EXPTDIR=${workspace}/expt_dirs/test_community
-echo "EXPTDIR=${EXPTDIR}"
-sed "s|^workflow:|workflow:\n  EXPT_BASEDIR: ${workspace}/expt_dirs|1" -i ush/config.yaml
-sed "s|^workflow:|workflow:\n  EXEC_SUBDIR: ${workspace}/install_${SRW_COMPILER}/exec|1" -i ush/config.yaml
-
-# Decrease forecast length since we are running all the steps
-sed "s|^  FCST_LEN_HRS: 12|  FCST_LEN_HRS: 6|g" -i ush/config.yaml
 
 # DATA_LOCATION differs on each platform ... find it.
-export DATA_LOCATION=$(grep TEST_EXTRN_MDL_SOURCE_BASEDIR ${workspace}/ush/machine/${platform,,}.yaml | awk '{printf "%s", $2}')
+DATA_LOCATION=$(grep TEST_EXTRN_MDL_SOURCE_BASEDIR ${workspace}/ush/machine/${platform,,}.yaml | awk '{printf "%s", $2}')
 echo "DATA_LOCATION=${DATA_LOCATION}"
 
-# Configure a default test ...
-sed "s|^task_get_extrn_ics:|task_get_extrn_ics:\n  EXTRN_MDL_SOURCE_BASEDIR_ICS: ${DATA_LOCATION}/FV3GFS/grib2/2019061518|1" -i ush/config.yaml
-sed "s|^task_get_extrn_lbcs:|task_get_extrn_lbcs:\n  EXTRN_MDL_SOURCE_BASEDIR_LBCS: ${DATA_LOCATION}/FV3GFS/grib2/2019061518|1" -i ush/config.yaml
-
-# Use staged data for HPSS supported machines
-sed 's|^platform:|platform:\n  EXTRN_MDL_DATA_STORES: disk|g' -i ush/config.yaml
+user_settings="
+user:
+  ACCOUNT: ${SRW_PROJECT}
+  MACHINE: ${platform^^}
+workflow:
+  EXPT_BASEDIR: ${workspace}/expt_dirs
+  EXEC_SUBDIR: install_${SRW_COMPILER}/exec
+  FCST_LEN_HRS: 6
+  COMPILER: ${SRW_COMPILER}
+task_get_extrn_ics:
+  envvars:
+    EXTRN_MDL_SOURCE_BASEDIR_ICS: ${DATA_LOCATION}/FV3GFS/grib2/2019061518
+task_get_extrn_lbcs:
+  envvars:
+    EXTRN_MDL_SOURCE_BASEDIR_LBCS: ${DATA_LOCATION}/FV3GFS/grib2/2019061518
+task_run_fcst:
+  envvars:
+    OMP_NUM_THREADS_RUN_FCST: 1
+"
 
 # Activate the workflow environment ...
 source etc/lmod-setup.sh ${platform,,}
 module use modulefiles
 module load build_${platform,,}_${SRW_COMPILER}
 module load wflow_${platform,,}
+# Deactivate conflicting conda env on GCP
+[[ "${platform}" == "noaacloud" ]] && conda deactivate
 
 [[ ${FORGIVE_CONDA} == true ]] && set +e +u    # Some platforms have incomplete python3 or conda support, but wouldn't necessarily block workflow tests
-conda activate workflow_tools
+conda activate srw_app
 set -e -u
 
-export PYTHONPATH=${workspace}/ush/python_utils/workflow-tools:${workspace}/ush/python_utils/workflow-tools/src
-
-# Adjust for strict limitation of stack size 
-sed "s|ulimit -s unlimited;|ulimit -S -s unlimited;|" -i ${workspace}/ush/machine/hera.yaml
+echo "${user_settings}" | uw config realize \
+  -i ${workspace}/ush/config.community.yaml \
+  -o ${workspace}/ush/config.yaml \
+  --update-format yaml
 
 cd ${workspace}/ush
         # Consistency check ...
@@ -106,13 +106,13 @@ cd ${workspace}
 
 cd ${EXPTDIR}
 pwd
-cp ${workspace}/ush/wrappers/* .
+cp ${workspace}/ush/wrappers/*.sh .
 
 # Set parameters that the task scripts require ...
 export JOBSdir=${workspace}/jobs
 export USHdir=${workspace}/ush
 export OMP_NUM_THREADS=1
-export nprocs=24
+export nprocs=12
 
 [[ -n ${TASKS} ]] || TASKS=(
                 run_make_grid

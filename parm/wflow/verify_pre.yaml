@@ -1,95 +1,129 @@
 default_task_verify_pre: &default_task_verify_pre
   account: '&ACCOUNT;'
   attrs:
-    cycledefs: forecast
+    cycledefs: cycledefs_obs_days_inst
     maxtries: '1'
   envars: &default_vars
     GLOBAL_VAR_DEFNS_FP: '&GLOBAL_VAR_DEFNS_FP;'
     USHdir: '&USHdir;'
-    PDY: !cycstr '@Y@m@d'
-    cyc: !cycstr "@H"
-    subcyc: !cycstr "@M"
-    LOGDIR: !cycstr "&LOGDIR;"
-    nprocs: '{{ parent.nnodes * parent.ppn }}'
-  join: !cycstr '&LOGDIR;/{{ jobname }}_@Y@m@d@H&LOGEXT;'
-  memory: '{% if user.MACHINE not in ["NOAACLOUD"] %}{{ "2G" }}{% endif %}'
+    PDY:
+      cyclestr:
+        value: '@Y@m@d'
+    cyc:
+      cyclestr:
+        value: '@H'
+    subcyc:
+      cyclestr:
+        value: '@M'
+    LOGDIR:
+      cyclestr:
+        value: '&LOGDIR;'
+    nprocs: '{{ verification_resources.execution.nodes * verification_resources.execution.tasks_per_node }}'
+  join:
+    cyclestr:
+      value: '&LOGDIR;/{{ jobname }}_@Y@m@d@H&LOGEXT;'
+  memory: '{{ "2G" if user.MACHINE not in ["NOAACLOUD"] }}'
   native: '{{ platform.SCHED_NATIVE_CMD }}'
-  nnodes: 1
-  nodes: '{{ nnodes }}:ppn={{ ppn }}'
-  nodesize: '&NCORES_PER_NODE;'
-  partition: '{% if platform.get("PARTITION_DEFAULT") %}&PARTITION_DEFAULT;{% else %}None{% endif %}'
-  ppn: 1
+  nodes: '{{ verification_resources.execution.nodes }}:ppn={{ verification_resources.execution.tasks_per_node }}'
+  partition: '{{ "&PARTITION_DEFAULT;" if platform.get("PARTITION_DEFAULT") }}'
   queue: '&QUEUE_DEFAULT;'
-  walltime: 00:30:00
+
+task_get_obs_aeronet:
+  <<: *default_task_verify_pre
+  command: '&LOAD_MODULES_RUN_TASK; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
+  envars:
+    <<: *default_vars
+    OBS_DIR: '&AERONET_OBS_DIR;'
+    OBTYPE: 'AERONET'
+    FHR: '{% for h in range(0, workflow.FCST_LEN_HRS+1) %}{{ " %02d" % h  }}{% endfor %}'
+  native: '{{ platform.SCHED_NATIVE_CMD_HPSS if platform.get("SCHED_NATIVE_CMD_HPSS") else platform.SCHED_NATIVE_CMD }}'
+  partition: '{{ "&PARTITION_HPSS;" if platform.get("PARTITION_HPSS") }}'
+  queue: "&QUEUE_HPSS;"
+  walltime: '{{ verification_resources.execution.get_obs.aeronet.walltime }}'
+
+task_get_obs_airnow:
+  <<: *default_task_verify_pre
+  command: '&LOAD_MODULES_RUN_TASK; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
+  envars:
+    <<: *default_vars
+    OBS_DIR: '&AIRNOW_OBS_DIR;'
+    OBTYPE: 'AIRNOW'
+    FHR: '{% for h in range(0, workflow.FCST_LEN_HRS+1) %}{{ " %02d" % h  }}{% endfor %}'
+  native: '{{ platform.SCHED_NATIVE_CMD_HPSS if platform.get("SCHED_NATIVE_CMD_HPSS") else platform.SCHED_NATIVE_CMD }}'
+  partition: '{{ "&PARTITION_HPSS;" if platform.get("PARTITION_HPSS") }}'
+  queue: "&QUEUE_HPSS;"
+  walltime: '{{ verification_resources.execution.get_obs.airnow.walltime }}'
+
 
 task_get_obs_ccpa:
   <<: *default_task_verify_pre
-  command: '&LOAD_MODULES_RUN_TASK_FP; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
+  attrs:
+    cycledefs: cycledefs_obs_days_cumul
+    maxtries: '1'
+  command: '&LOAD_MODULES_RUN_TASK; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
   envars:
     <<: *default_vars
-    ACCUM_HH: '01'
-    OBS_DIR: '&CCPA_OBS_DIR;'
     OBTYPE: 'CCPA'
-    FHR: '{% for h in range(0, workflow.FCST_LEN_HRS+1) %}{{ " %02d" % h  }}{% endfor %}'
-  partition: '{% if platform.get("PARTITION_HPSS") %}&PARTITION_HPSS;{% else %}None{% endif %}'
+  native: '{{ platform.SCHED_NATIVE_CMD_HPSS if platform.get("SCHED_NATIVE_CMD_HPSS") else platform.SCHED_NATIVE_CMD }}'
+  partition: '{{ "&PARTITION_HPSS;" if platform.get("PARTITION_HPSS") }}'
   queue: "&QUEUE_HPSS;"
-  walltime: 00:45:00
+  walltime: "{{ verification_resources.execution.get_obs.ccpa.walltime }}"
 
 task_get_obs_nohrsc:
   <<: *default_task_verify_pre
-  command: '&LOAD_MODULES_RUN_TASK_FP; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
+  attrs:
+    cycledefs: cycledefs_obs_days_cumul
+    maxtries: '1'
+  command: '&LOAD_MODULES_RUN_TASK; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
   envars:
     <<: *default_vars
-    OBS_DIR: '&NOHRSC_OBS_DIR;'
     OBTYPE: 'NOHRSC'
-    FHR: '{% for h in range(0, workflow.FCST_LEN_HRS+1) %}{{ " %02d" % h  }}{% endfor %}'
-  partition: '{% if platform.get("PARTITION_HPSS") %}&PARTITION_HPSS;{% else %}None{% endif %}'
+  native: '{{ platform.SCHED_NATIVE_CMD_HPSS if platform.get("SCHED_NATIVE_CMD_HPSS") else platform.SCHED_NATIVE_CMD }}'
+  partition: '{{ "&PARTITION_HPSS;" if platform.get("PARTITION_HPSS") }}'
   queue: "&QUEUE_HPSS;"
-  walltime: 00:45:00
+  walltime: "{{ verification_resources.execution.get_obs.nohrsc.walltime }}"
 
 task_get_obs_mrms:
   <<: *default_task_verify_pre
-  command: '&LOAD_MODULES_RUN_TASK_FP; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
+  command: '&LOAD_MODULES_RUN_TASK; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
   envars:
     <<: *default_vars
-    OBS_DIR: '&MRMS_OBS_DIR;'
     OBTYPE: 'MRMS'
-    VAR: 'REFC RETOP'
-    FHR: '{% for h in range(0, workflow.FCST_LEN_HRS+1) %}{{ " %02d" % h  }}{% endfor %}'
-  partition: '{% if platform.get("PARTITION_HPSS") %}&PARTITION_HPSS;{% else %}None{% endif %}'
+  native: '{{ platform.SCHED_NATIVE_CMD_HPSS if platform.get("SCHED_NATIVE_CMD_HPSS") else platform.SCHED_NATIVE_CMD }}'
+  partition: '{{ "&PARTITION_HPSS;" if platform.get("PARTITION_HPSS") }}'
   queue: "&QUEUE_HPSS;"
-  walltime: 00:45:00
+  walltime: "{{ verification_resources.execution.get_obs.mrms.walltime }}"
 
 task_get_obs_ndas:
   <<: *default_task_verify_pre
+  command: '&LOAD_MODULES_RUN_TASK; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
   envars:
     <<: *default_vars
-    OBS_DIR: '&NDAS_OBS_DIR;'
     OBTYPE: 'NDAS'
-    FHR: '{% for h in range(0, workflow.FCST_LEN_HRS+1) %}{{ " %02d" % h  }}{% endfor %}'
-  command: '&LOAD_MODULES_RUN_TASK_FP; "get_obs" "&JOBSdir;/JREGIONAL_GET_VERIF_OBS"'
   queue: "&QUEUE_HPSS;"
-  partition: '{% if platform.get("PARTITION_HPSS") %}&PARTITION_HPSS;{% else %}None{% endif %}'
-  walltime: 02:00:00
+  native: '{{ platform.SCHED_NATIVE_CMD_HPSS if platform.get("SCHED_NATIVE_CMD_HPSS") else platform.SCHED_NATIVE_CMD }}'
+  partition: '{{ "&PARTITION_HPSS;" if platform.get("PARTITION_HPSS") }}'
+  walltime: "{{ verification_resources.execution.get_obs.ndas.walltime }}"
 
-task_run_MET_Pb2nc_obs:
+task_run_MET_Pb2nc_obs_NDAS:
   <<: *default_task_verify_pre
   attrs:
-    cycledefs: forecast
+    cycledefs: cycledefs_obs_days_inst
     maxtries: '2'
-  command: '&LOAD_MODULES_RUN_TASK_FP; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PB2NC_OBS"'
+  command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PB2NC_OBS"'
   envars:
     <<: *default_vars
-    VAR: SFC
+    FIELD_GROUP: 'SFC'
     ACCUM_HH: '01'
-    obs_or_fcst: obs
+    FCST_OR_OBS: OBS
     OBTYPE: NDAS
     OBS_DIR: '&NDAS_OBS_DIR;'
-    MET_TOOL: 'PB2NC'
+    METPLUSTOOLNAME: 'PB2NC'
+  walltime: "{{ verification_resources.execution.pb2nc.walltime }}"
   dependency:
     and:
       datadep:
-        text: "&NDAS_OBS_DIR;"
+        value: "&NDAS_OBS_DIR;"
       or:
         not:
           taskvalid:
@@ -99,36 +133,101 @@ task_run_MET_Pb2nc_obs:
           attrs:
             task: get_obs_ndas
 
-metatask_PcpCombine_obs:
+metatask_ASCII2nc_obs:
   var:
-    ACCUM_HH: '{% for ah in verification.VX_APCP_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
-  task_run_MET_PcpCombine_obs_APCP#ACCUM_HH#h:
+    METAOBTYPE: '{% for var in verification.VX_FIELD_GROUPS %}{% if var =="AOD" %}AERONET {% elif var in ["PM25", "PM10"] %}AIRNOW {% endif %}{% endfor %}'
+    METAOBS_DIR: '{% for var in verification.VX_FIELD_GROUPS %}{% if var =="AOD" %}&AERONET_OBS_DIR; {% elif var in ["PM25", "PM10"] %}&AIRNOW_OBS_DIR; {% endif %}{% endfor %}'
+    TASKDEP: '{% for var in verification.VX_FIELD_GROUPS %}{% if var =="AOD" %}get_obs_aeronet {% elif var in ["PM25", "PM10"] %}get_obs_airnow {% endif %}{% endfor %}'
+  task_run_MET_ASCII2nc_obs_#METAOBTYPE#:
     <<: *default_task_verify_pre
     attrs:
-      cycledefs: forecast
+      cycledefs: cycledefs_obs_days_inst
       maxtries: '2'
-    command: '&LOAD_MODULES_RUN_TASK_FP; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PCPCOMBINE"'
+    command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_ASCII2NC_OBS"'
+    walltime: "{{ verification_resources.execution.ascii2nc.walltime }}"
     envars:
       <<: *default_vars
-      VAR: APCP
-      ACCUM_HH: '#ACCUM_HH#'
-      obs_or_fcst: obs
-      OBTYPE: CCPA
-      OBS_DIR: '&CCPA_OBS_DIR;'
-      MET_TOOL: 'PCPCOMBINE'
-      ENSMEM_INDX: ''
+      OBTYPE: '#METAOBTYPE#'
+      OBS_DIR: '#METAOBS_DIR#'
+      METPLUSTOOLNAME: 'ASCII2NC'
     dependency:
       and:
         datadep:
-          text: "&CCPA_OBS_DIR;"
+          value: '#METAOBS_DIR#'
         or:
           not:
             taskvalid:
               attrs:
-                task: get_obs_ccpa
+                task: '#TASKDEP#'
           taskdep:
             attrs:
-              task: get_obs_ccpa
+              task: '#TASKDEP#'
+
+metatask_PcpCombine_APCP_all_accums_obs_CCPA:
+  var:
+    ACCUM_HH: '{% for ah in verification.VX_APCP_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+  task_run_MET_PcpCombine_APCP#ACCUM_HH#h_obs_CCPA:
+    <<: *default_task_verify_pre
+    attrs:
+      cycledefs: forecast
+      maxtries: '2'
+    command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PCPCOMBINE"'
+    walltime: "{{ verification_resources.execution.pcpcombine.obs.walltime }}"
+    envars:
+      <<: *default_vars
+      FIELD_GROUP: 'APCP'
+      ACCUM_HH: '#ACCUM_HH#'
+      FCST_OR_OBS: OBS
+      OBTYPE: CCPA
+      OBS_DIR: '&CCPA_OBS_DIR;'
+      OBS_AVAIL_INTVL_HRS: '{{ verification.CCPA_OBS_AVAIL_INTVL_HRS }}'
+      METPLUSTOOLNAME: 'PCPCOMBINE'
+    dependency:
+      and:
+        datadep:
+          value: "&CCPA_OBS_DIR;"
+        # Check that the flag files that indicate that the get_obs_ccpa tasks
+        # are complete are all present before launching any PcpCombine task.
+        sh_ccpa_obs_available:
+          attrs:
+            shell: /bin/bash
+          command: find {{ workflow.WFLOW_FLAG_FILES_DIR }} -name "get_obs_ccpa_*_complete.txt" -exec basename {} \; 2>/dev/null |
+            grep -oE '[0-9]{8}' |
+            awk -F/ -v s={{ workflow.OBS_DAYS_ALL_CYCLES_CUMUL[0] }} -v e={{ workflow.OBS_DAYS_ALL_CYCLES_CUMUL[-1] }} '($NF >= s && $NF <= e)' |
+            test $(wc -l) -ge {{ workflow.OBS_DAYS_ALL_CYCLES_CUMUL|length }}
+
+metatask_PcpCombine_ASNOW_all_accums_obs_NOHRSC:
+  var:
+    ACCUM_HH: '{% for ah in verification.VX_ASNOW_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
+  task_run_MET_PcpCombine_ASNOW#ACCUM_HH#h_obs_NOHRSC:
+    <<: *default_task_verify_pre
+    attrs:
+      cycledefs: forecast
+      maxtries: '2'
+    command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PCPCOMBINE"'
+    envars:
+      <<: *default_vars
+      FIELD_GROUP: 'ASNOW'
+      ACCUM_HH: '#ACCUM_HH#'
+      FCST_OR_OBS: OBS
+      OBTYPE: NOHRSC
+      OBS_DIR: '&NOHRSC_OBS_DIR;'
+      OBS_AVAIL_INTVL_HRS: '{{ verification.NOHRSC_OBS_AVAIL_INTVL_HRS }}'
+      METPLUSTOOLNAME: 'PCPCOMBINE'
+    walltime: "{{ verification_resources.execution.pcpcombine.obs.walltime }}"
+    dependency:
+      and:
+        datadep:
+          value: "&NOHRSC_OBS_DIR;"
+        # Check that the flag files that indicate that the get_obs_nohrsc tasks
+        # are complete are all present before launching any PcpCombine task.
+        sh_nohrsc_obs_available:
+          attrs:
+            shell: /bin/bash
+          command: find {{ workflow.WFLOW_FLAG_FILES_DIR }} -name "get_obs_nohrsc_*_complete.txt" -exec basename {} \; 2>/dev/null |
+            grep -oE '[0-9]{8}' |
+            awk -F/ -v s={{ workflow.OBS_DAYS_ALL_CYCLES_CUMUL[0] }} -v e={{ workflow.OBS_DAYS_ALL_CYCLES_CUMUL[-1] }} '($NF >= s && $NF <= e)' |
+            test $(wc -l) -ge {{ workflow.OBS_DAYS_ALL_CYCLES_CUMUL|length }}
 
 metatask_check_post_output_all_mems:
   var:
@@ -138,128 +237,104 @@ metatask_check_post_output_all_mems:
     attrs:
       cycledefs: forecast
       maxtries: '1'
-    command: '&LOAD_MODULES_RUN_TASK_FP; "run_vx" "&JOBSdir;/JREGIONAL_CHECK_POST_OUTPUT"'
+    command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_CHECK_POST_OUTPUT"'
     envars:
       <<: *default_vars
-      VAR: APCP
-      ACCUM_HH: '01'
       ENSMEM_INDX: '#mem#'
+    walltime: "{{ verification_resources.execution.check_post_output.walltime }}"
     dependency:
-      # This "or" checks that the necessary stand-alone post tasks or forecast
-      # tasks with inline post have run to generate the post files that are 
-      # needed as forecast input to various verification tasks.
-      or_post_files_exist: &post_files_exist
-        # This "and" is to check whether post is being run stand-alone (i.e. outside
-        # the weather model in tasks separate from the forecast task(s)), and if
-        # so, to ensure that the stand-alone post metatask for the current member
-        # has completed for all forecast hours.
-        and_standalone_post:
-          # This "or" is to check whether a stand-alane post task exists [either for
-          # mem000 (if running a deterministic forecast) or for mem001 (if running
-          # an ensemble forecast)].  Checking for forecast hour 000 is sufficient.  
-          # If so, it implies post is being run stand-alone.
-          or_post_task_exists: &post_task_exists
-            taskvalid_mem000:
-              attrs:
-                task: run_post_mem000_f000
-            taskvalid_mem001:
-              attrs:
-                task: run_post_mem001_f000
-          # We would like a dependency here on the run_post_#mem#_all_fhrs metatask,
-          # but that is apparently not possible in rocoto with a metataskvalid/
-          # metataskdep combination (currently, metataskvalid is not a defined
-          # dependency type in ROCOTO); that approach only works for tasks.  Thus, 
-          # here we use jinja directives to explicitly list all the tasks in the
-          # run_post_#mem#_all_fhrs metatask.
-          #or_post_metatask:
-          #  not:
-          #    metataskvalid:
-          #      attrs:
-          #        metatask: run_post_mem#mem#_all_fhrs
-          #  metataskdep:
-          #    attrs:
-          #      metatask: run_post_mem#mem#_all_fhrs
-          taskdep: 
-            attrs:
-              task: '{% for h in range(0, workflow.LONG_FCST_LEN+1) %}{% if h > 0 %}{{"      <taskdep task="}}{% endif %}{{ "\"run_post_mem#mem#_f%03d\"" % h }}{% if h < workflow.LONG_FCST_LEN %}{{"/>\n"}}{% endif %}{%- endfor -%}'
-        # This "and" is to check whether post is being run inline (i.e. as part of
-        # the weather model), and if so, to ensure that the forecast task for the
-        # current member has completed.
-        and_inline_post:
-          # This "not" is to check whether a stand-alone post task DOESN'T exist
-          # [either for mem000 (if running a deterministic forecast) or for mem001
-          # (if running an ensemble forecast)].  If so, it implies that either
-          # post is being run inline (as part of the weather model) or is not being
-          # run at all.
-          not: 
-            or_post_task_exists:
-              <<: *post_task_exists
-          # This "or" is to verify that either the forecast task for the current
-          # member exists and has completed, or that it doesn't exist.
-          or_run_fcst:
-            and:
-              taskvalid: &fcst_task_exists
-                attrs:
-                  task: run_fcst_mem#mem#
-              taskdep:
-                attrs:
-                  task: run_fcst_mem#mem#
-            not:
-              taskvalid:
-                <<: *fcst_task_exists
+      # Metataskdep here is for the default running standalone post tasks. When running inline post,
+      # or no forecast tasks at all, this section is replaced by logic in setup.py.
+      metataskdep:
+        attrs:
+          metatask: run_post_mem#mem#_all_fhrs
 
-metatask_PcpCombine_fcst_APCP_all_accums_all_mems:
+metatask_PcpCombine_APCP_all_accums_all_mems:
   var:
     ACCUM_HH: '{% for ah in verification.VX_APCP_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
-  metatask_PcpCombine_fcst_APCP#ACCUM_HH#h_all_mems:
+  metatask_PcpCombine_APCP#ACCUM_HH#h_all_mems:
     var:
       mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
-    task_run_MET_PcpCombine_fcst_APCP#ACCUM_HH#h_mem#mem#:
+    task_run_MET_PcpCombine_APCP#ACCUM_HH#h_fcst_mem#mem#:
       <<: *default_task_verify_pre
       attrs:
         cycledefs: forecast
         maxtries: '2'
-      command: '&LOAD_MODULES_RUN_TASK_FP; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PCPCOMBINE"'
+      command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PCPCOMBINE"'
       envars:
         <<: *default_vars
-        VAR: APCP
+        FIELD_GROUP: 'APCP'
         ACCUM_HH: '#ACCUM_HH#'
-        obs_or_fcst: fcst
+        FCST_OR_OBS: FCST
         OBTYPE: CCPA
         OBS_DIR: '&CCPA_OBS_DIR;'
-        MET_TOOL: 'PCPCOMBINE'
+        METPLUSTOOLNAME: 'PCPCOMBINE'
         ENSMEM_INDX: "#mem#"
       dependency:
         datadep:
           attrs:
             age: 00:00:00:30
-          text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_mem#mem#.txt'
-      walltime: 00:05:00
+          value:
+            cyclestr:
+              value: '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_mem#mem#.txt'
+      walltime: 00:30:00
 
-metatask_PcpCombine_fcst_ASNOW_all_accums_all_mems:
+metatask_PcpCombine_ASNOW_all_accums_all_mems:
   var:
     ACCUM_HH: '{% for ah in verification.VX_ASNOW_ACCUMS_HRS %}{% if workflow.FCST_LEN_HRS >= ah %}{{ "%02d " % ah }}{% endif %}{% endfor %}'
-  metatask_PcpCombine_fcst_ASNOW#ACCUM_HH#h_all_mems:
+  metatask_PcpCombine_ASNOW#ACCUM_HH#h_all_mems:
     var:
       mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
-    task_run_MET_PcpCombine_fcst_ASNOW#ACCUM_HH#h_mem#mem#:
+    task_run_MET_PcpCombine_ASNOW#ACCUM_HH#h_fcst_mem#mem#:
       <<: *default_task_verify_pre
       attrs:
         cycledefs: forecast
         maxtries: '2'
-      command: '&LOAD_MODULES_RUN_TASK_FP; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PCPCOMBINE"'
+      command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PCPCOMBINE"'
       envars:
         <<: *default_vars
-        VAR: ASNOW
+        FIELD_GROUP: 'ASNOW'
         ACCUM_HH: '#ACCUM_HH#'
-        obs_or_fcst: fcst
+        FCST_OR_OBS: FCST
         OBTYPE: NOHRSC
         OBS_DIR: '&NOHRSC_OBS_DIR;'
-        MET_TOOL: 'PCPCOMBINE'
+        METPLUSTOOLNAME: 'PCPCOMBINE'
         ENSMEM_INDX: "#mem#"
       dependency:
         datadep:
           attrs:
             age: 00:00:00:30
-          text: !cycstr '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_mem#mem#.txt'
-      walltime: 00:05:00
+          value:
+            cyclestr:
+              value: '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_mem#mem#.txt'
+      walltime: '{{ verification_resources.execution.pcpcombine.obs.walltime }}'
+
+metatask_PcpCombine_fcst_PM_all_mems:
+  var:
+    PM: '{% for var in verification.VX_FIELD_GROUPS %}{{ ("%s " % var) if var in ["PM25", "PM10"] }}{% endfor %}'
+  metatask_PcpCombine_fcst_#PM#_all_mems:
+    var:
+      mem: '{% if global.DO_ENSEMBLE %}{% for m in range(1, global.NUM_ENS_MEMBERS+1) %}{{ "%03d "%m }}{%- endfor -%} {% else %}{{ "000"|string }}{% endif %}'
+    task_run_MET_PcpCombine_fcst_#PM#_mem#mem#:
+      <<: *default_task_verify_pre
+      attrs:
+        cycledefs: forecast
+        maxtries: '2'
+      command: '&LOAD_MODULES_RUN_TASK; "run_vx" "&JOBSdir;/JREGIONAL_RUN_MET_PCPCOMBINE"'
+      envars:
+        <<: *default_vars
+        FIELD_GROUP: '#PM#'
+        ACCUM_HH: '01'
+        FCST_OR_OBS: FCST
+        OBTYPE: AIRNOW
+        OBS_DIR: '&AIRNOW_OBS_DIR;'
+        METPLUSTOOLNAME: 'PCPCOMBINE'
+        ENSMEM_INDX: "#mem#"
+      dependency:
+        datadep:
+          attrs:
+            age: 00:00:00:30
+          value:
+            cyclestr:
+              value: '{{ workflow.EXPTDIR }}/@Y@m@d@H/post_files_exist_mem#mem#.txt'
+      walltime: '{{ verification_resources.execution.pcpcombine.ensemble.walltime }}'

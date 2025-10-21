@@ -10,8 +10,8 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)
 # Get repository root from Jenkins WORKSPACE variable if set, otherwise, set
 # relative to script directory.
 declare workspace
-if [[ -n "${WORKSPACE}" ]]; then
-    workspace="${WORKSPACE}"
+if [[ -n "${WORKSPACE}/${SRW_PLATFORM}" ]]; then
+    workspace="${WORKSPACE}/${SRW_PLATFORM}"
 else
     workspace="$(cd -- "${script_dir}/../.." && pwd)"
 fi
@@ -24,14 +24,11 @@ else
     platform="${SRW_PLATFORM}"
 fi
 
-if [[ "${SRW_PLATFORM}" = jet-epic ]]; then
-    platform='jet'
-fi
-
 # Build and install
 cd ${workspace}/tests
 set +e
-./build.sh ${platform} ${SRW_COMPILER} all
+/usr/bin/time -p -f '{\n  "cpu": "%P"\n, "memMax": "%M"\n, "mem": {"text": "%X", "data": "%D", "swaps": "%W", "context": "%c", "waits": "%w"}\n, "pagefaults": {"major": "%F", "minor": "%R"}\n, "filesystem": {"inputs": "%I", "outputs": "%O"}\n, "time": {"real": "%e", "user": "%U", "sys": "%S"}\n}' -o ${WORKSPACE}/${SRW_PLATFORM}-${SRW_COMPILER}-time-srw_build.json \
+    ./build.sh ${platform} ${SRW_COMPILER}
 build_exit=$?
 set -e
 cd -
@@ -39,6 +36,6 @@ cd -
 # Create combined log file for upload to s3
 build_dir="${workspace}/build_${SRW_COMPILER}"
 cat ${build_dir}/log.cmake ${build_dir}/log.make \
-    >${build_dir}/srw_build-${platform}-${SRW_COMPILER}.txt
+    >${build_dir}/srw_build-${SRW_PLATFORM}-${SRW_COMPILER}.txt
 
 exit $build_exit

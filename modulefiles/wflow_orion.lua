@@ -6,17 +6,15 @@ the MSU machine Orion
 whatis([===[Loads libraries needed for running SRW on Orion ]===])
 
 load("contrib")
-load("rocoto")
-load("wget")
-load("set_pythonpath")
+load("ruby/3.2.3")
+load("rocoto/1.3.7")
 
 unload("python")
-append_path("MODULEPATH","/work/noaa/epic/role-epic/contrib/orion/miniconda3/modulefiles")
-load(pathJoin("miniconda3", os.getenv("miniconda3_ver") or "4.12.0"))
+load("conda")
 
 if mode() == "load" then
    LmodMsgRaw([===[Please do the following to activate conda:
-       > conda activate workflow_tools
+       > conda activate srw_app
 ]===])
 end
 

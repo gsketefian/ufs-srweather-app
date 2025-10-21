@@ -1,4 +1,48 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+#
+#-----------------------------------------------------------------------
+#
+# This ex-script generates surface climatology files needed to run FV3
+# forecasts.
+#
+# The script runs the sfc_climo_gen UFS Utils program, and links the
+# output to the SFC_CLIMO_GEN directory
+#
+# Run-time environment variables:
+#
+#    DATA
+#    GLOBAL_VAR_DEFNS_FP
+#    REDIRECT_OUT_ERR
+#
+# Experiment variables
+#
+#   user:
+#     EXECdir
+#     USHdir
+#
+#   platform:
+#     FIXsfc
+#     PRE_TASK_CMDS
+#     RUN_CMD_UTILS
+#
+#   workflow:
+#     CRES
+#     DOT_OR_USCORE
+#     FIXlam
+#     VERBOSE
+#
+#   task_make_sfc_climo:
+#     SFC_CLIMO_DIR
+#
+#   constants:
+#     GTYPE
+#     NH0
+#     NH4
+#     TILE_RGNL
+#
+#-----------------------------------------------------------------------
+#
 
 #
 #-----------------------------------------------------------------------
@@ -8,7 +52,17 @@
 #-----------------------------------------------------------------------
 #
 . $USHdir/source_util_funcs.sh
-source_config_for_task "task_make_sfc_climo" ${GLOBAL_VAR_DEFNS_FP}
+sections=(
+  user
+  nco
+  platform
+  workflow
+  constants
+  task_make_sfc_climo.envvars
+)
+for sect in ${sections[*]} ; do
+  source_yaml ${GLOBAL_VAR_DEFNS_FP} ${sect}
+done
 #
 #-----------------------------------------------------------------------
 #
@@ -48,16 +102,6 @@ climatology.
 #
 #-----------------------------------------------------------------------
 #
-# Set OpenMP variables.
-#
-#-----------------------------------------------------------------------
-#
-export KMP_AFFINITY=${KMP_AFFINITY_MAKE_SFC_CLIMO}
-export OMP_NUM_THREADS=${OMP_NUM_THREADS_MAKE_SFC_CLIMO}
-export OMP_STACKSIZE=${OMP_STACKSIZE_MAKE_SFC_CLIMO}
-#
-#-----------------------------------------------------------------------
-#
 # Are these machine dependent??
 #
 #-----------------------------------------------------------------------
@@ -70,7 +114,7 @@ ulimit -s unlimited
 #
 #-----------------------------------------------------------------------
 #
-cd_vrfy $DATA
+cd $DATA
 #
 #-----------------------------------------------------------------------
 #
@@ -162,7 +206,7 @@ case "$GTYPE" in
 #
   for fn in *.nc; do
     if [[ -f $fn ]]; then
-      mv_vrfy $fn ${SFC_CLIMO_DIR}/${CRES}_${fn}
+      mv $fn ${SFC_CLIMO_DIR}/${CRES}_${fn}
     fi
   done
   ;;
@@ -181,7 +225,7 @@ case "$GTYPE" in
   for fn in *.halo.nc; do
     if [ -f $fn ]; then
       bn="${fn%.halo.nc}"
-      mv_vrfy $fn ${SFC_CLIMO_DIR}/${CRES}.${bn}.halo${NH4}.nc
+      mv $fn ${SFC_CLIMO_DIR}/${CRES}.${bn}.halo${NH4}.nc
     fi
   done
 #
@@ -194,7 +238,7 @@ case "$GTYPE" in
   for fn in *.nc; do
     if [ -f $fn ]; then
       bn="${fn%.nc}"
-      mv_vrfy $fn ${SFC_CLIMO_DIR}/${CRES}.${bn}.halo${NH0}.nc
+      mv $fn ${SFC_CLIMO_DIR}/${CRES}.${bn}.halo${NH0}.nc
     fi
   done
   ;;

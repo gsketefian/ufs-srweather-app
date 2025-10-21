@@ -1,4 +1,29 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+#
+#-----------------------------------------------------------------------
+#
+# The J-job to run chgres_cube for preparing lateral boundary conditions
+# for the FV3 forecast
+#
+# Run-time environment variables:
+#
+#    GLOBAL_VAR_DEFNS_FP
+#
+# Experiment variables
+#
+#  user:
+#    SCRIPTSdir
+#    USHdir
+#
+#  workflow:
+#    PREEXISTING_DIR_METHOD
+#
+#  task_make_sfc_climo:
+#    SFC_CLIMO_DIR
+#
+#-----------------------------------------------------------------------
+#
 
 #
 #-----------------------------------------------------------------------
@@ -8,7 +33,15 @@
 #-----------------------------------------------------------------------
 #
 . $USHdir/source_util_funcs.sh
-source_config_for_task "task_make_sfc_climo" ${GLOBAL_VAR_DEFNS_FP}
+sections=(
+  user
+  nco
+  workflow
+  task_make_sfc_climo.envvars
+)
+for sect in ${sections[*]} ; do
+  source_yaml ${GLOBAL_VAR_DEFNS_FP} ${sect}
+done
 . $USHdir/job_preamble.sh
 #
 #-----------------------------------------------------------------------
@@ -55,7 +88,7 @@ climatology.
 #-----------------------------------------------------------------------
 #
 check_for_preexist_dir_file "${SFC_CLIMO_DIR}" "${PREEXISTING_DIR_METHOD}"
-mkdir_vrfy -p "${SFC_CLIMO_DIR}"
+mkdir -p "${SFC_CLIMO_DIR}"
 #
 #-----------------------------------------------------------------------
 #
@@ -66,7 +99,7 @@ mkdir_vrfy -p "${SFC_CLIMO_DIR}"
 DATA="${DATA:-${SFC_CLIMO_DIR}/tmp}"
 if [ $RUN_ENVIR != "nco" ]; then
     check_for_preexist_dir_file "$DATA" "delete"
-    mkdir_vrfy $DATA
+    mkdir $DATA
 fi
 #
 #-----------------------------------------------------------------------

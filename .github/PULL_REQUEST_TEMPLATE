@@ -30,13 +30,14 @@
 <!-- Explicitly state what tests were run on these changes, or if any are still pending (for README or other text-only changes, just put "None required"). Make note of the compilers used, the platform/machine, and other relevant details as necessary. For more complicated changes, or those resulting in scientific changes, please be explicit! -->
 <!-- Add an X to check off a box. -->
 
+- [ ] derecho.intel
+- [ ] gaeac6.intel
+- [ ] hera.gnu
 - [ ] hera.intel
+- [ ] hercules.intel
 - [ ] orion.intel
-- [ ] cheyenne.intel
-- [ ] cheyenne.gnu
-- [ ] gaea.intel
-- [ ] jet.intel
-- [ ] wcoss2.intel
+- [ ] ursa.gnu
+- [ ] ursa.intel
 - [ ] NOAA Cloud (indicate which platform)
 - [ ] Jenkins
 - [ ] fundamental test suite
@@ -78,10 +79,6 @@ A Code Manager needs to add the following labels to this PR:
 - [ ] run_ci
 - [ ] run_we2e_fundamental_tests
 - [ ] run_we2e_comprehensive_tests
-- [ ] Needs Cheyenne test 
-- [ ] Needs Jet test 
-- [ ] Needs Hera test 
-- [ ] Needs Orion test 
 - [ ] help wanted
 
 ## CONTRIBUTORS (optional): 

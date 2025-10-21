@@ -1,25 +1,23 @@
 help([[
 This module loads libraries for building the UFS SRW App on
-the NOAA RDHPC machine Jet using Intel-2022.1.2
+the NOAA RDHPC machine Jet using Intel-2021.5.0
 ]])
 
 whatis([===[Loads libraries needed for building the UFS SRW App on Jet ]===])
 
-prepend_path("MODULEPATH","/contrib/sutils/modulefiles")
-load("sutils")
+prepend_path("MODULEPATH","/contrib/spack-stack/spack-stack-1.6.0/envs/fms-2024.01/install/modulefiles/Core")
 
-load(pathJoin("cmake", os.getenv("cmake_ver") or "3.20.1"))
-
-prepend_path("MODULEPATH","/mnt/lfs4/HFIP/hfv3gfs/role.epic/hpc-stack/libs/intel-2022.1.2/modulefiles/stack")
-load(pathJoin("hpc", os.getenv("hpc_ver") or "1.2.0"))
-load(pathJoin("hpc-intel", os.getenv("hpc_intel_ver") or "2022.1.2"))
-load(pathJoin("hpc-impi", os.getenv("hpc_impi_ver") or "2022.1.2"))
+load("stack-intel/2021.5.0")
+load("stack-intel-oneapi-mpi/2021.5.1")
+load("stack-python/3.10.13")
+load("cmake/3.23.1")
 
 load("srw_common")
 
-load(pathJoin("prod_util", os.getenv("prod_util_ver") or "1.2.2"))
-load(pathJoin("nccmp", os.getenv("nccmp_ver") or "1.8.9.0"))
-load(pathJoin("nco", os.getenv("nco_ver") or "4.9.3"))
+load("nccmp/1.9.0.1")
+load("nco/5.0.6")
+
+setenv("FC", "mpiifort")
 
 setenv("CMAKE_C_COMPILER","mpiicc")
 setenv("CMAKE_CXX_COMPILER","mpiicpc")

@@ -6,7 +6,13 @@ import logging
 
 sys.path.append("../../ush")
 
-from python_utils import load_config_file
+try:
+    from python_utils import load_config_file
+except ModuleNotFoundError:
+    print("\n\nERROR: Could not load python utilities.")
+    print('Note that this script can only be run in the SRW App from the directory:')
+    print("ufs-srweather-app/tests/WE2E\n\n")
+    raise
 
 from check_python_version import check_python_version
 
@@ -14,8 +20,13 @@ from utils import calculate_core_hours, create_expts_dict, print_WE2E_summary, w
 
 def setup_logging(debug: bool = False) -> None:
     """
-    Sets up logging, printing high-priority (INFO and higher) messages to screen, and printing all
-    messages with detailed timing and routine info in the specified text file.
+    Sets up logging to print high-priority (INFO and higher) messages to the console and to print all
+    messages with detailed timing and routine info to the specified text file.
+
+    Args:
+        debug (bool): Set to True to print more verbose output to the console
+    Returns:
+        None
     """
     logging.getLogger().setLevel(logging.DEBUG)
 
@@ -63,9 +74,13 @@ if __name__ == "__main__":
     else:
         raise ValueError(f'Bad arguments; run {__file__} -h for more information')
 
-    # Calculate core hours and update yaml
-    expts_dict = calculate_core_hours(expts_dict)
-    write_monitor_file(yaml_file,expts_dict)
+    if expts_dict:
+        # Calculate core hours and update yaml
+        expts_dict = calculate_core_hours(expts_dict)
+        write_monitor_file(yaml_file,expts_dict)
 
-    #Call function to print summary
-    print_WE2E_summary(expts_dict, args.debug)
+        #Call function to print summary
+        print_WE2E_summary(expts_dict, args.debug)
+    else:
+        logging.error(f'No experiments found in provided directory {args.expt_dir}')
+

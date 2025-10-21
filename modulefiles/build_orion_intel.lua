@@ -1,28 +1,31 @@
 help([[
 This module loads libraries for building the UFS SRW App on
-the MSU machine Orion using Intel-2022.1.2
+the MSU machine Orion using intel-oneapi-compilers/2021.9.0
 ]])
 
 whatis([===[Loads libraries needed for building the UFS SRW App on Orion ]===])
 
-load("contrib")
-load("noaatools")
+prepend_path("MODULEPATH", "/apps/contrib/spack-stack/spack-stack-1.9.2/envs/ue-oneapi-2024.1.0/install/modulefiles/Core")
+prepend_path("MODULEPATH", "/apps/contrib/spack-stack/spack-stack-1.9.2/envs/ue-oneapi-2024.1.0/install/modulefiles/intel-oneapi-mpi/2021.13-li242lf/gcc/12.2.0")
 
-load(pathJoin("cmake", os.getenv("cmake_ver") or "3.22.1"))
-load(pathJoin("python", os.getenv("python_ver") or "3.9.2"))
-
-prepend_path("MODULEPATH","/work/noaa/epic/role-epic/contrib/orion/hpc-stack/intel-2022.1.2/modulefiles/stack")
-load(pathJoin("hpc", os.getenv("hpc_ver") or "1.2.0"))
-load(pathJoin("hpc-intel", os.getenv("hpc_intel_ver") or "2022.1.2"))
-load(pathJoin("hpc-impi", os.getenv("hpc_impi_ver") or "2022.1.2"))
+load("stack-oneapi/2024.2.1")
+load("stack-intel-oneapi-mpi/2021.13")
+load("stack-python/3.11.7")
+load("cmake/3.27.9")
 
 load("srw_common")
+load("zlib/1.2.13")
 
-load(pathJoin("nccmp", os.getenv("nccmp_ver") or "1.8.9.0"))
-load(pathJoin("nco", os.getenv("nco_ver") or "4.9.3"))
+load("nccmp/1.9.0.1")
+load("nco/5.2.4")
+load(pathJoin("prod_util", os.getenv("prod_util_ver") or "2.1.1"))
+
+setenv("CFLAGS","-diag-disable=10441")
+setenv("FFLAGS","-diag-disable=10441")
+
+setenv("FC", "mpiifort")
 
 setenv("CMAKE_C_COMPILER","mpiicc")
 setenv("CMAKE_CXX_COMPILER","mpiicpc")
 setenv("CMAKE_Fortran_COMPILER","mpiifort")
 setenv("CMAKE_Platform","orion.intel")
-

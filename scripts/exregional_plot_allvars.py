@@ -320,6 +320,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Print debug messages",
     )
+    parser.add_argument(
+        "--net",
+        help="Model name; prefix of model output files.",
+        default="srw",
+        )
+
     args = parser.parse_args()
     
     setup_logging(args.debug)
@@ -361,14 +367,7 @@ if __name__ == "__main__":
     
         # Define the location of the input file
         data1 = pygrib.open(
-            COMOUT
-            + "/rrfs.t"
-            + cyc
-            + "z.prslev.f"
-            + fhour
-            + "."
-            + POST_OUTPUT_DOMAIN_NAME
-            + ".grib2"
+            f"{COMOUT}/{args.net}.t{cyc}z.prslev.f{fhour}.{POST_OUTPUT_DOMAIN_NAME}.grib2"
         )
     
         # Get the lats and lons
@@ -430,7 +429,7 @@ if __name__ == "__main__":
         t1a = time.perf_counter()
     
         # Sea level pressure
-        slp = data1.select(name="Pressure reduced to MSL")[0].values * 0.01
+        slp = data1.select(name="MSLP (Eta model reduction)")[0].values * 0.01
         slpsmooth = ndimage.gaussian_filter(slp, 13.78)
     
         # 2-m temperature
@@ -485,7 +484,13 @@ if __name__ == "__main__":
         )
     
         # Composite reflectivity
-        refc = data1.select(name="Maximum/Composite radar reflectivity")[0].values
+        # refc is the 37th entry in the GRIB2 post output file
+        # First rewind to the start of the GRIB2 file
+        data1.rewind()
+        # Advance 36 entries in the GRIB2 file
+        data1.seek(36)
+        # Read values from the 37th entry in the GRIB2 file
+        refc = data1.readline().values
     
         if fhr > 0:
             # Max/Min Hourly 2-5 km Updraft Helicity
@@ -578,6 +583,7 @@ if __name__ == "__main__":
                 facecolor="none",
                 linewidth=fline_wd,
                 alpha=falpha,
+                zorder=4,
             )
             coastline = cfeature.NaturalEarthFeature(
                 "physical",
@@ -587,6 +593,7 @@ if __name__ == "__main__":
                 facecolor="none",
                 linewidth=fline_wd,
                 alpha=falpha,
+                zorder=4,
             )
             states = cfeature.NaturalEarthFeature(
                 "cultural",
@@ -597,6 +604,7 @@ if __name__ == "__main__":
                 linewidth=fline_wd,
                 linestyle=":",
                 alpha=falpha,
+                zorder=4,
             )
             borders = cfeature.NaturalEarthFeature(
                 "cultural",
@@ -606,6 +614,7 @@ if __name__ == "__main__":
                 facecolor="none",
                 linewidth=fline_wd,
                 alpha=falpha,
+                zorder=4,
             )
     
             # All lat lons are earth relative, so setup the associated projection correct for that data
