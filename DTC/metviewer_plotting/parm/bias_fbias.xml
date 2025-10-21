@@ -1,0 +1,482 @@
+{%- set do_indent = false -%}
+{%- set indent = "" -%}
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<plot_spec>
+    <connection>
+        <host>{{mv_host}}</host>
+        <database>{{mv_database}}</database>
+        <user>{{mv_host_config_dict["user"]}}</user>
+        <password>{{mv_host_config_dict["password"]}}</password>
+        <management_system>mariadb</management_system>
+    </connection>
+    <rscript>{{mv_host_config_dict["Rscript_fp"]}}</rscript>
+    <folders>
+        <r_tmpl>{{mv_host_config_dict["R_tmpl_dir"]}}</r_tmpl>
+        <r_work>{{mv_host_config_dict["R_work_dir"]}}</r_work>
+        <plots>{{output_dir}}/plots</plots>
+        <data>{{output_dir}}/data</data>
+        <scripts>{{output_dir}}/scripts</scripts>
+    </folders>
+    <plot>
+        <template>series_plot.R_tmpl</template>
+        <dep>
+            <dep1>
+                <fcst_var name="{{fcst_field_name_in_db}}">
+                    <stat>{{vx_metric_mv}}</stat>
+                </fcst_var>
+            </dep1>
+            <dep2/>
+        </dep>
+        <series1>
+            <field name="model">
+{%- set fmt = "%02d" -%}
+{%- set indent = "\n                " -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set model = model_names_in_db[imdl-1] -%}
+  {%- if incl_ens_means -%}
+    {{- indent ~ "<val>" ~ model ~ "_mean" ~ "</val>" -}}
+  {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]+1) -%}
+    {{- indent ~ "<val>" ~ model ~ "_mem" ~ fmt%imem ~ "</val>" -}}
+  {%- endfor -%}
+{%- endfor %}
+            </field>
+        </series1>
+        <series2/>
+{%- set ipf = -1 %}
+        <plot_fix>
+            <field equalize="true" name="fcst_init_beg">
+{%- set ipf = ipf+1 %}
+                <set name="fcst_init_beg_{{ipf}}">
+{%- set indent = "\n                    " -%}
+{%- for t_init in fcst_init_times -%}
+  {{- indent ~ "<val>" ~ t_init ~ "</val>" -}}
+{%- endfor %}
+                </set>
+            </field>
+            <field equalize="true" name="vx_mask">
+{%- set ipf = ipf+1 %}
+                <set name="vx_mask_{{ipf}}">
+                    <val>CONUS</val>
+                </set>
+            </field>
+            <field equalize="true" name="obtype">
+{%- set ipf = ipf+1 %}
+                <set name="obtype_{{ipf}}">
+                    <val>{{obs_type}}</val>
+                </set>
+            </field>
+            <field equalize="true" name="fcst_lev">
+{%- set ipf = ipf+1 %}
+                <set name="fcst_lev_{{ipf}}">
+                    <val>{{level_in_db}}</val>
+                </set>
+            </field>
+{%- if (vx_metric_uc == "FBIAS") %}
+            <field equalize="true" name="fcst_thresh">
+  {%- set ipf = ipf+1 %}
+                <set name="fcst_thresh_{{ipf}}">
+                    <val>{{thresh_in_db}}</val>
+                </set>
+            </field>
+{%- endif %}
+        </plot_fix>
+        <plot_cond/>
+        <indep equalize="true" name="fcst_lead">
+{%- set fhr_start = 0 -%}
+{%- if fcst_field_uc == "APCP" %}
+  {%- set fhr_start = 1 -%}
+{%- endif -%}
+{#- #}
+{%- set fhr_incr = 1 -%}
+{%- if obs_type == "ADPUPA" %}
+  {%- set fhr_incr = 12 -%}
+{%- elif fcst_field_uc == "APCP" %}
+  {%- set fhr_incr = level_value_no_0pad | int -%}
+{%- endif -%}
+{#- #}
+{%- set indent = "\n            " -%}
+{%- for ihr in range(fhr_start, fcst_len_hrs+1) -%}
+  {%- if ihr%fhr_incr == 0 -%}
+    {{indent}}<val label="{{ihr}}" plot_val="">{{ihr*10000}}</val>
+  {%- endif -%}
+{%- endfor %}
+        </indep>
+{#-
+For continuous forecast fields (e.g. DPT, TMP, WIND), it is reasonable
+to use summary statistics (although aggregate statistics is probably
+better), but for discontinuous fields, aggregate statistics should be
+used.
+
+However, it is not yet clear whether the above rule applies only to 
+FBIAS or to both BIAS and FBIAS (and possibly other statistics).  Thus,
+for now we apply the rule only to FBIAS.
+#}
+{%- if (vx_metric_uc == "BIAS") %}
+{#- Known discontinuous fields.  Use aggregate statistics in this case. #}
+  {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
+        <agg_stat>
+            <agg_sl1l2>true</agg_sl1l2>
+            <boot_repl>10</boot_repl>
+            <boot_random_seed>1</boot_random_seed>
+            <boot_ci>perc</boot_ci>
+            <eveq_dis>false</eveq_dis>
+            <cache_agg_stat>false</cache_agg_stat>
+            <circular_block_bootstrap>true</circular_block_bootstrap>
+        </agg_stat>
+{#- Continuous fields for which we want to use aggregate statistics. #}
+  {%- elif fcst_field_uc in ["DPT", "HGT", "TMP", "VIS", "WIND"] %}
+        <agg_stat>
+            <agg_sl1l2>true</agg_sl1l2>
+            <boot_repl>10</boot_repl>
+            <boot_random_seed>1</boot_random_seed>
+            <boot_ci>perc</boot_ci>
+            <eveq_dis>false</eveq_dis>
+            <cache_agg_stat>false</cache_agg_stat>
+            <circular_block_bootstrap>true</circular_block_bootstrap>
+        </agg_stat>
+  {%- else %}
+        <plot_stat>median</plot_stat>
+  {%- endif %}
+{%- elif (vx_metric_uc == "FBIAS") %}
+{#- Known discontinuous fields.  Use aggregate statistics in this case. #}
+  {%- if fcst_field_uc in ["APCP", "CAPE", "REFC", "RETOP"] %}
+        <agg_stat>
+            <agg_ctc>true</agg_ctc>
+            <boot_repl>10</boot_repl>
+            <boot_random_seed>1</boot_random_seed>
+            <boot_ci>perc</boot_ci>
+            <eveq_dis>false</eveq_dis>
+            <cache_agg_stat>false</cache_agg_stat>
+            <circular_block_bootstrap>true</circular_block_bootstrap>
+        </agg_stat>
+{#- Continuous fields for which we want to use aggregate statistics. #}
+  {%- elif fcst_field_uc in ["VIS"] %}
+        <agg_stat>
+            <agg_ctc>true</agg_ctc>
+            <boot_repl>10</boot_repl>
+            <boot_random_seed>1</boot_random_seed>
+            <boot_ci>perc</boot_ci>
+            <eveq_dis>false</eveq_dis>
+            <cache_agg_stat>false</cache_agg_stat>
+            <circular_block_bootstrap>true</circular_block_bootstrap>
+        </agg_stat>
+{#- Known continuous fields.  Use summary statistics for these for now (may change later). #}
+  {%- elif fcst_field_uc in ["DPT", "HGT", "TMP"] %}
+        <plot_stat>median</plot_stat>
+{#- Default to summary statistics for unexpected fields. #}
+  {%- else %}
+        <plot_stat>median</plot_stat>
+  {%- endif %}
+{%- endif %}
+        <tmpl>
+            <data_file>plot_{{job_title}}.data</data_file>
+            <plot_file>plot_{{job_title}}.png</plot_file>
+            <r_file>plot_{{job_title}}.R</r_file>
+            <title>{{plot_title}}</title>
+            <x_label>Forecast Hour</x_label>
+            <y1_label>{{vx_metric_uc}}</y1_label>
+            <y2_label/>
+            <caption>{{caption}}</caption>
+            <job_title>{{job_title}}</job_title>
+            <keep_revisions>false</keep_revisions>
+            <listdiffseries1>list()</listdiffseries1>
+            <listdiffseries2>list()</listdiffseries2>
+        </tmpl>
+{%- set xlab_offset = "2" %}
+{%- set ylab_offset = "-8" %}
+{%- set legend_inset_x = "-0.025" %}
+{%- set legend_inset_y = "-0.15" %}
+        <execution_type>Python</execution_type>
+        <event_equal>true</event_equal>
+        <vert_plot>false</vert_plot>
+        <x_reverse>false</x_reverse>
+        <num_stats>false</num_stats>
+        <indy1_stag>false</indy1_stag>
+        <indy2_stag>false</indy2_stag>
+        <start_from_zero>false</start_from_zero>
+        <grid_on>true</grid_on>
+        <sync_axes>false</sync_axes>
+        <dump_points1>false</dump_points1>
+        <dump_points2>false</dump_points2>
+        <log_y1>false</log_y1>
+        <log_y2>false</log_y2>
+{#-
+Variance inflation factor should be turned off according to DTC statisticians.
+#}
+        <varianceinflationfactor>false</varianceinflationfactor>
+        <plot_type>png16m</plot_type>
+        <plot_height>8.5</plot_height>
+        <plot_width>11</plot_width>
+        <plot_res>72</plot_res>
+        <plot_units>in</plot_units>
+        <mar>c(8,4,5,4)</mar>
+        <mgp>c(1,1,0)</mgp>
+        <cex>1</cex>
+        <title_weight>2</title_weight>
+        <title_size>1.4</title_size>
+        <title_offset>-2</title_offset>
+        <title_align>0.5</title_align>
+        <xtlab_orient>1</xtlab_orient>
+        <xtlab_perp>-0.75</xtlab_perp>
+        <xtlab_horiz>0.5</xtlab_horiz>
+        <xtlab_freq>{{xtick_label_freq}}</xtlab_freq>
+        <xtlab_size>2</xtlab_size>
+        <xlab_weight>1</xlab_weight>
+        <xlab_size>6</xlab_size>
+        <xlab_offset>{{xlab_offset}}</xlab_offset>
+        <xlab_align>0.5</xlab_align>
+        <ytlab_orient>1</ytlab_orient>
+        <ytlab_perp>0.5</ytlab_perp>
+        <ytlab_horiz>0.5</ytlab_horiz>
+        <ytlab_size>2</ytlab_size>
+        <ylab_weight>1</ylab_weight>
+        <ylab_size>6</ylab_size>
+        <ylab_offset>{{ylab_offset}}</ylab_offset>
+        <ylab_align>0.5</ylab_align>
+        <grid_lty>3</grid_lty>
+        <grid_col>#cccccc</grid_col>
+        <grid_lwd>1</grid_lwd>
+        <grid_x>listX</grid_x>
+        <x2tlab_orient>1</x2tlab_orient>
+        <x2tlab_perp>1</x2tlab_perp>
+        <x2tlab_horiz>0.5</x2tlab_horiz>
+        <x2tlab_size>0.8</x2tlab_size>
+        <x2lab_size>0.8</x2lab_size>
+        <x2lab_offset>-0.5</x2lab_offset>
+        <x2lab_align>0.5</x2lab_align>
+        <y2tlab_orient>1</y2tlab_orient>
+        <y2tlab_perp>0.5</y2tlab_perp>
+        <y2tlab_horiz>0.5</y2tlab_horiz>
+        <y2tlab_size>1</y2tlab_size>
+        <y2lab_size>1</y2lab_size>
+        <y2lab_offset>1</y2lab_offset>
+        <y2lab_align>0.5</y2lab_align>
+        <legend_box>o</legend_box>
+        <legend_inset>c({{legend_inset_x}}, {{legend_inset_y}})</legend_inset>
+{#-
+This should be generalized to the number of series being plotted, but
+it doesn't seem to make a difference in the final plot.
+#}
+        <legend_ncol>3</legend_ncol>
+        <legend_size>1.0</legend_size>
+        <!-- Have the caption weight and color match that of the title.
+             Note that it doesn't seem possible to change the title color
+             (i.e. there is no <title_col> above), so here we set the
+             color of the caption to match that of the title. -->
+        <caption_weight>2</caption_weight>
+        <caption_col>#2a3f5f</caption_col>
+        <caption_size>1.0</caption_size>
+        <caption_offset>4.2</caption_offset>
+        <caption_align>0.05</caption_align>
+        <ci_alpha>0.05</ci_alpha>
+        <eqbound_low>-0.001</eqbound_low>
+        <eqbound_high>0.001</eqbound_high>
+        <!-- These appear in the MetViewer GUI under the column "Conf Interval".
+             They specify the type of confidence intervals to plot ("none" for 
+             no confidence intervals). -->
+        <plot_ci>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n                   " -%}
+{%- endif -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set plot_ci = "none" -%}
+  {%- if incl_ens_means -%} "{{plot_ci}}", {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+    "{{plot_ci}}",
+  {%- endfor -%}
+  "{{plot_ci}}"
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</plot_ci>
+{#- #}
+        <!-- These appear in the MetViewer GUI under the column "Show Significant".
+             Not yet clear on what they do. -->
+        <show_signif>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n                       " -%}
+{%- endif -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set show_signif = "FALSE" -%}
+  {%- if incl_ens_means -%} {{show_signif}}, {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+    {{show_signif}},
+  {%- endfor -%}
+  {{show_signif}}
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</show_signif>
+{#- #}
+        <!-- These appear in the MetViewer GUI under the column "Hide", although it
+             seems it is the opposite of this that is in the "Hide" column, i.e. if
+             an element is set to "TRUE" here, it will show up as "FALSE" in the GUI.
+             Not yet clear on what they do. -->
+        <plot_disp>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n                     " -%}
+{%- endif -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set plot_disp = "TRUE" -%}
+  {%- if incl_ens_means -%} {{plot_disp}}, {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+    {{plot_disp}},
+  {%- endfor -%}
+  {{plot_disp}}
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</plot_disp>
+{#- #}
+        <!-- These appear in the MetViewer GUI under the column "Line Color".
+             They control the line colors. -->
+        <colors>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n                  " -%}
+{%- endif -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set color = model_color_codes[imdl-1] -%}
+  {%- if incl_ens_means -%} "{{color}}", {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+    "{{color}}",
+  {%- endfor -%}
+  "{{color}}"
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</colors>
+{#- #}
+        <!-- These appear in the MetViewer GUI under the column "Point Symbol".
+             They control the symbols used for the data points of each series. -->
+        <pch>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n               " -%}
+{%- endif -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set pch = 20 -%}
+  {%- if incl_ens_means -%} {{pch}}, {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+    {{pch}},
+  {%- endfor -%}
+  {{pch}}
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</pch>
+{#- #}
+        <!-- These appear in the MetViewer GUI under the column "Series Line Type".
+             "l" is for lines, and "b" is for "joined lines".
+             Not yet clear on what they do. -->
+        <type>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n                " -%}
+{%- endif -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set ns = num_ens_mems_by_model[imdl-1] -%}
+  {%- if incl_ens_means -%} {%- set ns = ns+1 -%} {%- endif -%}
+  {%- for imem in range(0, ns-1) -%}
+    {%- set is = (imdl-1)*ns + imem -%}
+    {%- set line_type = line_types[is] -%}
+    "{{line_type}}",
+  {%- endfor -%}
+  {%- set imem = ns-1 -%}
+  {%- set is = (imdl-1)*ns + imem -%}
+  {%- set line_type = line_types[is] -%}
+  "{{line_type}}"
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</type>
+{#- #}
+        <!-- These appear in the MetViewer GUI under the column "Line Type".
+             1 is for "solid", 3 is for "dotted".
+             They control the line types that join the data points. -->
+        <lty>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n               " -%}
+{%- endif -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set lty = 1 -%}
+  {%- if incl_ens_means -%} {{lty}}, {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+    {{lty}},
+  {%- endfor -%}
+  {{lty}}
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</lty>
+{#- #}
+        <!-- These appear in the MetViewer GUI under the column "Line Width".
+             They control the widths of the lines that join the data points. -->
+        <lwd>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n               " -%}
+{%- endif -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set line_width = line_widths[imdl-1] -%}
+  {%- if incl_ens_means -%} {{line_width*2}}, {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+    {{line_width}},
+  {%- endfor -%}
+  {{line_width}}
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</lwd>
+{#- #}
+        <!-- These appear in the MetViewer GUI under the column "Connect Across".
+             0 is "no" and 1 is "yes".  
+             Not yet clear on what they do. -->
+        <con_series>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n                      " -%}
+{%- endif -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set cs = 1 -%}
+  {%- if incl_ens_means -%} {{cs}}, {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+    {{cs}},
+  {%- endfor -%}
+  {{cs}}
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</con_series>
+{#- #}
+        <!-- These appear in the MetViewer GUI under the column "#" (number sign).
+             They control the order of the series, although details aren't clear. -->
+        <order_series>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n                        " -%}
+{%- endif -%}
+{%- set is = namespace(value=0) -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set ns = num_ens_mems_by_model[imdl-1] -%}
+  {%- if incl_ens_means -%} {%- set ns = ns+1 -%} {%- endif -%}
+  {{- order_series[is.value:is.value+ns]|join(",") -}}
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+  {%- set is.value = is.value + ns -%}
+{%- endfor -%})</order_series>
+{#- #}
+        <plot_cmd/>
+        <!-- These appear in the MetViewer GUI under the column "Legend Text".
+             They specify the text that appears in the legend for each series. -->
+        <legend>c(
+{%- set indent = "" -%}
+{%- if do_indent -%}
+  {%- set indent = " \\\n                  " -%}
+{%- endif -%}
+{%- set fmt = "%02d" -%}
+{%- for imdl in range(1, num_models_to_plot+1) -%}
+  {%- set model = model_names_short[imdl-1] -%}
+  {%- if incl_ens_means -%} "{{model}}_mean", {%- endif -%}
+  {%- for imem in range(1, num_ens_mems_by_model[imdl-1]) -%}
+    "{{model}}{{fmt%imem}}",
+  {%- endfor -%}
+  {%- set imem = num_ens_mems_by_model[imdl-1] -%}
+  "{{model}}{{fmt%imem}}"
+  {%- if imdl != num_models_to_plot -%} ,{{indent}} {%- endif -%}
+{%- endfor -%})</legend>
+{#- #}
+        <create_html>TRUE</create_html>
+        <y1_lim>c()</y1_lim>
+        <x1_lim>c()</x1_lim>
+        <y1_bufr>0.04</y1_bufr>
+        <y2_lim>c()</y2_lim>
+    </plot>
+</plot_spec>
+

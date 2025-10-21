@@ -14,6 +14,7 @@ This macro prints out an error message and quits the jinja templater.
 {%- macro print_err_and_quit(error_msg) %}
   {%- include 'ERROR: ' ~ error_msg %}
 {%- endmacro %}
+
 {#-
 Given a specified field level that is really an accumulation period, this
 macro prints out an "A" followed by the accumulation period (an integer)
@@ -47,7 +48,7 @@ This macro checks whether the specified threshold (input_thresh) has a
 {%- endmacro %}
 
 {#-
-This macro checks whether, for the given field, the list of thresholds 
+For the given field, this macro checks whether the list of thresholds 
 for all levels are identical.  If not, it prints out an error message
 and errors out.
 #}
