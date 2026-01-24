@@ -48,10 +48,6 @@ global:
   SPPT_INT: 0
   NUM_ENS_MEMBERS: 10
 
-#rocoto:
-#  tasks:
-#    metatask_run_ens_post: !remove
-
 platform:
   DOMAIN_PREGEN_BASEDIR: '/scratch4/BMC/fv3lam/Gerard.Ketefian/DTC_MPAS_stoch/pregen_for_srw'
 
