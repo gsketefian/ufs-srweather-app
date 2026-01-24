@@ -217,7 +217,8 @@ def create_model_configure_file(
         nsout = (dt_subhourly_post_mnts * 60) // dt_atmos
         output_fh = 0
     else:
-        output_fh = 1
+#        output_fh = 1
+        output_fh = 6
         nsout = -1
 
     settings.update({"output_fh": output_fh, "nsout": nsout})
