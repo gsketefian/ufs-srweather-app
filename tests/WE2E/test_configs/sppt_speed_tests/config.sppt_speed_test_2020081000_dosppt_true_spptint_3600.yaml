@@ -81,3 +81,6 @@ rocoto:
     task_make_orog: !remove
     task_make_sfc_climo: !remove
     metatask_run_ens_post: !remove
+    # The integration test fails if the forecast's output file frequency is changed
+    # to anything other than 1, so disable this test.
+    metatask_integration_test: !remove
