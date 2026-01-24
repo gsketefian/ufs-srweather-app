@@ -1,0 +1,85 @@
+metadata:
+  description: |-
+    This test is to ensure that the workflow running in community mode
+    completes successfully on the RRFS_CONUS_3km grid using the HRRR
+    physics suite with ICs and LBCs derived from the FV3GFS.
+
+user:
+  RUN_ENVIR: community
+
+workflow:
+  CCPP_PHYS_SUITE: FV3_HRRR
+#  PREDEF_GRID_NAME: RRFS_CONUS_3km
+  PREDEF_GRID_NAME: RRFS_CONUScompact_3km
+  DATE_FIRST_CYCL: '2020081000'
+  DATE_LAST_CYCL: '2020081000'
+  FCST_LEN_HRS: 6
+  PREEXISTING_DIR_METHOD: rename
+
+#task_get_extrn_ics:
+#  envvars:
+#    EXTRN_MDL_NAME_ICS: FV3GFS
+#    USE_USER_STAGED_EXTRN_FILES: true
+#    FV3GFS_FILE_FMT_ICS: nemsio
+#task_get_extrn_lbcs:
+#  envvars:
+#    EXTRN_MDL_NAME_LBCS: FV3GFS
+#    LBC_SPEC_INTVL_HRS: 3
+#    USE_USER_STAGED_EXTRN_FILES: true
+#    FV3GFS_FILE_FMT_LBCS: nemsio
+
+task_get_extrn_ics:
+  envvars:
+    EXTRN_MDL_NAME_ICS: HRRR
+    USE_USER_STAGED_EXTRN_FILES: true
+    EXTRN_MDL_FILES_ICS:
+      - '{yy}{jjj}{hh}00{fcst_hr:02d}00'
+
+task_get_extrn_lbcs:
+  envvars:
+    EXTRN_MDL_NAME_LBCS: HRRR
+    LBC_SPEC_INTVL_HRS: 3
+    USE_USER_STAGED_EXTRN_FILES: true
+    EXTRN_MDL_FILES_LBCS:
+      - '{yy}{jjj}{hh}00{fcst_hr:02d}00'
+
+task_run_fcst:
+  fv3:
+    execution:
+      batchargs:
+        walltime: 00:30:00
+
+global:
+  DO_ENSEMBLE: true
+  NUM_ENS_MEMBERS: 2
+  DO_SPPT: false
+  ISEED_SPPT: 2019061518011
+  NEW_LSCALE: true
+  SPPT_MAG: 0.4 #Variable "sppt" in input.nml
+  SPPT_LOGIT: true
+  SPPT_LSCALE: 150000
+  SPPT_SFCLIMIT: true
+  SPPT_TSCALE: 21600 #Variable "sppt_tau" in input.nml
+  SPPT_INT: 0 #Variable "spptint" in input.nml
+  USE_ZMTNBLCK: false
+
+#  &nam_stochy
+#    iseed_sppt = 2019061518011
+#    new_lscale = .true.
+#    sppt = 0.4
+#    sppt_logit = .true.
+#    sppt_lscale = 150000
+#    sppt_sfclimit = .true.
+#    sppt_tau = 21600
+#    spptint = 0
+#    use_zmtnblck = .false.
+
+platform:
+  DOMAIN_PREGEN_BASEDIR: '/scratch4/BMC/fv3lam/Gerard.Ketefian/DTC_MPAS_stoch/pregen_for_srw'
+
+rocoto:
+  tasks:
+    task_make_grid: !remove
+    task_make_orog: !remove
+    task_make_sfc_climo: !remove
+    metatask_run_ens_post: !remove

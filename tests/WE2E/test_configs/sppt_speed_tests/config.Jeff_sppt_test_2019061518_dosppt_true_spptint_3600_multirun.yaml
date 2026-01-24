@@ -1,0 +1,66 @@
+metadata:
+  description: >-
+    Sample community config
+
+user:
+  RUN_ENVIR: community
+  MACHINE: HERA
+  ACCOUNT: hmtb
+
+workflow:
+  USE_CRON_TO_RELAUNCH: false
+  EXPT_SUBDIR: test_community
+  CCPP_PHYS_SUITE: FV3_HRRR
+  PREDEF_GRID_NAME: RRFS_CONUS_3km
+  DATE_FIRST_CYCL: '2019061518'
+  DATE_LAST_CYCL: '2019061518'
+#  FCST_LEN_HRS: 54
+  FCST_LEN_HRS: 6
+  PREEXISTING_DIR_METHOD: rename
+  VERBOSE: true
+  COMPILER: intel
+
+task_get_extrn_ics:
+  envvars:
+    EXTRN_MDL_NAME_ICS: FV3GFS
+    FV3GFS_FILE_FMT_ICS: grib2
+
+task_get_extrn_lbcs:
+  envvars:
+    EXTRN_MDL_NAME_LBCS: FV3GFS
+    LBC_SPEC_INTVL_HRS: 6
+    FV3GFS_FILE_FMT_LBCS: grib2
+
+task_run_fcst:
+  QUILTING: true
+  fv3:
+    execution:
+      batchargs:
+        walltime: 00:30:00
+
+task_plot_allvars:
+  envvars:
+    COMOUT_REF: ""
+
+global:
+  DO_ENSEMBLE: true
+  DO_SPPT: true
+  SPPT_INT: 3600
+  NUM_ENS_MEMBERS: 10
+
+#rocoto:
+#  tasks:
+#    metatask_run_ens_post: !remove
+
+platform:
+  DOMAIN_PREGEN_BASEDIR: '/scratch4/BMC/fv3lam/Gerard.Ketefian/DTC_MPAS_stoch/pregen_for_srw'
+
+rocoto:
+  tasks:
+    task_make_grid: !remove
+    task_make_orog: !remove
+    task_make_sfc_climo: !remove
+    metatask_run_ens_post: !remove
+    # The integration test fails if the forecast's output file frequency is changed
+    # to anything other than 1, so disable this test.
+    metatask_integration_test: !remove
