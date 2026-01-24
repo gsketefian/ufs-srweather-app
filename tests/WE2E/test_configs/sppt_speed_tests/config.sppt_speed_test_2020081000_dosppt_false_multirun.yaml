@@ -51,7 +51,7 @@ task_run_fcst:
 
 global:
   DO_ENSEMBLE: true
-  NUM_ENS_MEMBERS: 2
+  NUM_ENS_MEMBERS: 10
   DO_SPPT: false
   ISEED_SPPT: 2019061518011
   NEW_LSCALE: true

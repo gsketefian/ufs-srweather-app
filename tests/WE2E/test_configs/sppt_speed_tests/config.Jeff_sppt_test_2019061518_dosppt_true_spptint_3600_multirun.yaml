@@ -44,9 +44,9 @@ task_plot_allvars:
 
 global:
   DO_ENSEMBLE: true
+  NUM_ENS_MEMBERS: 10
   DO_SPPT: true
   SPPT_INT: 3600
-  NUM_ENS_MEMBERS: 10
 
 platform:
   DOMAIN_PREGEN_BASEDIR: '/scratch4/BMC/fv3lam/Gerard.Ketefian/DTC_MPAS_stoch/pregen_for_srw'
